@@ -1,0 +1,27 @@
+# Ignore Python bytecode and cache
+__pycache__/
+*.py[cod]
+*$py.class
+
+# Ignore SQLite database files
+*.sqlite3
+
+# Ignore logs and runtime files
+*.log
+*.pot
+*.pyc
+*.pyo
+*.pyd
+
+# Ignore virtual environment contents except the actual Django project
+venv/*
+!venv/.gitignore
+!venv/British_Style/
+!venv/British_Style/manage.py
+!venv/British_Style/British_Style/
+!venv/British_Style/apps/
+!venv/British_Style/static/
+
+# Ignore system files
+.DS_Store
+Thumbs.db
