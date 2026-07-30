@@ -13,14 +13,8 @@ __pycache__/
 *.pyo
 *.pyd
 
-# Ignore virtual environment contents except the actual Django project
-venv/*
-!venv/.gitignore
-!venv/British_Style/
-!venv/British_Style/manage.py
-!venv/British_Style/British_Style/
-!venv/British_Style/apps/
-!venv/British_Style/static/
+# Ignore the virtual environment directory entirely
+venv/
 
 # Ignore system files
 .DS_Store
