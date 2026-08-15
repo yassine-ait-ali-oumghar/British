@@ -358,21 +358,79 @@ main { flex: 1 0 auto; }
 
 ---
 
+## Authentication & Google OAuth (django-allauth)
+
+The project uses `django-allauth` for email-based authentication and Google OAuth 2.0 single sign-on.
+
+### Google OAuth Configuration (`settings.py`)
+
+```python
+INSTALLED_APPS = [
+    ...
+    'django.contrib.sites',
+    'allauth',
+    'allauth.account',
+    'allauth.socialaccount',
+    'allauth.socialaccount.providers.google',
+]
+
+SITE_ID = 1
+
+AUTHENTICATION_BACKENDS = (
+    'django.contrib.auth.backends.ModelBackend',
+    'allauth.account.auth_backends.AuthenticationBackend',
+)
+
+ACCOUNT_LOGIN_METHODS = {'email'}
+ACCOUNT_SIGNUP_FIELDS = ['email*']
+ACCOUNT_EMAIL_VERIFICATION = 'none'
+SOCIALACCOUNT_AUTO_SIGNUP = True
+SOCIALACCOUNT_LOGIN_ON_GET = True
+
+SOCIALACCOUNT_PROVIDERS = {
+    'google': {
+        'APP': {
+            'client_id': '1787044947-8oo9r1tfau5h2k46ird4a1n5jk65n0mn.apps.googleusercontent.com',
+            'secret': 'GOCSPX-...',
+            'key': ''
+        },
+        'SCOPE': ['profile', 'email'],
+        'AUTH_PARAMS': {'access_type': 'online'},
+        'OAUTH_PKCE_ENABLED': True,
+    }
+}
+```
+
+### URL Routes (`urls.py`)
+
+- `http://127.0.0.1:8000/accounts/login/` — Custom Login Page with Google OAuth
+- `http://127.0.0.1:8000/accounts/signup/` — Custom Sign Up Page
+- `http://127.0.0.1:8000/accounts/logout/` — Sign Out Route
+- `http://127.0.0.1:8000/accounts/google/login/` — Google OAuth Trigger Route
+- `http://127.0.0.1:8000/accounts/google/login/callback/` — Google OAuth Callback URI
+
+### Custom Templates (`apps/core/templates/account/`)
+
+- `login.html`: Luxury custom login template with a **"Continuer avec Google"** button and email login form.
+- `signup.html`: Luxury custom sign-up template with Google registration and email registration form.
+
+---
+
+## Layout & Header Alignment Fixes
+
+To prevent fixed top navigation header (`#main-header`) overlap:
+- Added `style="padding-top: 140px !important;"` to `.services-section`, `.team-section`, `.boutique-hero`, and `.contact-container` across `services.html`, `equipe.html`, `boutique.html`, and `contact.html`.
+- Updated corresponding CSS files (`services.css`, `equipe.css`, `boutique.css`).
+
+---
+
 ## Running the Project
 
 ```bash
-# Navigate to the project directory
-cd "c:\British Style\venv\British_Style"
-
-# Activate the virtual environment (choose one):
-# PowerShell
+# Activate the virtual environment
 venv\Scripts\Activate.ps1
-# CMD
-venv\Scripts\activate.bat
-# Unix / Git Bash (or on Unix-like systems)
-source venv/bin/activate
 
-# Run migrations
+# Apply database migrations
 python manage.py migrate
 
 # Start the development server
@@ -381,17 +439,12 @@ python manage.py runserver
 
 Then visit:
 - `http://127.0.0.1:8000/` — Home page
+- `http://127.0.0.1:8000/services/` — Services page
+- `http://127.0.0.1:8000/boutique/` — Boutique page
 - `http://127.0.0.1:8000/contact/` — Contact page
-- `http://127.0.0.1:8000/admin/` — Django admin
+- `http://127.0.0.1:8000/accounts/login/` — Google OAuth / Allauth Login Page
 
-## Creating New Migrations
-
-If you modify `models.py` in any app:
-
-```bash
-python manage.py makemigrations <app_name>
-python manage.py migrate
-```
+---
 
 ## Technology Stack
 
@@ -399,8 +452,13 @@ python manage.py migrate
 |---|---|
 | Python | 3.14 |
 | Django | 6.0.7 |
+| Authentication | `django-allauth`, Google OAuth 2.0 |
+| OAuth Dependencies | `requests`, `pyjwt`, `cryptography` |
 | Database | SQLite3 |
 | Frontend | Bootstrap 5.3 |
 | Template Engine | Django Templates |
 
+Email : admin@britishstyle.com
+Nom d'utilisateur : admin
+Mot de passe : admin123
 ---

@@ -1,0 +1,265 @@
+{% extends 'core/base.html' %}
+{% load static %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'styles/pages/boutique.css' %}?v=fixed_ratio">
+{% endblock %}
+
+{% block content %}
+<!-- Page Header -->
+<section class="boutique-hero py-5" style="padding-top: 140px !important;">
+    <div class="container-fluid px-4 px-lg-5 py-4">
+        <div class="text-center boutique-header-content mx-auto">
+            <span class="badge-tag"><i class="bi bi-bag-check me-2"></i>Boutique Exclusive</span>
+            <h1 class="page-title mt-3">La Boutique British Style</h1>
+            <p class="page-subtitle mx-auto">
+                L'excellence de la cosmétique britannique à votre portée. Retrouvez nos soins d'exception, sérums régénérants et rituel beauté au salon et en livraison.
+            </p>
+        </div>
+
+        <!-- Filter & Search Toolbar -->
+        <div class="boutique-toolbar mt-5">
+            <div class="d-flex flex-column flex-lg-row align-items-stretch align-items-lg-center justify-content-between gap-4">
+                <div class="search-input-wrapper">
+                    <i class="bi bi-search search-icon"></i>
+                    <input type="text" id="productSearch" class="search-input" placeholder="Rechercher une marque (Olaplex, Kérastase, Huda, Dior, Laneige...)...">
+                </div>
+                <div class="category-tabs d-flex flex-wrap gap-2 justify-content-start justify-content-lg-end">
+                    <button class="filter-btn active" data-category="all">🌟 Tous les produits</button>
+                    <button class="filter-btn" data-category="Cheveux">💇‍♀️ Cheveux & Soins</button>
+                    <button class="filter-btn" data-category="Visage & Skincare">💆‍♀️ Skincare & Visage</button>
+                    <button class="filter-btn" data-category="Maquillage">💄 Maquillage</button>
+                    <button class="filter-btn" data-category="Ongles & Vernis">💅 Ongles & Vernis</button>
+                    <button class="filter-btn" data-category="Coloration Cheveux">🎨 Coloration Cheveux</button>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Main Products Section -->
+<section class="boutique-catalog-section pb-5">
+    <div class="container-fluid px-4 px-lg-5">
+        <div class="row g-4" id="productsGrid">
+            {% for prod in products_list %}
+            <div class="col-lg-4 col-md-6 product-item" data-category="{{ prod.category }}" data-name="{{ prod.name|lower }}" data-desc="{{ prod.description|lower }}">
+                <div class="boutique-card h-100 d-flex flex-column justify-content-between">
+                    <div class="product-media-box position-relative overflow-hidden">
+                        {% if prod.image_url %}
+                        <img src="{{ prod.image_url }}" alt="{{ prod.name }}" class="w-100 h-100 product-img-cover" loading="lazy" onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
+                        <div class="product-icon-glow" style="display: none;">
+                            {% if prod.category == 'Cheveux' %}<i class="bi bi-droplet-half"></i>
+                            {% elif prod.category == 'Visage & Skincare' %}<i class="bi bi-flower1"></i>
+                            {% elif prod.category == 'Maquillage' %}<i class="bi bi-palette"></i>
+                            {% elif prod.category == 'Ongles & Vernis' %}<i class="bi bi-hand-index-thumb"></i>
+                            {% elif prod.category == 'Coloration Cheveux' %}<i class="bi bi-brush"></i>
+                            {% else %}<i class="bi bi-sparkles"></i>{% endif %}
+                        </div>
+                        {% else %}
+                        <div class="product-icon-glow">
+                            {% if prod.category == 'Cheveux' %}<i class="bi bi-droplet-half"></i>
+                            {% elif prod.category == 'Visage & Skincare' %}<i class="bi bi-flower1"></i>
+                            {% elif prod.category == 'Maquillage' %}<i class="bi bi-palette"></i>
+                            {% elif prod.category == 'Ongles & Vernis' %}<i class="bi bi-hand-index-thumb"></i>
+                            {% elif prod.category == 'Coloration Cheveux' %}<i class="bi bi-brush"></i>
+                            {% else %}<i class="bi bi-sparkles"></i>{% endif %}
+                        </div>
+                        {% endif %}
+                    </div>
+                    <div class="product-details p-4 d-flex flex-column justify-content-between h-100">
+                        <div>
+                            <div class="d-flex align-items-center justify-content-between mb-2">
+                                <span class="product-cat font-semibold">{{ prod.category }}</span>
+                            </div>
+                            <h3 class="product-title h5 fw-bold text-dark mb-2">{{ prod.name }}</h3>
+                            <p class="product-summary text-muted small mb-0">
+                                {{ prod.description|default:"Produit cosmétique d'exception certifié authentique." }}
+                            </p>
+
+                            {% if prod.shades %}
+                            <div class="shade-selector-box mt-3 p-2 bg-light rounded-3 border" id="shadeBox_{{ prod.id }}">
+                                <div class="d-flex align-items-center justify-content-between mb-2">
+                                    <span class="small fw-bold text-dark" style="font-size: 0.8rem;"><i class="bi bi-palette me-1 text-gold"></i>Choisissez votre couleur:</span>
+                                    <span class="shade-selected-label small text-muted font-monospace" id="shadeLabel_{{ prod.id }}" style="font-size: 0.75rem;">Sélection requise</span>
+                                </div>
+                                <div class="shade-options-list d-flex flex-wrap gap-2">
+                                    {% for shade in prod.shades %}
+                                    <button type="button" class="btn btn-sm btn-white border shade-pill-btn d-inline-flex align-items-center gap-1 py-1 px-2 rounded-pill shadow-xs"
+                                            onclick="selectProductVariant(this, '{{ prod.id }}', '{{ shade.name|escapejs }}')">
+                                        <span class="shade-dot rounded-circle border d-inline-block" style="width: 12px; height: 12px; flex-shrink: 0;" data-bg="{{ shade.hex }}"></span>
+                                        <span class="shade-name text-dark small" style="font-size: 0.78rem;">{{ shade.name }}</span>
+                                    </button>
+                                    {% endfor %}
+                                </div>
+                            </div>
+                            {% endif %}
+                        </div>
+                        <div class="card-bottom d-flex align-items-center justify-content-between pt-3 border-top mt-3">
+                            <div class="price-tag">
+                                <span class="price-amount fs-4 fw-bold text-dark">{{ prod.price|floatformat:"0" }} DH</span>
+                            </div>
+                            <button type="button" class="btn-add-cart btn btn-dark px-3 py-2 rounded-3 fw-semibold"
+                                    id="btnAddToCart_{{ prod.id }}"
+                                    data-has-shades="{% if prod.shades %}true{% else %}false{% endif %}"
+                                    data-selected-shade=""
+                                    onclick="handleAddProductToCart(this, '{{ prod.id }}', '{{ prod.name|escapejs }}', '{{ prod.price|floatformat:0 }} DH', 'bi-bag-check', '{{ prod.category|escapejs }}')">
+                                <i class="bi bi-bag-plus me-2"></i>Ajouter
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            {% empty %}
+            <div class="col-12 text-center py-5 text-muted">
+                <i class="bi bi-bag-x fs-1 mb-2 d-block"></i>
+                <p>Aucun produit disponible dans le catalogue pour le moment.</p>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+</section>
+
+<!-- Reassurance Feature Banner -->
+<section class="boutique-guarantees py-5 mt-4">
+    <div class="container-fluid px-4 px-lg-5">
+        <div class="row g-4 text-center">
+            <div class="col-md-3 col-sm-6">
+                <div class="guarantee-box p-4">
+                    <i class="bi bi-truck guarantee-icon mb-3"></i>
+                    <h5 class="guarantee-title">Livraison Offerte</h5>
+                    <p class="guarantee-desc mb-0">Partout au Maroc dès 500 DH d'achat et en Europe.</p>
+                </div>
+            </div>
+            <div class="col-md-3 col-sm-6">
+                <div class="guarantee-box p-4">
+                    <i class="bi bi-shop guarantee-icon mb-3"></i>
+                    <h5 class="guarantee-title">Click & Collect</h5>
+                    <p class="guarantee-desc mb-0">Retrait gratuit dans notre salon à Casablanca.</p>
+                </div>
+            </div>
+            <div class="col-md-3 col-sm-6">
+                <div class="guarantee-box p-4">
+                    <i class="bi bi-patch-check guarantee-icon mb-3"></i>
+                    <h5 class="guarantee-title">100% Authenticité</h5>
+                    <p class="guarantee-desc mb-0">Ingrédients éco-responsables certifiés UK.</p>
+                </div>
+            </div>
+            <div class="col-md-3 col-sm-6">
+                <div class="guarantee-box p-4">
+                    <i class="bi bi-headset guarantee-icon mb-3"></i>
+                    <h5 class="guarantee-title">Conseil Personnalisé</h5>
+                    <p class="guarantee-desc mb-0">Nos experts beauté sont à votre écoute 7j/7.</p>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Floating Cart Toast Notification -->
+<div id="cartToast" class="cart-toast" role="alert">
+    <div class="cart-toast-body d-flex align-items-center gap-3">
+        <div class="toast-check-icon"><i class="bi bi-check-lg"></i></div>
+        <div>
+            <strong id="toastProductName">Produit</strong> ajouté au panier !
+            <div class="small text-muted" id="toastProductPrice">490 DH</div>
+        </div>
+    </div>
+</div>
+
+<script>
+    function selectProductVariant(btn, prodId, shadeName) {
+        const box = document.getElementById('shadeBox_' + prodId);
+        if (!box) return;
+
+        // Remove active state from all buttons in this box
+        box.querySelectorAll('.shade-pill-btn').forEach(b => {
+            b.classList.remove('btn-dark', 'active-shade-pill');
+            b.classList.add('btn-white');
+        });
+
+        // Highlight clicked button
+        btn.classList.remove('btn-white');
+        btn.classList.add('btn-dark', 'active-shade-pill');
+
+        // Update label and data attribute
+        const label = document.getElementById('shadeLabel_' + prodId);
+        if (label) {
+            label.innerHTML = '<span class="badge bg-success"><i class="bi bi-check2 me-1"></i>' + shadeName + '</span>';
+        }
+
+        const addBtn = document.getElementById('btnAddToCart_' + prodId);
+        if (addBtn) {
+            addBtn.setAttribute('data-selected-shade', shadeName);
+            box.classList.remove('border-danger', 'bg-warning-subtle');
+        }
+    }
+
+    function handleAddProductToCart(btn, prodId, name, price, icon, cat) {
+        const hasShades = btn.getAttribute('data-has-shades') === 'true';
+        const selectedShade = btn.getAttribute('data-selected-shade');
+
+        if (hasShades && !selectedShade) {
+            const box = document.getElementById('shadeBox_' + prodId);
+            if (box) {
+                box.classList.add('border-danger', 'bg-warning-subtle');
+                box.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+            }
+            if (typeof showCustomAlert === 'function') {
+                showCustomAlert("Sélection de couleur requise", "Veuillez choisir une nuance / couleur avant d'ajouter ce produit au panier.", "bi-palette-fill");
+            } else {
+                alert("Veuillez choisir une nuance / couleur avant d'ajouter ce produit au panier.");
+            }
+            return;
+        }
+
+        CartManager.addItem(name, price, icon, cat, selectedShade || '');
+    }
+
+    document.addEventListener('DOMContentLoaded', function() {
+        document.querySelectorAll('[data-bg]').forEach(function(el) {
+            el.style.backgroundColor = el.getAttribute('data-bg');
+        });
+
+        const filterBtns = document.querySelectorAll('.filter-btn');
+        const searchInput = document.getElementById('productSearch');
+        const productItems = document.querySelectorAll('.product-item');
+
+        let selectedCategory = 'all';
+
+        function filterProducts() {
+            const query = searchInput ? searchInput.value.toLowerCase().trim() : '';
+            const selCat = (selectedCategory || 'all').toLowerCase().trim();
+
+            productItems.forEach(item => {
+                const cat = (item.getAttribute('data-category') || '').toLowerCase().trim();
+                const name = (item.getAttribute('data-name') || '').toLowerCase().trim();
+                const desc = (item.getAttribute('data-desc') || '').toLowerCase().trim();
+
+                const matchesCat = (selCat === 'all' || cat === selCat);
+                const matchesSearch = !query || name.includes(query) || desc.includes(query) || cat.includes(query);
+
+                if (matchesCat && matchesSearch) {
+                    item.style.display = 'block';
+                } else {
+                    item.style.display = 'none';
+                }
+            });
+        }
+
+        filterBtns.forEach(btn => {
+            btn.addEventListener('click', function(e) {
+                e.preventDefault();
+                filterBtns.forEach(b => b.classList.remove('active'));
+                this.classList.add('active');
+
+                selectedCategory = this.getAttribute('data-category') || 'all';
+                filterProducts();
+            });
+        });
+
+        if (searchInput) {
+            searchInput.addEventListener('input', filterProducts);
+        }
+    });
+</script>
+{% endblock %}

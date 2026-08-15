@@ -16,6 +16,11 @@ __pycache__/
 # Ignore the virtual environment directory entirely
 venv/
 
-# Ignore system files
+# Ignore environment variables
+.env
+
+# Ignore system & editor files
 .DS_Store
 Thumbs.db
+.vscode/
+

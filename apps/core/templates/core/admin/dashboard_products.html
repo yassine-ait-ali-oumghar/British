@@ -1,0 +1,179 @@
+{% extends 'core/admin/admin_base.html' %}
+
+{% block title %}Gestion des Produits - ERP | British Style{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <div>
+        <h4 class="fw-bold text-dark mb-1">Gestion du Catalogue Produits</h4>
+        <p class="text-muted small mb-0">Ajoutez, modifiez ou gérez la disponibilité des soins cosmétiques.</p>
+    </div>
+    <button class="btn btn-success fw-semibold rounded-3 d-flex align-items-center gap-2" data-bs-toggle="modal" data-bs-target="#createProductModal">
+        <i class="bi bi-plus-circle-fill fs-5"></i> Ajouter un Produit
+    </button>
+</div>
+
+<!-- Products Grid -->
+<div class="row g-3">
+    {% for prod in products %}
+    <div class="col-md-4 col-lg-3">
+        <div class="erp-card h-100 mb-0 d-flex flex-column justify-content-between">
+            <div>
+                <div class="d-flex justify-content-between align-items-start mb-2">
+                    <span class="badge bg-secondary rounded-pill">{{ prod.category }}</span>
+                    <form method="post" class="d-inline">
+                        {% csrf_token %}
+                        <input type="hidden" name="action" value="toggle_available">
+                        <input type="hidden" name="product_id" value="{{ prod.id }}">
+                        <button type="submit" class="btn btn-sm {% if prod.is_available %}btn-outline-success{% else %}btn-outline-danger{% endif %} rounded-pill px-2 py-0" style="font-size: 0.7rem;">
+                            {% if prod.is_available %}Disponible{% else %}Indisponible{% endif %}
+                        </button>
+                    </form>
+                </div>
+                <h5 class="fw-bold text-dark mb-1">{{ prod.name }}</h5>
+                <p class="text-muted small mb-3 text-truncate">{{ prod.description|default:"Aucune description" }}</p>
+                <div class="d-flex justify-content-between align-items-center mb-3">
+                    <div class="fs-4 fw-bold text-primary">{{ prod.price }} DH</div>
+                </div>
+            </div>
+            <div class="d-flex gap-2 border-top pt-3">
+                <button class="btn btn-sm btn-light border text-dark w-50 fw-semibold" data-id="{{ prod.id }}" data-name="{{ prod.name }}" data-category="{{ prod.category }}" data-price="{{ prod.price }}" data-available="{{ prod.is_available|yesno:'true,false' }}" data-image="{{ prod.image_url }}" data-description="{{ prod.description }}" onclick="editProduct(this)">
+                    <i class="bi bi-pencil me-1"></i> Modifier
+                </button>
+                <form method="post" class="w-50" onsubmit="return confirm('Supprimer ce produit ?');">
+                    {% csrf_token %}
+                    <input type="hidden" name="action" value="delete">
+                    <input type="hidden" name="product_id" value="{{ prod.id }}">
+                    <button type="submit" class="btn btn-sm btn-light border text-danger w-100 fw-semibold">
+                        <i class="bi bi-trash me-1"></i> Supprimer
+                    </button>
+                </form>
+            </div>
+        </div>
+    </div>
+    {% empty %}
+    <div class="col-12 text-center py-5 text-muted">Aucun produit dans le catalogue.</div>
+    {% endfor %}
+</div>
+
+<!-- Create Product Modal -->
+<div class="modal fade" id="createProductModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content border-0 shadow-lg rounded-4">
+            <div class="modal-header border-bottom-0">
+                <h5 class="modal-title fw-bold">Nouveau Produit</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <form method="post">
+                {% csrf_token %}
+                <input type="hidden" name="action" value="create">
+                <div class="modal-body p-4">
+                    <div class="row g-3">
+                        <div class="col-8">
+                            <label class="form-label small fw-bold">Nom du produit</label>
+                            <input type="text" name="name" class="form-control" required>
+                        </div>
+                        <div class="col-4">
+                            <label class="form-label small fw-bold">Catégorie</label>
+                            <input type="text" name="category" class="form-control" placeholder="ex: Cheveux" required>
+                        </div>
+                        <div class="col-12">
+                            <label class="form-label small fw-bold">Prix (DH)</label>
+                            <input type="number" step="0.01" name="price" class="form-control" required>
+                        </div>
+                        <div class="col-12">
+                            <label class="form-label small fw-bold">URL de l'image (optionnel)</label>
+                            <input type="text" name="image_url" class="form-control" placeholder="https://...">
+                        </div>
+                        <div class="col-12">
+                            <label class="form-label small fw-bold">Description</label>
+                            <textarea name="description" class="form-control" rows="2"></textarea>
+                        </div>
+                        <div class="col-12">
+                            <div class="form-check">
+                                <input type="checkbox" name="is_available" class="form-check-input" id="availCheck" checked>
+                                <label class="form-check-label small fw-bold" for="availCheck">Produit disponible à la vente</label>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer border-top-0 pt-0">
+                    <button type="button" class="btn btn-light" data-bs-dismiss="modal">Annuler</button>
+                    <button type="submit" class="btn btn-success fw-semibold px-4">Créer le Produit</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- Edit Product Modal -->
+<div class="modal fade" id="editProductModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content border-0 shadow-lg rounded-4">
+            <div class="modal-header border-bottom-0">
+                <h5 class="modal-title fw-bold">Modifier le Produit</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <form method="post">
+                {% csrf_token %}
+                <input type="hidden" name="action" value="edit">
+                <input type="hidden" name="product_id" id="editProdId">
+                <div class="modal-body p-4">
+                    <div class="row g-3">
+                        <div class="col-8">
+                            <label class="form-label small fw-bold">Nom du produit</label>
+                            <input type="text" name="name" id="editProdName" class="form-control" required>
+                        </div>
+                        <div class="col-4">
+                            <label class="form-label small fw-bold">Catégorie</label>
+                            <input type="text" name="category" id="editProdCat" class="form-control" required>
+                        </div>
+                        <div class="col-12">
+                            <label class="form-label small fw-bold">Prix (DH)</label>
+                            <input type="number" step="0.01" name="price" id="editProdPrice" class="form-control" required>
+                        </div>
+                        <div class="col-12">
+                            <label class="form-label small fw-bold">URL Image</label>
+                            <input type="text" name="image_url" id="editProdImg" class="form-control">
+                        </div>
+                        <div class="col-12">
+                            <label class="form-label small fw-bold">Description</label>
+                            <textarea name="description" id="editProdDesc" class="form-control" rows="2"></textarea>
+                        </div>
+                        <div class="col-12">
+                            <div class="form-check">
+                                <input type="checkbox" name="is_available" class="form-check-input" id="editProdAvail">
+                                <label class="form-check-label small fw-bold" for="editProdAvail">Disponible à la vente</label>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer border-top-0 pt-0">
+                    <button type="button" class="btn btn-light" data-bs-dismiss="modal">Annuler</button>
+                    <button type="submit" class="btn btn-primary fw-semibold px-4">Sauvegarder</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    let editProdModal = null;
+    document.addEventListener('DOMContentLoaded', () => {
+        editProdModal = new bootstrap.Modal(document.getElementById('editProductModal'));
+    });
+
+    function editProduct(btn) {
+        document.getElementById('editProdId').value = btn.dataset.id;
+        document.getElementById('editProdName').value = btn.dataset.name;
+        document.getElementById('editProdCat').value = btn.dataset.category;
+        document.getElementById('editProdPrice').value = btn.dataset.price;
+        document.getElementById('editProdAvail').checked = btn.dataset.available === 'true';
+        document.getElementById('editProdImg').value = btn.dataset.image;
+        document.getElementById('editProdDesc').value = btn.dataset.description;
+        editProdModal.show();
+    }
+</script>
+{% endblock %}

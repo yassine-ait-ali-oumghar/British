@@ -1,0 +1,205 @@
+{% extends base_template|default:'core/employee/employee_base.html' %}
+
+{% block title %}Mon Pointage | Espace Employé{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-lg-10 col-xl-8">
+        <!-- Main Clocking Card -->
+        <div class="card border-0 shadow-sm rounded-4 p-4 p-md-5 mb-4">
+            <div class="text-center mb-4">
+                <span class="text-muted text-uppercase tracking-wider fw-semibold small">Système de Pointage Numérique</span>
+                <h2 class="fw-bold text-dark mt-1">Espace de Pointage Quotidien</h2>
+                <div class="d-inline-flex align-items-center gap-2 mt-2">
+                    <span class="text-muted fs-6">Statut actuel :</span>
+                    <span id="pointageStatusBadge" class="status-badge status-{{ current_status }} fs-6 px-3 py-2">
+                        <i class="bi bi-circle-fill"></i>
+                        <span id="pointageStatusText">{{ current_status_display }}</span>
+                    </span>
+                </div>
+            </div>
+
+            <!-- Digital Clock Display -->
+            <div class="bg-dark text-white rounded-4 p-4 text-center mb-5 shadow-inner position-relative overflow-hidden" style="background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%);">
+                <div class="display-3 fw-bold tracking-tight text-warning" id="liveDigitalClock">00:00:00</div>
+                <div class="text-white-50 mt-1 fs-6" id="liveDateDisplay">Chargement de la date...</div>
+            </div>
+
+            <!-- Alert Feedback -->
+            <div id="clockFeedbackAlert" class="alert alert-dismissible fade show d-none rounded-3 mb-4" role="alert">
+                <span id="feedbackMessage"></span>
+                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+            </div>
+
+            <!-- Pointage Action Buttons Grid -->
+            <div class="row g-3" id="clockButtonsContainer">
+                <!-- 1. Pointer l'entrée -->
+                <div class="col-sm-6" id="btnContainerCheckIn">
+                    <button class="btn btn-success w-100 py-3 rounded-3 fw-semibold shadow-sm d-flex align-items-center justify-content-center gap-2 fs-5" id="btnCheckIn" onclick="submitClockAction('CHECK_IN')">
+                        <i class="bi bi-box-arrow-in-right fs-4"></i>
+                        <span>Pointer l'entrée</span>
+                    </button>
+                </div>
+
+                <!-- 2. Commencer une pause -->
+                <div class="col-sm-6" id="btnContainerStartPause">
+                    <button class="btn btn-warning w-100 py-3 rounded-3 fw-semibold shadow-sm d-flex align-items-center justify-content-center gap-2 fs-5 text-dark" id="btnStartPause" onclick="submitClockAction('START_PAUSE')">
+                        <i class="bi bi-pause-circle fs-4"></i>
+                        <span>Commencer une pause</span>
+                    </button>
+                </div>
+
+                <!-- 3. Terminer la pause -->
+                <div class="col-sm-6" id="btnContainerEndPause">
+                    <button class="btn btn-info w-100 py-3 rounded-3 fw-semibold shadow-sm d-flex align-items-center justify-content-center gap-2 fs-5 text-white" id="btnEndPause" onclick="submitClockAction('END_PAUSE')">
+                        <i class="bi bi-play-circle fs-4"></i>
+                        <span>Terminer la pause</span>
+                    </button>
+                </div>
+
+                <!-- 4. Pointer la sortie -->
+                <div class="col-sm-6" id="btnContainerCheckOut">
+                    <button class="btn btn-danger w-100 py-3 rounded-3 fw-semibold shadow-sm d-flex align-items-center justify-content-center gap-2 fs-5" id="btnCheckOut" onclick="submitClockAction('CHECK_OUT')">
+                        <i class="bi bi-box-arrow-right fs-4"></i>
+                        <span>Pointer la sortie</span>
+                    </button>
+                </div>
+            </div>
+
+            <!-- Day Finished Notice -->
+            <div id="dayFinishedNotice" class="alert alert-success text-center py-4 rounded-4 my-3 d-none">
+                <i class="bi bi-check-circle-fill display-4 text-success d-block mb-2"></i>
+                <h4 class="fw-bold mb-1">Votre journée est terminée.</h4>
+                <p class="text-muted mb-0">Merci pour votre travail aujourd'hui ! Passez une excellente fin de journée.</p>
+            </div>
+        </div>
+
+        <!-- Summary & Stats Bar -->
+        <div class="card border-0 shadow-sm rounded-4 p-4">
+            <h5 class="fw-bold text-dark mb-3"><i class="bi bi-info-circle me-2 text-warning"></i>Résumé de la journée</h5>
+            <div class="row text-center g-3">
+                <div class="col-4 border-end">
+                    <small class="text-muted d-block text-uppercase">Arrivée</small>
+                    <span class="fw-bold text-dark fs-5" id="sumCheckIn">{{ today_rec.check_in|time:"H:i"|default:"--" }}</span>
+                </div>
+                <div class="col-4 border-end">
+                    <small class="text-muted d-block text-uppercase">Départ</small>
+                    <span class="fw-bold text-dark fs-5" id="sumCheckOut">{{ today_rec.check_out|time:"H:i"|default:"--" }}</span>
+                </div>
+                <div class="col-4">
+                    <small class="text-muted d-block text-uppercase">Total Travaillé</small>
+                    <span class="fw-bold text-primary fs-5" id="sumHoursToday">{{ hours_today }}</span>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    // Initial State Variables from Django template
+    let currentStatus = "{{ current_status }}";
+    let hasCheckIn = {% if today_rec and today_rec.check_in %}true{% else %}false{% endif %};
+    let hasCheckOut = {% if today_rec and today_rec.check_out %}true{% else %}false{% endif %};
+
+    function updateDigitalClock() {
+        const now = new Date();
+        const hours = String(now.getHours()).padStart(2, '0');
+        const minutes = String(now.getMinutes()).padStart(2, '0');
+        const seconds = String(now.getSeconds()).padStart(2, '0');
+        document.getElementById('liveDigitalClock').innerText = `${hours}:${minutes}:${seconds}`;
+
+        const options = { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' };
+        document.getElementById('liveDateDisplay').innerText = now.toLocaleDateString('fr-FR', options);
+    }
+    setInterval(updateDigitalClock, 1000);
+    updateDigitalClock();
+
+    function renderButtonStates() {
+        const btnCheckIn = document.getElementById('btnContainerCheckIn');
+        const btnStartPause = document.getElementById('btnContainerStartPause');
+        const btnEndPause = document.getElementById('btnContainerEndPause');
+        const btnCheckOut = document.getElementById('btnContainerCheckOut');
+        const dayFinished = document.getElementById('dayFinishedNotice');
+
+        // Hide all first
+        btnCheckIn.classList.add('d-none');
+        btnStartPause.classList.add('d-none');
+        btnEndPause.classList.add('d-none');
+        btnCheckOut.classList.add('d-none');
+        dayFinished.classList.add('d-none');
+
+        if (hasCheckOut) {
+            // Day Finished
+            dayFinished.classList.remove('d-none');
+        } else if (!hasCheckIn) {
+            // Not started -> Only Check In
+            btnCheckIn.classList.remove('d-none');
+        } else if (currentStatus === 'PRESENT') {
+            // Present -> Start Pause & Check Out
+            btnStartPause.classList.remove('d-none');
+            btnCheckOut.classList.remove('d-none');
+        } else if (currentStatus === 'PAUSE') {
+            // Pause -> End Pause
+            btnEndPause.classList.remove('d-none');
+        }
+    }
+
+    renderButtonStates();
+
+    function submitClockAction(actionType) {
+        const formData = new FormData();
+        formData.append('action', actionType);
+
+        fetch("{% url 'employee_clock_action' %}", {
+            method: 'POST',
+            headers: {
+                'X-CSRFToken': getCookie('csrftoken'),
+                'X-Requested-With': 'XMLHttpRequest'
+            },
+            body: formData
+        })
+        .then(response => response.json())
+        .then(data => {
+            const alertBox = document.getElementById('clockFeedbackAlert');
+            const msgSpan = document.getElementById('feedbackMessage');
+
+            alertBox.classList.remove('d-none', 'alert-success', 'alert-danger');
+            
+            if (data.success) {
+                alertBox.classList.add('alert-success');
+                msgSpan.innerText = data.message;
+
+                // Update state
+                currentStatus = data.stats.current_status;
+                if (data.stats.check_in) hasCheckIn = true;
+                if (data.stats.check_out || data.stats.is_day_finished) hasCheckOut = true;
+
+                // Update Badges & UI
+                document.getElementById('pointageStatusBadge').className = `status-badge status-${currentStatus} fs-6 px-3 py-2`;
+                document.getElementById('pointageStatusText').innerText = data.stats.current_status_display;
+
+                const topbarBadge = document.getElementById('liveStatusBadge');
+                if (topbarBadge) {
+                    topbarBadge.className = `status-badge status-${currentStatus}`;
+                    document.getElementById('liveStatusText').innerText = data.stats.current_status_display;
+                }
+
+                // Update Summary values
+                if (data.stats.check_in) document.getElementById('sumCheckIn').innerText = data.stats.check_in;
+                if (data.stats.check_out) document.getElementById('sumCheckOut').innerText = data.stats.check_out;
+                document.getElementById('sumHoursToday').innerText = data.stats.hours_today;
+
+                renderButtonStates();
+            } else {
+                alertBox.classList.add('alert-danger');
+                msgSpan.innerText = data.message || "Une erreur est survenue lors de l'enregistrement.";
+            }
+        })
+        .catch(error => {
+            console.error('Error submitting clock action:', error);
+        });
+    }
+</script>
+{% endblock %}

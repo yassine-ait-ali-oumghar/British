@@ -1,0 +1,604 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}{{ page_title }} | Réception British Style{% endblock %}</title>
+
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <!-- Bootstrap 5 CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <!-- Bootstrap Icons -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+
+    <style>
+        :root {
+            --sidebar-width: 270px;
+            --topbar-height: 70px;
+            --bg-body: #f4f6f9;
+            --sidebar-bg: #1e293b;
+            --card-bg: #ffffff;
+            --gold-accent: #c5a059;
+            --gold-hover: #b38e46;
+            --gold-light: #fef8ec;
+            --text-dark: #0f172a;
+            --text-muted: #64748b;
+            --border-color: #e2e8f0;
+        }
+
+        body {
+            font-family: 'Poppins', sans-serif;
+            background-color: var(--bg-body);
+            color: var(--text-dark);
+            margin: 0;
+            padding: 0;
+            overflow-x: hidden;
+        }
+
+        /* Sidebar Styling */
+        .reception-sidebar {
+            width: var(--sidebar-width);
+            height: 100vh;
+            position: fixed;
+            top: 0;
+            left: 0;
+            background-color: var(--sidebar-bg);
+            z-index: 1000;
+            display: flex;
+            flex-direction: column;
+            overflow-y: auto;
+            transition: all 0.3s ease;
+            box-shadow: 4px 0 15px rgba(0, 0, 0, 0.1);
+        }
+
+        .sidebar-brand {
+            height: var(--topbar-height);
+            display: flex;
+            align-items: center;
+            padding: 0 1.5rem;
+            font-size: 1.25rem;
+            font-weight: 700;
+            color: #ffffff;
+            text-decoration: none;
+            gap: 0.6rem;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .sidebar-brand-icon {
+            width: 32px;
+            height: 32px;
+            background: linear-gradient(135deg, var(--gold-accent), #dfb76c);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #1e293b;
+            font-weight: bold;
+            font-size: 1rem;
+        }
+
+        .sidebar-user {
+            text-align: center;
+            padding: 1.5rem 1rem;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+            background: rgba(255, 255, 255, 0.02);
+        }
+
+        .sidebar-user-avatar {
+            width: 64px;
+            height: 64px;
+            border-radius: 50%;
+            margin: 0 auto 0.75rem auto;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: white;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.25);
+            border: 2px solid var(--gold-accent);
+            background-color: #334155;
+        }
+
+        .sidebar-user-name {
+            font-size: 0.95rem;
+            font-weight: 600;
+            color: #f8fafc;
+            margin-bottom: 0.15rem;
+        }
+
+        .sidebar-user-role {
+            font-size: 0.78rem;
+            color: var(--gold-accent);
+            font-weight: 500;
+            background: rgba(197, 160, 89, 0.15);
+            padding: 2px 10px;
+            border-radius: 12px;
+            display: inline-block;
+        }
+
+        .sidebar-menu {
+            list-style: none;
+            padding: 1rem 0;
+            margin: 0;
+            flex-grow: 1;
+        }
+
+        .sidebar-menu-item {
+            margin-bottom: 0.3rem;
+        }
+
+        .sidebar-menu-link {
+            display: flex;
+            align-items: center;
+            padding: 0.85rem 1.5rem;
+            color: #94a3b8;
+            text-decoration: none;
+            font-size: 0.9rem;
+            font-weight: 500;
+            gap: 0.8rem;
+            transition: all 0.2s ease;
+            border-left: 4px solid transparent;
+        }
+
+        .sidebar-menu-link:hover {
+            color: #f8fafc;
+            background-color: rgba(255, 255, 255, 0.05);
+        }
+
+        .sidebar-menu-link.active {
+            color: #ffffff;
+            background: linear-gradient(90deg, rgba(197, 160, 89, 0.25), transparent);
+            border-left-color: var(--gold-accent);
+            font-weight: 600;
+        }
+
+        .sidebar-menu-link.active i {
+            color: var(--gold-accent);
+        }
+
+        /* Main Content */
+        .reception-main {
+            margin-left: var(--sidebar-width);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            transition: all 0.3s ease;
+        }
+
+        /* Topbar Header */
+        .reception-topbar {
+            height: var(--topbar-height);
+            background-color: #ffffff;
+            border-bottom: 1px solid var(--border-color);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0 2rem;
+            position: sticky;
+            top: 0;
+            z-index: 900;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.03);
+        }
+
+        .topbar-title {
+            font-size: 1.25rem;
+            font-weight: 700;
+            color: var(--text-dark);
+            margin: 0;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .topbar-actions {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+        }
+
+        .btn-gold {
+            background: linear-gradient(135deg, var(--gold-accent), #dfb76c);
+            color: #ffffff;
+            font-weight: 600;
+            border: none;
+            padding: 0.55rem 1.25rem;
+            border-radius: 10px;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 12px rgba(197, 160, 89, 0.3);
+        }
+
+        .btn-gold:hover {
+            background: linear-gradient(135deg, var(--gold-hover), #c5a059);
+            color: #ffffff;
+            transform: translateY(-1px);
+        }
+
+        .btn-outline-gold {
+            border: 1.5px solid var(--gold-accent);
+            color: var(--gold-accent);
+            font-weight: 600;
+            border-radius: 10px;
+            padding: 0.5rem 1.1rem;
+            transition: all 0.2s ease;
+            background: transparent;
+        }
+
+        .btn-outline-gold:hover {
+            background: var(--gold-accent);
+            color: #ffffff;
+        }
+
+        .content-body {
+            padding: 2rem;
+            flex-grow: 1;
+        }
+
+        /* Luxury Cards */
+        .luxury-card {
+            background-color: var(--card-bg);
+            border-radius: 16px;
+            border: 1px solid var(--border-color);
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.03);
+            padding: 1.5rem;
+            margin-bottom: 1.5rem;
+            transition: all 0.3s ease;
+        }
+
+        .luxury-card:hover {
+            box-shadow: 0 8px 30px rgba(0, 0, 0, 0.06);
+        }
+
+        /* Stat Card */
+        .stat-card {
+            display: flex;
+            align-items: center;
+            gap: 1.2rem;
+            padding: 1.25rem;
+            border-radius: 16px;
+            background: #ffffff;
+            border: 1px solid var(--border-color);
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.03);
+            transition: transform 0.2s ease;
+        }
+
+        .stat-card:hover {
+            transform: translateY(-3px);
+        }
+
+        .stat-icon {
+            width: 54px;
+            height: 54px;
+            border-radius: 14px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.5rem;
+            flex-shrink: 0;
+        }
+
+        .stat-val {
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: var(--text-dark);
+            line-height: 1.2;
+        }
+
+        .stat-label {
+            font-size: 0.82rem;
+            color: var(--text-muted);
+            font-weight: 500;
+        }
+
+        /* Badges */
+        .badge-status {
+            padding: 0.4rem 0.85rem;
+            border-radius: 20px;
+            font-weight: 600;
+            font-size: 0.8rem;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.4rem;
+        }
+
+        .badge-pending { background-color: #fef3c7; color: #92400e; }
+        .badge-confirmed { background-color: #dbeafe; color: #1e40af; }
+        .badge-arrived { background-color: #f3e8ff; color: #6b21a8; }
+        .badge-in_progress { background-color: #ffedd5; color: #c2410c; }
+        .badge-completed { background-color: #dcfce7; color: #166534; }
+        .badge-cancelled { background-color: #fee2e2; color: #991b1b; }
+        .badge-no_show { background-color: #f1f5f9; color: #334155; }
+
+        .category-pill {
+            padding: 0.25rem 0.75rem;
+            border-radius: 12px;
+            font-size: 0.78rem;
+            font-weight: 600;
+        }
+        .cat-onglerie { background-color: #fce7f3; color: #9d174d; }
+        .cat-coiffure { background-color: #e0e7ff; color: #3730a3; }
+        .cat-esthetique { background-color: #fef3c7; color: #92400e; }
+
+        @media (max-width: 991.98px) {
+            .reception-sidebar {
+                transform: translateX(-100%);
+            }
+            .reception-sidebar.show {
+                transform: translateX(0);
+            }
+            .reception-main {
+                margin-left: 0;
+            }
+        }
+    </style>
+    {% block extra_css %}{% endblock %}
+</head>
+<body>
+
+    <!-- Reception Sidebar -->
+    <aside class="reception-sidebar" id="receptionSidebar">
+        <a href="{% url 'reception_dashboard' %}" class="sidebar-brand">
+            <div class="sidebar-brand-icon"><i class="bi bi-bell-fill"></i></div>
+            <span>Réception Salon</span>
+        </a>
+
+        <div class="sidebar-user">
+            <div class="sidebar-user-avatar">
+                <i class="bi bi-person-badge"></i>
+            </div>
+            <div class="sidebar-user-name">{{ user.employee_profile.full_name|default:user.username }}</div>
+            <span class="sidebar-user-role"><i class="bi bi-shield-check me-1"></i>Réceptionniste</span>
+        </div>
+
+        <ul class="sidebar-menu">
+            <li class="sidebar-menu-item">
+                <a href="{% url 'reception_dashboard' %}" class="sidebar-menu-link {% if active_menu == 'dashboard' %}active{% endif %}">
+                    <i class="bi bi-speedometer2 fs-5"></i>
+                    <span>Tableau de bord</span>
+                </a>
+            </li>
+            <li class="sidebar-menu-item">
+                <a href="{% url 'reception_planning' %}" class="sidebar-menu-link {% if active_menu == 'planning' %}active{% endif %}">
+                    <i class="bi bi-calendar-week fs-5"></i>
+                    <span>Planning du jour</span>
+                </a>
+            </li>
+            <li class="sidebar-menu-item">
+                <a href="{% url 'reception_payments' %}" class="sidebar-menu-link {% if active_menu == 'payments' %}active{% endif %}">
+                    <i class="bi bi-cash-stack fs-5"></i>
+                    <span>Paiements & Caisse</span>
+                </a>
+            </li>
+            <li class="sidebar-menu-item">
+                <a href="{% url 'reception_orders' %}" class="sidebar-menu-link {% if active_menu == 'orders' %}active{% endif %}">
+                    <i class="bi bi-bag-check fs-5"></i>
+                    <span>Click & Collect & Shop</span>
+                </a>
+            </li>
+            <li class="sidebar-menu-item">
+                <a href="{% url 'reception_clients' %}" class="sidebar-menu-link {% if active_menu == 'clients' %}active{% endif %}">
+                    <i class="bi bi-people fs-5"></i>
+                    <span>Gestion Clientes</span>
+                </a>
+            </li>
+            <li class="sidebar-menu-item">
+                <a href="{% url 'employee_pointage' %}" class="sidebar-menu-link {% if active_menu == 'pointage' %}active{% endif %}">
+                    <i class="bi bi-clock-history fs-5"></i>
+                    <span>Mon Pointage</span>
+                </a>
+            </li>
+            <li class="sidebar-menu-item">
+                <a href="{% url 'employee_historique' %}" class="sidebar-menu-link {% if active_menu == 'historique' %}active{% endif %}">
+                    <i class="bi bi-journal-text fs-5"></i>
+                    <span>Historique</span>
+                </a>
+            </li>
+            <li class="sidebar-menu-item">
+                <a href="{% url 'employee_profil' %}" class="sidebar-menu-link {% if active_menu == 'profil' %}active{% endif %}">
+                    <i class="bi bi-person-badge fs-5"></i>
+                    <span>Mon Profil</span>
+                </a>
+            </li>
+            <li class="sidebar-menu-item">
+                <a href="{% url 'reception_notifications' %}" class="sidebar-menu-link {% if active_menu == 'notifications' %}active{% endif %}">
+                    <i class="bi bi-bell fs-5"></i>
+                    <span>Notifications</span>
+                    <span class="badge bg-danger rounded-pill ms-auto d-none" id="sidebarNotifBadge">0</span>
+                </a>
+            </li>
+        </ul>
+
+        <div class="p-3 border-top border-secondary border-opacity-25 mt-auto">
+            <a href="{% url 'frontpage' %}" class="btn btn-outline-light w-100 btn-sm mb-2 rounded-3 d-flex align-items-center justify-content-center gap-2">
+                <i class="bi bi-house-door"></i> Site Principal
+            </a>
+            <form method="post" action="{% url 'account_logout' %}" class="m-0">
+                {% csrf_token %}
+                <button type="submit" class="btn btn-danger w-100 btn-sm rounded-3 d-flex align-items-center justify-content-center gap-2">
+                    <i class="bi bi-box-arrow-right"></i> Déconnexion
+                </button>
+            </form>
+        </div>
+    </aside>
+
+    <!-- Main Workspace -->
+    <div class="reception-main">
+        <header class="reception-topbar">
+            <div class="d-flex align-items-center gap-3">
+                <button class="btn btn-light d-lg-none" type="button" onclick="document.getElementById('receptionSidebar').classList.toggle('show')">
+                    <i class="bi bi-list fs-4"></i>
+                </button>
+                <h1 class="topbar-title">
+                    <i class="bi bi-balloon-heart text-gold" style="color: #c5a059;"></i>
+                    {% block header_title %}{{ page_title }}{% endblock %}
+                </h1>
+            </div>
+
+            <div class="topbar-actions">
+            </div>
+        </header>
+
+        <div class="content-body">
+            {% if messages %}
+            <div class="messages-container mb-4">
+                {% for message in messages %}
+                <div class="alert alert-{{ message.tags|default:'info' }} alert-dismissible fade show rounded-3 shadow-sm border-0 d-flex align-items-center gap-2" role="alert">
+                    <i class="bi bi-info-circle-fill fs-5"></i>
+                    <div>{{ message }}</div>
+                    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                </div>
+                {% endfor %}
+            </div>
+            {% endif %}
+
+            {% block content %}{% endblock %}
+        </div>
+    </div>
+
+    <!-- Modal Nouveau Rendez-vous Commun -->
+    <div class="modal fade" id="createRDVModal" tabindex="-1" aria-labelledby="createRDVModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered modal-lg">
+            <div class="modal-content border-0 shadow-lg rounded-4">
+                <div class="modal-header border-0 bg-dark text-white p-4">
+                    <h5 class="modal-title fw-bold d-flex align-items-center gap-2" id="createRDVModalLabel">
+                        <i class="bi bi-calendar-plus text-gold" style="color: #c5a059;"></i>
+                        Nouveau Rendez-vous (Réception)
+                    </h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <form method="post" action="{% url 'reception_reservation_create' %}" id="createRDVForm">
+                    {% csrf_token %}
+                    <div class="modal-body p-4">
+                        <div id="availabilityAlert" class="alert d-none rounded-3 mb-3"></div>
+
+                        <div class="row g-3">
+                            <div class="col-md-6">
+                                <label class="form-label fw-semibold">Cliente <span class="text-danger">*</span></label>
+                                <select name="client_id" class="form-select rounded-3" required>
+                                    <option value="">-- Sélectionner une cliente --</option>
+                                    {% for c in all_clients %}
+                                    <option value="{{ c.id }}">{{ c.get_full_name|default:c.username }} ({{ c.email }})</option>
+                                    {% endfor %}
+                                </select>
+                            </div>
+
+                            <div class="col-md-6">
+                                <label class="form-label fw-semibold">Prestation / Service <span class="text-danger">*</span></label>
+                                <select name="service_id" id="modal_service_id" class="form-select rounded-3" required onchange="checkAvailabilityRealtime()">
+                                    <option value="">-- Sélectionner une prestation --</option>
+                                    {% for s in all_services %}
+                                    <option value="{{ s.id }}" data-category="{{ s.category }}" data-duration="{{ s.duration_minutes }}" data-price="{{ s.price }}">
+                                        {% if 'ongl' in s.category|lower %}💅{% elif 'coiff' in s.category|lower %}💇‍♀️{% else %}✨{% endif %}
+                                        {{ s.name }} ({{ s.duration_minutes }} min - {{ s.price }} DH)
+                                    </option>
+                                    {% endfor %}
+                                </select>
+                            </div>
+
+                            <div class="col-md-6">
+                                <label class="form-label fw-semibold">Employé(e) Assigné(e) <span class="text-danger">*</span></label>
+                                <select name="employee_id" id="modal_employee_id" class="form-select rounded-3" required onchange="checkAvailabilityRealtime()">
+                                    <option value="">-- Sélectionner un membre de l'équipe --</option>
+                                    {% for emp in all_employees %}
+                                    <option value="{{ emp.id }}">{{ emp.full_name }} ({{ emp.position }})</option>
+                                    {% endfor %}
+                                </select>
+                            </div>
+
+                            <div class="col-md-3">
+                                <label class="form-label fw-semibold">Date <span class="text-danger">*</span></label>
+                                <input type="date" name="date" id="modal_date" class="form-control rounded-3" value="{{ today_date|date:'Y-m-d' }}" required onchange="checkAvailabilityRealtime()">
+                            </div>
+
+                            <div class="col-md-3">
+                                <label class="form-label fw-semibold">Heure de début <span class="text-danger">*</span></label>
+                                <input type="time" name="start_time" id="modal_start_time" class="form-control rounded-3" value="10:00" required onchange="checkAvailabilityRealtime()">
+                            </div>
+
+                            <div class="col-12">
+                                <label class="form-label fw-semibold">Notes / Préférences particulières</label>
+                                <textarea name="notes" class="form-control rounded-3" rows="2" placeholder="Informations complémentaires sur le soin ou la cliente..."></textarea>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="modal-footer border-0 p-4 pt-0">
+                        <button type="button" class="btn btn-light rounded-3 px-4" data-bs-dismiss="modal">Annuler</button>
+                        <button type="submit" id="modalSubmitBtn" class="btn btn-gold rounded-3 px-4">Valider le Rendez-vous</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- Bootstrap 5 JS Bundle -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+
+    <script>
+        function checkAvailabilityRealtime() {
+            const empId = document.getElementById('modal_employee_id').value;
+            const dateVal = document.getElementById('modal_date').value;
+            const timeVal = document.getElementById('modal_start_time').value;
+            const serviceSelect = document.getElementById('modal_service_id');
+            const selectedOpt = serviceSelect.options[serviceSelect.selectedIndex];
+            const duration = selectedOpt ? selectedOpt.getAttribute('data-duration') : 30;
+
+            const alertDiv = document.getElementById('availabilityAlert');
+            const submitBtn = document.getElementById('modalSubmitBtn');
+
+            if (!empId || !dateVal || !timeVal || !serviceSelect.value) {
+                alertDiv.classList.add('d-none');
+                submitBtn.disabled = false;
+                return;
+            }
+
+            fetch(`{% url 'reception_api_check_availability' %}?employee_id=${empId}&date=${dateVal}&start_time=${timeVal}&duration_minutes=${duration}`)
+                .then(res => res.json())
+                .then(data => {
+                    alertDiv.classList.remove('d-none', 'alert-success', 'alert-danger');
+                    if (data.available) {
+                        alertDiv.classList.add('alert-success');
+                        alertDiv.innerHTML = `<i class="bi bi-check-circle-fill me-2"></i> 🟢 Employé(e) disponible sur ce créneau !`;
+                        submitBtn.disabled = false;
+                    } else {
+                        alertDiv.classList.add('alert-danger');
+                        alertDiv.innerHTML = `<i class="bi bi-exclamation-triangle-fill me-2"></i> 🔴 ${data.message}`;
+                        submitBtn.disabled = true;
+                    }
+                })
+                .catch(err => {
+                    console.error("Availability check error:", err);
+                });
+        }
+
+        // Real-time live stats update every 30s
+        function fetchLiveStats() {
+            fetch("{% url 'reception_api_live_stats' %}")
+                .then(res => res.json())
+                .then(data => {
+                    if (document.getElementById('kpi-today-rdv')) document.getElementById('kpi-today-rdv').innerText = data.today_reservations_count;
+                    if (document.getElementById('kpi-pending-rdv')) document.getElementById('kpi-pending-rdv').innerText = data.pending_reservations_count;
+                    if (document.getElementById('kpi-expected-clients')) document.getElementById('kpi-expected-clients').innerText = data.expected_clients_count;
+                    if (document.getElementById('kpi-today-payments')) document.getElementById('kpi-today-payments').innerText = data.today_payments_total;
+                    if (document.getElementById('kpi-click-collect')) document.getElementById('kpi-click-collect').innerText = data.click_collect_pending_count;
+
+                    const sidebarBadge = document.getElementById('sidebarNotifBadge');
+                    if (sidebarBadge) {
+                        if (data.unread_notifications > 0) {
+                            sidebarBadge.innerText = data.unread_notifications;
+                            sidebarBadge.classList.remove('d-none');
+                        } else {
+                            sidebarBadge.classList.add('d-none');
+                        }
+                    }
+                })
+                .catch(err => console.error("Error updating live stats:", err));
+        }
+
+        setInterval(fetchLiveStats, 30000);
+        fetchLiveStats();
+    </script>
+    {% block extra_js %}{% endblock %}
+</body>
+</html>

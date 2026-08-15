@@ -1,0 +1,8 @@
+{% if messages %}
+{% for message in messages %}
+<div class="alert alert-{% if message.tags == 'error' %}danger{% else %}{{ message.tags }}{% endif %} alert-auto-dismiss fade show rounded-3 small py-2 mb-3 d-flex align-items-center gap-2" role="alert" data-dismiss-delay="{% if message.tags == 'error' %}7000{% else %}5000{% endif %}">
+    <i class="bi bi-{% if message.tags == 'error' %}exclamation-triangle-fill{% elif message.tags == 'success' %}check-circle-fill{% else %}info-circle-fill{% endif %}"></i>
+    <div>{{ message }}</div>
+</div>
+{% endfor %}
+{% endif %}

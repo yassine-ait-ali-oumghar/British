@@ -1,0 +1,413 @@
+{% extends 'core/employee/employee_base.html' %}
+
+{% block title %}Mon Dashboard & Planning | Espace Employé{% endblock %}
+
+{% block content %}
+{% if msg %}
+<div class="alert alert-{{ msg_type }} alert-dismissible fade show rounded-3 mb-4 shadow-sm" role="alert">
+    <i class="bi {% if msg_type == 'danger' %}bi-exclamation-triangle-fill{% else %}bi-check-circle-fill{% endif %} me-2"></i>
+    {{ msg }}
+    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+</div>
+{% endif %}
+
+<!-- Welcome Card -->
+<div class="row g-4 mb-4">
+    <div class="col-12">
+        <div class="card border-0 shadow-sm rounded-4 overflow-hidden" style="background: linear-gradient(135deg, #1e293b 0%, #334155 100%); color: #ffffff;">
+            <div class="card-body p-4 p-md-5 position-relative">
+                <div class="row align-items-center">
+                    <div class="col-md-8">
+                        <div class="d-flex align-items-center gap-3 mb-3">
+                            {% if employee.photo %}
+                                <img src="{{ employee.photo }}" alt="Avatar" class="rounded-circle border border-2 border-warning" style="width: 70px; height: 70px; object-fit: cover;">
+                            {% else %}
+                                <div class="rounded-circle d-flex align-items-center justify-content-center text-white fw-bold fs-3 border border-2 border-warning" style="width: 70px; height: 70px; background-color: {{ employee.avatar_color|default:'#c5a059' }};">
+                                    {{ employee.first_name|slice:":1" }}{{ employee.last_name|slice:":1" }}
+                                </div>
+                            {% endif %}
+                            <div>
+                                <h2 class="fw-bold mb-1">Bonjour, {{ employee.full_name }} 👋</h2>
+                                <p class="text-white-50 mb-0">Ravi de vous revoir dans votre espace personnel.</p>
+                            </div>
+                        </div>
+
+                        <div class="d-flex flex-wrap gap-4 mt-4 pt-3 border-top border-secondary">
+                            <div>
+                                <small class="text-white-50 text-uppercase tracking-wider fw-medium d-block">Poste</small>
+                                <span class="fw-semibold text-warning fs-6"><i class="bi bi-briefcase me-1"></i>{{ employee.position }}</span>
+                            </div>
+                            <div>
+                                <small class="text-white-50 text-uppercase tracking-wider fw-medium d-block">Département</small>
+                                <span class="fw-semibold text-white fs-6"><i class="bi bi-building me-1"></i>{{ employee.department }}</span>
+                            </div>
+                            <div>
+                                <small class="text-white-50 text-uppercase tracking-wider fw-medium d-block">Statut Actuel</small>
+                                <span id="dashStatusBadge" class="status-badge status-{{ current_status }} mt-1">
+                                    <i class="bi bi-circle-fill fs-6"></i>
+                                    <span id="dashStatusText">{{ current_status_display }}</span>
+                                </span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="col-md-4 text-md-end mt-4 mt-md-0 d-flex flex-column gap-2 align-items-md-end">
+                        <a href="{% url 'employee_pointage' %}" class="btn btn-gold px-4 py-2.5 rounded-3 shadow">
+                            <i class="bi bi-fingerprint fs-5 me-2"></i> Accéder au Pointage
+                        </a>
+                        <button class="btn btn-outline-light btn-sm rounded-3 px-3 py-2" data-bs-toggle="modal" data-bs-target="#addBreakModal">
+                            <i class="bi bi-cup-hot me-1"></i> Planifier une Pause Déjeuner
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- 🔔 Pending Appointments Notification Banner -->
+{% if pending_reservations %}
+<div class="card border-0 shadow-sm rounded-4 mb-4 bg-warning bg-opacity-10 border-start border-warning border-4">
+    <div class="card-body p-4">
+        <div class="d-flex align-items-center justify-content-between mb-3">
+            <h5 class="fw-bold text-dark mb-0 d-flex align-items-center gap-2">
+                <i class="bi bi-bell-fill text-warning fs-4"></i>
+                Nouveaux rendez-vous en attente de confirmation ({{ pending_reservations|length }})
+            </h5>
+            <span class="badge bg-warning text-dark px-3 py-1.5 rounded-pill fw-semibold">Action requise</span>
+        </div>
+        <div class="row g-3">
+            {% for res in pending_reservations %}
+            <div class="col-md-6 col-lg-4">
+                <div class="card border shadow-xs rounded-3 p-3 bg-white h-100">
+                    <div class="d-flex justify-content-between align-items-start mb-2">
+                        <span class="badge bg-warning bg-opacity-20 text-warning-emphasis border border-warning px-2.5 py-1 rounded-pill small fw-bold">🟡 En attente</span>
+                        <small class="text-muted fw-bold"><i class="bi bi-calendar-event me-1"></i>{{ res.date|date:"d/m/Y" }}</small>
+                    </div>
+                    <h6 class="fw-bold text-dark mb-1">{{ res.service.name }}</h6>
+                    <div class="small text-muted mb-2">
+                        <i class="bi bi-clock me-1 text-gold"></i>{{ res.start_time|time:"H:i" }} → {{ res.end_time|time:"H:i" }} ({{ res.duration_minutes }} min)
+                    </div>
+                    <div class="small text-dark fw-medium mb-3">
+                        <i class="bi bi-person me-1"></i>Cliente : <strong class="text-dark">{{ res.client.first_name|default:res.client.username }} {{ res.client.last_name }}</strong>
+                    </div>
+                    <div class="d-flex gap-2 mt-auto">
+                        <form method="post" class="w-50">
+                            {% csrf_token %}
+                            <input type="hidden" name="action" value="update_reservation_status">
+                            <input type="hidden" name="reservation_id" value="{{ res.id }}">
+                            <input type="hidden" name="status" value="CONFIRMED">
+                            <button type="submit" class="btn btn-sm btn-primary w-100 fw-semibold rounded-3 py-1.5">
+                                <i class="bi bi-check-circle me-1"></i> Confirmer
+                            </button>
+                        </form>
+                        <form method="post" class="w-50">
+                            {% csrf_token %}
+                            <input type="hidden" name="action" value="update_reservation_status">
+                            <input type="hidden" name="reservation_id" value="{{ res.id }}">
+                            <input type="hidden" name="status" value="CANCELLED">
+                            <button type="submit" class="btn btn-sm btn-outline-danger w-100 fw-semibold rounded-3 py-1.5">
+                                <i class="bi bi-x-circle me-1"></i> Refuser
+                            </button>
+                        </form>
+                    </div>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+</div>
+{% endif %}
+
+<!-- 1. 📅 Planning de la journée (Daily Schedule Timeline) -->
+<div class="card border-0 shadow-sm rounded-4 mb-4">
+    <div class="card-header bg-white py-3 px-4 border-bottom d-flex flex-column flex-md-row align-items-start align-items-md-center justify-content-between gap-3">
+        <div>
+            <h5 class="fw-bold text-dark mb-0 d-flex align-items-center gap-2">
+                <i class="bi bi-calendar3 text-gold fs-4"></i>
+                Planning de la journée — {{ schedule_date|date:"d/m/Y" }}
+            </h5>
+            <small class="text-muted">Visualisez vos créneaux de travail, rendez-vous clients et temps de pause.</small>
+        </div>
+        <div class="d-flex align-items-center gap-2">
+            <form method="get" class="d-flex align-items-center gap-2">
+                <input type="date" name="date" class="form-control form-control-sm" value="{{ schedule_date_str }}" onchange="this.form.submit()">
+            </form>
+            <button class="btn btn-sm btn-dark rounded-3 px-3" data-bs-toggle="modal" data-bs-target="#addBreakModal">
+                <i class="bi bi-plus-circle me-1"></i> Ajouter une Pause
+            </button>
+        </div>
+    </div>
+    <div class="card-body p-4">
+        <!-- Pauses enregistrées pour la journée -->
+        {% if today_breaks %}
+        <div class="mb-4 p-3 bg-light rounded-3 border">
+            <div class="small fw-bold text-dark mb-2 d-flex align-items-center gap-2">
+                <i class="bi bi-cup-hot-fill text-warning fs-6"></i> Pauses / Repos planifiés aujourd'hui :
+            </div>
+            <div class="d-flex flex-wrap gap-2">
+                {% for b in today_breaks %}
+                <div class="badge bg-white text-dark border px-3 py-2 rounded-pill d-inline-flex align-items-center gap-2 shadow-xs">
+                    <span class="fw-bold text-warning"><i class="bi bi-clock me-1"></i>{{ b.start_time|time:"H:i" }} → {{ b.end_time|time:"H:i" }}</span>
+                    <span>({{ b.title }})</span>
+                    <form method="post" class="d-inline ms-1">
+                        {% csrf_token %}
+                        <input type="hidden" name="action" value="delete_break">
+                        <input type="hidden" name="break_id" value="{{ b.id }}">
+                        <button type="submit" class="btn btn-link text-danger p-0 m-0 border-0" title="Supprimer la pause">
+                            <i class="bi bi-x-circle-fill"></i>
+                        </button>
+                    </form>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+        {% endif %}
+
+        <!-- Timeline Slots -->
+        <div class="timeline-schedule-container">
+            <div class="row g-2">
+                {% for slot in timeline_slots %}
+                <div class="col-12">
+                    <div class="d-flex align-items-center gap-3 p-2.5 rounded-3 border {% if slot.reservation %}bg-white border-primary border-opacity-50 shadow-xs{% elif slot.break %}bg-warning bg-opacity-10 border-warning{% else %}bg-light border-light-subtle{% endif %}">
+                        <div class="fw-mono text-muted fw-bold font-monospace text-center flex-shrink-0" style="width: 70px; font-size: 0.9rem;">
+                            {{ slot.time_label }}
+                        </div>
+
+                        <div class="flex-grow-1">
+                            {% if slot.reservation %}
+                                <div class="d-flex flex-column flex-md-row align-items-start align-items-md-center justify-content-between gap-2">
+                                    <div>
+                                        <div class="d-flex align-items-center gap-2">
+                                            <span class="badge 
+                                                {% if slot.emp_status == 'PENDING' %}bg-warning text-dark
+                                                {% elif slot.emp_status == 'CONFIRMED' %}bg-primary text-white
+                                                {% elif slot.emp_status == 'ARRIVED' %}bg-purple text-white style="background-color: #6f42c1;"
+                                                {% elif slot.emp_status == 'IN_PROGRESS' %}bg-warning bg-opacity-75 text-dark
+                                                {% elif slot.emp_status == 'COMPLETED' %}bg-success text-white
+                                                {% elif slot.emp_status == 'CANCELLED' %}bg-danger text-white
+                                                {% else %}bg-secondary text-white{% endif %} rounded-pill px-2.5 py-1 small fw-bold">
+                                                {{ slot.emp_status_display }}
+                                            </span>
+                                            {% if slot.emp_services %}
+                                                <div class="d-flex flex-wrap align-items-center gap-1">
+                                                    {% for s_name in slot.emp_services %}
+                                                        <span class="badge bg-dark text-white px-2.5 py-1.5 fw-bold rounded-2 shadow-xs" style="font-size:0.85rem;">
+                                                            <i class="bi bi-scissors me-1" style="color: #c5a059;"></i>{{ s_name }}
+                                                        </span>
+                                                    {% endfor %}
+                                                </div>
+                                            {% else %}
+                                                <strong class="text-dark fs-6">{{ slot.reservation.service.name }}</strong>
+                                            {% endif %}
+                                            <span class="text-muted small">({% if slot.emp_window_label %}{{ slot.emp_window_label }}{% else %}{{ slot.reservation.start_time|time:"H:i" }} → {{ slot.reservation.end_time|time:"H:i" }}{% endif %})</span>
+                                        </div>
+                                        <div class="small text-muted mt-1">
+                                            <i class="bi bi-person me-1"></i>Cliente : <strong class="text-dark">{{ slot.reservation.client.first_name|default:slot.reservation.client.username }} {{ slot.reservation.client.last_name }}</strong>
+                                            {% if slot.reservation.user_custom_notes %}<span class="ms-2 italic text-muted">({{ slot.reservation.user_custom_notes }})</span>{% endif %}
+                                        </div>
+                                    </div>
+
+                                    <!-- Interactive Action Buttons -->
+                                    <div class="d-flex flex-wrap align-items-center gap-1 mt-2 mt-md-0">
+                                        {% if slot.emp_status == 'PENDING' %}
+                                            <form method="post" class="d-inline">
+                                                {% csrf_token %}
+                                                <input type="hidden" name="action" value="update_reservation_status">
+                                                <input type="hidden" name="reservation_id" value="{{ slot.reservation.id }}">
+                                                <input type="hidden" name="status" value="CONFIRMED">
+                                                <button type="submit" class="btn btn-sm btn-primary py-1 px-2.5 fw-semibold rounded-3">
+                                                    <i class="bi bi-check-circle me-1"></i> Confirmer
+                                                </button>
+                                            </form>
+                                        {% elif slot.emp_status == 'CONFIRMED' %}
+                                            <form method="post" class="d-inline">
+                                                {% csrf_token %}
+                                                <input type="hidden" name="action" value="update_reservation_status">
+                                                <input type="hidden" name="reservation_id" value="{{ slot.reservation.id }}">
+                                                <input type="hidden" name="status" value="ARRIVED">
+                                                <button type="submit" class="btn btn-sm btn-info text-white py-1 px-2.5 fw-semibold rounded-3" style="background-color: #6f42c1; border-color: #6f42c1;">
+                                                    <i class="bi bi-person-check me-1"></i> Cliente arrivée
+                                                </button>
+                                            </form>
+                                        {% elif slot.emp_status == 'ARRIVED' %}
+                                            <form method="post" class="d-inline">
+                                                {% csrf_token %}
+                                                <input type="hidden" name="action" value="update_reservation_status">
+                                                <input type="hidden" name="reservation_id" value="{{ slot.reservation.id }}">
+                                                <input type="hidden" name="status" value="IN_PROGRESS">
+                                                <button type="submit" class="btn btn-sm btn-warning text-dark py-1 px-2.5 fw-semibold rounded-3">
+                                                    <i class="bi bi-play-circle me-1"></i> Commencer le soin
+                                                </button>
+                                            </form>
+                                        {% elif slot.emp_status == 'IN_PROGRESS' %}
+                                            <form method="post" class="d-inline">
+                                                {% csrf_token %}
+                                                <input type="hidden" name="action" value="update_reservation_status">
+                                                <input type="hidden" name="reservation_id" value="{{ slot.reservation.id }}">
+                                                <input type="hidden" name="status" value="COMPLETED">
+                                                <button type="submit" class="btn btn-sm btn-success py-1 px-2.5 fw-semibold rounded-3">
+                                                    <i class="bi bi-check-all me-1"></i> Terminer le soin
+                                                </button>
+                                            </form>
+                                        {% elif slot.emp_status == 'COMPLETED' %}
+                                            <span class="badge bg-success bg-opacity-10 text-success border border-success border-opacity-25 px-2.5 py-1 rounded-pill">
+                                                <i class="bi bi-check-circle-fill me-1"></i> Soin Terminé
+                                            </span>
+                                        {% endif %}
+
+                                        {% if slot.reservation.status != 'COMPLETED' and slot.reservation.status != 'CANCELLED' and slot.reservation.status != 'NO_SHOW' %}
+                                            <div class="dropdown d-inline">
+                                                <button class="btn btn-sm btn-light border text-muted py-1 px-2 dropdown-toggle" type="button" data-bs-toggle="dropdown">
+                                                    Plus
+                                                </button>
+                                                <ul class="dropdown-menu dropdown-menu-end shadow-sm">
+                                                    <li>
+                                                        <form method="post">
+                                                            {% csrf_token %}
+                                                            <input type="hidden" name="action" value="update_reservation_status">
+                                                            <input type="hidden" name="reservation_id" value="{{ slot.reservation.id }}">
+                                                            <input type="hidden" name="status" value="NO_SHOW">
+                                                            <button type="submit" class="dropdown-item small text-secondary">
+                                                                <i class="bi bi-person-x me-2"></i> Cliente absente
+                                                            </button>
+                                                        </form>
+                                                    </li>
+                                                    <li>
+                                                        <form method="post">
+                                                            {% csrf_token %}
+                                                            <input type="hidden" name="action" value="update_reservation_status">
+                                                            <input type="hidden" name="reservation_id" value="{{ slot.reservation.id }}">
+                                                            <input type="hidden" name="status" value="CANCELLED">
+                                                            <button type="submit" class="dropdown-item small text-danger">
+                                                                <i class="bi bi-x-circle me-2"></i> Annuler le rdv
+                                                            </button>
+                                                        </form>
+                                                    </li>
+                                                </ul>
+                                            </div>
+                                        {% endif %}
+                                    </div>
+                                </div>
+                            {% elif slot.break %}
+                                <div class="d-flex align-items-center justify-content-between">
+                                    <span class="badge bg-warning bg-opacity-20 text-warning-emphasis border border-warning px-2.5 py-1 rounded-pill">
+                                        <i class="bi bi-cup-hot-fill me-1"></i> {{ slot.break.title }} (🔴 Indisponible)
+                                    </span>
+                                    <span class="text-muted small">{{ slot.break.start_time|time:"H:i" }} → {{ slot.break.end_time|time:"H:i" }}</span>
+                                </div>
+                            {% else %}
+                                <div class="d-flex align-items-center justify-content-between">
+                                    <span class="badge bg-success bg-opacity-10 text-success border border-success border-opacity-25 px-2.5 py-1 rounded-pill font-monospace" style="font-size: 0.78rem;">
+                                        🟢 Disponible
+                                    </span>
+                                    <span class="text-muted small">Créneau libre pour réservation</span>
+                                </div>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- 8 Personal Statistics Cards -->
+<div class="row g-4 mb-4">
+    <div class="col-sm-6 col-xl-3">
+        <div class="stat-card">
+            <div class="d-flex justify-content-between align-items-center mb-3">
+                <span class="text-muted fw-medium fs-7 text-uppercase">Aujourd'hui</span>
+                <div class="p-2 bg-primary-subtle text-primary rounded-3">
+                    <i class="bi bi-clock-history fs-5"></i>
+                </div>
+            </div>
+            <h3 class="fw-bold mb-1 text-dark" id="statHoursToday">{{ hours_today }}</h3>
+            <span class="text-muted small">Heures travaillées aujourd'hui</span>
+        </div>
+    </div>
+
+    <div class="col-sm-6 col-xl-3">
+        <div class="stat-card">
+            <div class="d-flex justify-content-between align-items-center mb-3">
+                <span class="text-muted fw-medium fs-7 text-uppercase">Cette Semaine</span>
+                <div class="p-2 bg-success-subtle text-success rounded-3">
+                    <i class="bi bi-calendar-week fs-5"></i>
+                </div>
+            </div>
+            <h3 class="fw-bold mb-1 text-dark" id="statHoursWeek">{{ hours_week }}</h3>
+            <span class="text-muted small">Total travaillé cette semaine</span>
+        </div>
+    </div>
+
+    <div class="col-sm-6 col-xl-3">
+        <div class="stat-card">
+            <div class="d-flex justify-content-between align-items-center mb-3">
+                <span class="text-muted fw-medium fs-7 text-uppercase">Ce Mois</span>
+                <div class="p-2 bg-warning-subtle text-warning rounded-3">
+                    <i class="bi bi-calendar-month fs-5"></i>
+                </div>
+            </div>
+            <h3 class="fw-bold mb-1 text-dark" id="statHoursMonth">{{ hours_month }}</h3>
+            <span class="text-muted small">Cumul du mois en cours</span>
+        </div>
+    </div>
+
+    <div class="col-sm-6 col-xl-3">
+        <div class="stat-card">
+            <div class="d-flex justify-content-between align-items-center mb-3">
+                <span class="text-muted fw-medium fs-7 text-uppercase">Temps de Pause</span>
+                <div class="p-2 bg-info-subtle text-info rounded-3">
+                    <i class="bi bi-cup-hot fs-5"></i>
+                </div>
+            </div>
+            <h3 class="fw-bold mb-1 text-dark" id="statPauseToday">{{ pause_today }}</h3>
+            <span class="text-muted small">Durée totale des pauses aujourd'hui</span>
+        </div>
+    </div>
+</div>
+
+<!-- Modal Planifier une Pause -->
+<div class="modal fade" id="addBreakModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content border-0 shadow-lg rounded-4">
+            <div class="modal-header border-bottom-0">
+                <h5 class="modal-title fw-bold text-dark"><i class="bi bi-cup-hot me-2 text-warning"></i>Planifier une Pause / Repos</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <form method="post">
+                {% csrf_token %}
+                <input type="hidden" name="action" value="add_break">
+                <div class="modal-body p-4">
+                    <div class="mb-3">
+                        <label class="form-label small fw-bold">Date de la pause</label>
+                        <input type="date" name="date" class="form-control" value="{{ schedule_date_str }}" required>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label small fw-bold">Intitulé / Motif</label>
+                        <input type="text" name="title" class="form-control" placeholder="ex: Pause Déjeuner, Pause Café, Formation..." value="Pause Déjeuner" required>
+                    </div>
+                    <div class="row g-3">
+                        <div class="col-6">
+                            <label class="form-label small fw-bold">Heure de Début</label>
+                            <input type="time" name="start_time" class="form-control" value="12:30" required>
+                        </div>
+                        <div class="col-6">
+                            <label class="form-label small fw-bold">Heure de Fin</label>
+                            <input type="time" name="end_time" class="form-control" value="13:30" required>
+                        </div>
+                    </div>
+                    <div class="alert alert-info small mb-0 mt-3">
+                        <i class="bi bi-info-circle me-1"></i> Durant cette période, vous serez indiqué comme 🔴 <strong>Indisponible</strong> et aucun client ne pourra réserver sur ces heures.
+                    </div>
+                </div>
+                <div class="modal-footer border-top-0">
+                    <button type="button" class="btn btn-light" data-bs-dismiss="modal">Annuler</button>
+                    <button type="submit" class="btn btn-gold px-4 fw-semibold">Valider & Enregistrer la Pause</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}

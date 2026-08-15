@@ -1,0 +1,1318 @@
+[
+{
+  "model": "core.service",
+  "pk": 8,
+  "fields": {
+    "name": "Pose Vernis",
+    "category": "Onglerie",
+    "price": "50.00",
+    "duration_minutes": 20,
+    "is_active": true,
+    "image_url": "",
+    "description": "Pose de vernis classique sur ongles mains ou pieds.",
+    "created_at": "2026-08-09T23:42:18.240Z"
+  }
+},
+{
+  "model": "core.service",
+  "pk": 9,
+  "fields": {
+    "name": "Pose Permanente",
+    "category": "Onglerie",
+    "price": "130.00",
+    "duration_minutes": 40,
+    "is_active": true,
+    "image_url": "",
+    "description": "Pose de vernis semi-permanent tenue longue durée.",
+    "created_at": "2026-08-09T23:42:18.250Z"
+  }
+},
+{
+  "model": "core.service",
+  "pk": 10,
+  "fields": {
+    "name": "Manucure",
+    "category": "Onglerie",
+    "price": "70.00",
+    "duration_minutes": 30,
+    "is_active": true,
+    "image_url": "",
+    "description": "Soin complet des mains, nettoyage des cuticules et limage des ongles.",
+    "created_at": "2026-08-09T23:42:18.251Z"
+  }
+},
+{
+  "model": "core.service",
+  "pk": 11,
+  "fields": {
+    "name": "Pédicure",
+    "category": "Onglerie",
+    "price": "130.00",
+    "duration_minutes": 45,
+    "is_active": true,
+    "image_url": "",
+    "description": "Soin esthétique complet des pieds et beautés des ongles.",
+    "created_at": "2026-08-09T23:42:18.252Z"
+  }
+},
+{
+  "model": "core.service",
+  "pk": 12,
+  "fields": {
+    "name": "Pédicure Médicale (ongle incarné)",
+    "category": "Onglerie",
+    "price": "150.00",
+    "duration_minutes": 45,
+    "is_active": true,
+    "image_url": "",
+    "description": "Soin spécialisé pour traiter les ongles incarnés et soulager l'inconfort.",
+    "created_at": "2026-08-09T23:42:18.252Z"
+  }
+},
+{
+  "model": "core.service",
+  "pk": 13,
+  "fields": {
+    "name": "Manucure SPA",
+    "category": "Onglerie",
+    "price": "150.00",
+    "duration_minutes": 45,
+    "is_active": true,
+    "image_url": "",
+    "description": "Soin nourrissant et relaxant des mains avec gommage, masque et massage.",
+    "created_at": "2026-08-09T23:42:18.253Z"
+  }
+},
+{
+  "model": "core.service",
+  "pk": 14,
+  "fields": {
+    "name": "Pédicure SPA",
+    "category": "Onglerie",
+    "price": "200.00",
+    "duration_minutes": 60,
+    "is_active": true,
+    "image_url": "",
+    "description": "Soin d'exception complet des pieds avec gommage, masque et bain relaxant (200 à 300 DH).",
+    "created_at": "2026-08-09T23:42:18.254Z"
+  }
+},
+{
+  "model": "core.service",
+  "pk": 15,
+  "fields": {
+    "name": "French Normal",
+    "category": "Onglerie",
+    "price": "10.00",
+    "duration_minutes": 10,
+    "is_active": true,
+    "image_url": "",
+    "description": "Finition French classique (supplément +10 DH).",
+    "created_at": "2026-08-09T23:42:18.255Z"
+  }
+},
+{
+  "model": "core.service",
+  "pk": 16,
+  "fields": {
+    "name": "French Permanent",
+    "category": "Onglerie",
+    "price": "20.00",
+    "duration_minutes": 15,
+    "is_active": true,
+    "image_url": "",
+    "description": "Finition French semi-permanente (supplément +20 DH).",
+    "created_at": "2026-08-09T23:42:18.256Z"
+  }
+},
+{
+  "model": "core.service",
+  "pk": 17,
+  "fields": {
+    "name": "Faux Ongles",
+    "category": "Onglerie",
+    "price": "140.00",
+    "duration_minutes": 60,
+    "is_active": true,
+    "image_url": "",
+    "description": "Pose de faux ongles esthétique et soignée.",
+    "created_at": "2026-08-09T23:42:18.257Z"
+  }
+},
+{
+  "model": "core.service",
+  "pk": 18,
+  "fields": {
+    "name": "Gel / Résine",
+    "category": "Onglerie",
+    "price": "400.00",
+    "duration_minutes": 90,
+    "is_active": true,
+    "image_url": "",
+    "description": "Pose complète d'ongles en Gel ou Résine haute tenue.",
+    "created_at": "2026-08-09T23:42:18.258Z"
+  }
+},
+{
+  "model": "core.service",
+  "pk": 19,
+  "fields": {
+    "name": "Remplissage",
+    "category": "Onglerie",
+    "price": "250.00",
+    "duration_minutes": 60,
+    "is_active": true,
+    "image_url": "",
+    "description": "Entretien et remplissage pour ongles en Gel ou Résine.",
+    "created_at": "2026-08-09T23:42:18.259Z"
+  }
+},
+{
+  "model": "core.service",
+  "pk": 20,
+  "fields": {
+    "name": "Baby Boomer Gel",
+    "category": "Onglerie",
+    "price": "500.00",
+    "duration_minutes": 90,
+    "is_active": true,
+    "image_url": "",
+    "description": "Dégradé d'élégance naturel Baby Boomer réalisé en gel.",
+    "created_at": "2026-08-09T23:42:18.259Z"
+  }
+},
+{
+  "model": "core.service",
+  "pk": 21,
+  "fields": {
+    "name": "Baby Boomer Permanente",
+    "category": "Onglerie",
+    "price": "200.00",
+    "duration_minutes": 45,
+    "is_active": true,
+    "image_url": "",
+    "description": "Effet Baby Boomer semi-permanent chic et raffiné.",
+    "created_at": "2026-08-09T23:42:18.260Z"
+  }
+},
+{
+  "model": "core.service",
+  "pk": 22,
+  "fields": {
+    "name": "Brushing",
+    "category": "Coiffure",
+    "price": "40.00",
+    "duration_minutes": 30,
+    "is_active": true,
+    "image_url": "",
+    "description": "Mise en forme et brushing professionnel (40 à 60 DH selon longueur).",
+    "created_at": "2026-08-09T23:42:18.261Z"
+  }
+},
+{
+  "model": "core.service",
+  "pk": 23,
+  "fields": {
+    "name": "Brushing + Extension",
+    "category": "Coiffure",
+    "price": "70.00",
+    "duration_minutes": 45,
+    "is_active": true,
+    "image_url": "",
+    "description": "Brushing spécifique sur cheveux avec rajouts / extensions (70 à 100 DH).",
+    "created_at": "2026-08-09T23:42:18.262Z"
+  }
+},
+{
+  "model": "core.service",
+  "pk": 24,
+  "fields": {
+    "name": "Touching",
+    "category": "Coiffure",
+    "price": "40.00",
+    "duration_minutes": 20,
+    "is_active": true,
+    "image_url": "",
+    "description": "Retouche et rafraîchissement rapide du coiffage.",
+    "created_at": "2026-08-09T23:42:18.264Z"
+  }
+},
+{
+  "model": "core.service",
+  "pk": 25,
+  "fields": {
+    "name": "Babyliss",
+    "category": "Coiffure",
+    "price": "80.00",
+    "duration_minutes": 45,
+    "is_active": true,
+    "image_url": "",
+    "description": "Création de boucles et ondulations glamour au fer Babyliss (80 à 100 DH).",
+    "created_at": "2026-08-09T23:42:18.265Z"
+  }
+},
+{
+  "model": "core.service",
+  "pk": 26,
+  "fields": {
+    "name": "Coupe",
+    "category": "Coiffure",
+    "price": "80.00",
+    "duration_minutes": 30,
+    "is_active": true,
+    "image_url": "",
+    "description": "Coupe sur mesure selon votre morphologie et vos envies.",
+    "created_at": "2026-08-09T23:42:18.267Z"
+  }
+},
+{
+  "model": "core.service",
+  "pk": 27,
+  "fields": {
+    "name": "Pointes",
+    "category": "Coiffure",
+    "price": "30.00",
+    "duration_minutes": 15,
+    "is_active": true,
+    "image_url": "",
+    "description": "Égalisation et entretien des pointes abîmées.",
+    "created_at": "2026-08-09T23:42:18.268Z"
+  }
+},
+{
+  "model": "core.service",
+  "pk": 28,
+  "fields": {
+    "name": "Shampoing Colorant",
+    "category": "Coiffure",
+    "price": "100.00",
+    "duration_minutes": 45,
+    "is_active": true,
+    "image_url": "",
+    "description": "Shampoing repigmentant pour raviver les reflets (100 à 200 DH).",
+    "created_at": "2026-08-09T23:42:18.270Z"
+  }
+},
+{
+  "model": "core.service",
+  "pk": 29,
+  "fields": {
+    "name": "Racines Ammoniaque",
+    "category": "Coiffure",
+    "price": "150.00",
+    "duration_minutes": 45,
+    "is_active": true,
+    "image_url": "",
+    "description": "Application de coloration racines avec formule classique.",
+    "created_at": "2026-08-09T23:42:18.271Z"
+  }
+},
+{
+  "model": "core.service",
+  "pk": 30,
+  "fields": {
+    "name": "Pose Coloration",
+    "category": "Coiffure",
+    "price": "100.00",
+    "duration_minutes": 45,
+    "is_active": true,
+    "image_url": "",
+    "description": "Prestation de pose de coloration capillaire.",
+    "created_at": "2026-08-09T23:42:18.272Z"
+  }
+},
+{
+  "model": "core.service",
+  "pk": 31,
+  "fields": {
+    "name": "Coloration Perla",
+    "category": "Coiffure",
+    "price": "250.00",
+    "duration_minutes": 60,
+    "is_active": true,
+    "image_url": "",
+    "description": "Coloration brillance Perla (250 à 350 DH).",
+    "created_at": "2026-08-09T23:42:18.273Z"
+  }
+},
+{
+  "model": "core.service",
+  "pk": 32,
+  "fields": {
+    "name": "Coloration Inoa",
+    "category": "Coiffure",
+    "price": "400.00",
+    "duration_minutes": 60,
+    "is_active": true,
+    "image_url": "",
+    "description": "Coloration d'exception Inoa sans ammoniaque au confort optimal.",
+    "created_at": "2026-08-09T23:42:18.274Z"
+  }
+},
+{
+  "model": "core.service",
+  "pk": 33,
+  "fields": {
+    "name": "Racines Inoa",
+    "category": "Coiffure",
+    "price": "250.00",
+    "duration_minutes": 45,
+    "is_active": true,
+    "image_url": "",
+    "description": "Retouche racines avec la gamme sans ammoniaque Inoa.",
+    "created_at": "2026-08-09T23:42:18.275Z"
+  }
+},
+{
+  "model": "core.service",
+  "pk": 34,
+  "fields": {
+    "name": "Mèches / Balayage / Ombré",
+    "category": "Coiffure",
+    "price": "500.00",
+    "duration_minutes": 120,
+    "is_active": true,
+    "image_url": "",
+    "description": "Éclaircissement sur mesure, balayage ou ombre hair lumineux (500 à 700 DH).",
+    "created_at": "2026-08-09T23:42:18.276Z"
+  }
+},
+{
+  "model": "core.service",
+  "pk": 35,
+  "fields": {
+    "name": "Coiffure",
+    "category": "Coiffure",
+    "price": "200.00",
+    "duration_minutes": 60,
+    "is_active": true,
+    "image_url": "",
+    "description": "Coiffure élaborée de soirée, chignon ou événement (200 à 500 DH).",
+    "created_at": "2026-08-09T23:42:18.278Z"
+  }
+},
+{
+  "model": "core.service",
+  "pk": 36,
+  "fields": {
+    "name": "Protéine",
+    "category": "Coiffure",
+    "price": "800.00",
+    "duration_minutes": 120,
+    "is_active": true,
+    "image_url": "",
+    "description": "Soin profond à la protéine pour lisser et réparer la fibre capillaire (800 à 1000 DH).",
+    "created_at": "2026-08-09T23:42:18.279Z"
+  }
+},
+{
+  "model": "core.service",
+  "pk": 37,
+  "fields": {
+    "name": "Extension",
+    "category": "Coiffure",
+    "price": "2000.00",
+    "duration_minutes": 180,
+    "is_active": true,
+    "image_url": "",
+    "description": "Pose d'extensions de cheveux naturelles sur mesure (2000 à 6000 DH).",
+    "created_at": "2026-08-09T23:42:18.281Z"
+  }
+},
+{
+  "model": "core.service",
+  "pk": 38,
+  "fields": {
+    "name": "Pose Anneaux",
+    "category": "Coiffure",
+    "price": "300.00",
+    "duration_minutes": 60,
+    "is_active": true,
+    "image_url": "",
+    "description": "Pose technique d'extensions à anneaux (micro-rings).",
+    "created_at": "2026-08-09T23:42:18.283Z"
+  }
+},
+{
+  "model": "core.service",
+  "pk": 39,
+  "fields": {
+    "name": "Rinçage après Racines",
+    "category": "Coiffure",
+    "price": "50.00",
+    "duration_minutes": 15,
+    "is_active": true,
+    "image_url": "",
+    "description": "Rinçage et soin traitant spécifique post-coloration (+50 DH).",
+    "created_at": "2026-08-09T23:42:18.284Z"
+  }
+},
+{
+  "model": "core.service",
+  "pk": 40,
+  "fields": {
+    "name": "Duvet",
+    "category": "Esthétique",
+    "price": "20.00",
+    "duration_minutes": 10,
+    "is_active": true,
+    "image_url": "",
+    "description": "Épilation douce du duvet de la lèvre supérieure.",
+    "created_at": "2026-08-09T23:42:18.286Z"
+  }
+},
+{
+  "model": "core.service",
+  "pk": 41,
+  "fields": {
+    "name": "Sourcils",
+    "category": "Esthétique",
+    "price": "20.00",
+    "duration_minutes": 15,
+    "is_active": true,
+    "image_url": "",
+    "description": "Épilation et redessin de la ligne des sourcils.",
+    "created_at": "2026-08-09T23:42:18.288Z"
+  }
+},
+{
+  "model": "core.service",
+  "pk": 42,
+  "fields": {
+    "name": "Menton",
+    "category": "Esthétique",
+    "price": "10.00",
+    "duration_minutes": 10,
+    "is_active": true,
+    "image_url": "",
+    "description": "Épilation cire zone menton.",
+    "created_at": "2026-08-09T23:42:18.289Z"
+  }
+},
+{
+  "model": "core.service",
+  "pk": 43,
+  "fields": {
+    "name": "Visage",
+    "category": "Esthétique",
+    "price": "60.00",
+    "duration_minutes": 25,
+    "is_active": true,
+    "image_url": "",
+    "description": "Épilation complète des zones du visage.",
+    "created_at": "2026-08-09T23:42:18.290Z"
+  }
+},
+{
+  "model": "core.service",
+  "pk": 44,
+  "fields": {
+    "name": "Teinte Sourcils",
+    "category": "Esthétique",
+    "price": "20.00",
+    "duration_minutes": 15,
+    "is_active": true,
+    "image_url": "",
+    "description": "Teinture des sourcils pour intensifier le regard.",
+    "created_at": "2026-08-09T23:42:18.291Z"
+  }
+},
+{
+  "model": "core.service",
+  "pk": 45,
+  "fields": {
+    "name": "Aisselles",
+    "category": "Esthétique",
+    "price": "30.00",
+    "duration_minutes": 15,
+    "is_active": true,
+    "image_url": "",
+    "description": "Épilation douce de la zone aisselles.",
+    "created_at": "2026-08-09T23:42:18.293Z"
+  }
+},
+{
+  "model": "core.service",
+  "pk": 46,
+  "fields": {
+    "name": "Avant Bras",
+    "category": "Esthétique",
+    "price": "40.00",
+    "duration_minutes": 20,
+    "is_active": true,
+    "image_url": "",
+    "description": "Épilation à la cire des avant-bras.",
+    "created_at": "2026-08-09T23:42:18.294Z"
+  }
+},
+{
+  "model": "core.service",
+  "pk": 47,
+  "fields": {
+    "name": "Bras",
+    "category": "Esthétique",
+    "price": "60.00",
+    "duration_minutes": 30,
+    "is_active": true,
+    "image_url": "",
+    "description": "Épilation complète des bras.",
+    "created_at": "2026-08-09T23:42:18.295Z"
+  }
+},
+{
+  "model": "core.service",
+  "pk": 48,
+  "fields": {
+    "name": "Maillot Bords",
+    "category": "Esthétique",
+    "price": "60.00",
+    "duration_minutes": 20,
+    "is_active": true,
+    "image_url": "",
+    "description": "Épilation du contour du maillot.",
+    "created_at": "2026-08-09T23:42:18.297Z"
+  }
+},
+{
+  "model": "core.service",
+  "pk": 49,
+  "fields": {
+    "name": "Maillot Intégrale",
+    "category": "Esthétique",
+    "price": "100.00",
+    "duration_minutes": 30,
+    "is_active": true,
+    "image_url": "",
+    "description": "Épilation intégrale de la zone maillot.",
+    "created_at": "2026-08-09T23:42:18.299Z"
+  }
+},
+{
+  "model": "core.service",
+  "pk": 50,
+  "fields": {
+    "name": "Demi Jambes",
+    "category": "Esthétique",
+    "price": "60.00",
+    "duration_minutes": 25,
+    "is_active": true,
+    "image_url": "",
+    "description": "Épilation demi-jambes (mollets ou cuisses).",
+    "created_at": "2026-08-09T23:42:18.300Z"
+  }
+},
+{
+  "model": "core.service",
+  "pk": 51,
+  "fields": {
+    "name": "Jambes Entières",
+    "category": "Esthétique",
+    "price": "100.00",
+    "duration_minutes": 40,
+    "is_active": true,
+    "image_url": "",
+    "description": "Épilation complète des jambes.",
+    "created_at": "2026-08-09T23:42:18.301Z"
+  }
+},
+{
+  "model": "core.service",
+  "pk": 52,
+  "fields": {
+    "name": "Épilation Complète sans Bras",
+    "category": "Esthétique",
+    "price": "220.00",
+    "duration_minutes": 60,
+    "is_active": true,
+    "image_url": "",
+    "description": "Forfait épilation corps complet (jambes + maillot + aisselles) hors bras.",
+    "created_at": "2026-08-09T23:42:18.302Z"
+  }
+},
+{
+  "model": "core.service",
+  "pk": 53,
+  "fields": {
+    "name": "Épilation Complète plus Bras",
+    "category": "Esthétique",
+    "price": "280.00",
+    "duration_minutes": 75,
+    "is_active": true,
+    "image_url": "",
+    "description": "Forfait épilation corps complet avec bras inclus.",
+    "created_at": "2026-08-09T23:42:18.304Z"
+  }
+},
+{
+  "model": "core.service",
+  "pk": 54,
+  "fields": {
+    "name": "Make Up",
+    "category": "Esthétique",
+    "price": "400.00",
+    "duration_minutes": 60,
+    "is_active": true,
+    "image_url": "",
+    "description": "Maquillage professionnel sur mesure (200 à 400 DH).",
+    "created_at": "2026-08-09T23:42:18.305Z"
+  }
+},
+{
+  "model": "core.service",
+  "pk": 55,
+  "fields": {
+    "name": "Faux Cils",
+    "category": "Esthétique",
+    "price": "120.00",
+    "duration_minutes": 30,
+    "is_active": true,
+    "image_url": "",
+    "description": "Pose de faux cils à frange ou en bouquets.",
+    "created_at": "2026-08-09T23:42:18.306Z"
+  }
+},
+{
+  "model": "core.service",
+  "pk": 56,
+  "fields": {
+    "name": "Faux Cils en Soie",
+    "category": "Esthétique",
+    "price": "350.00",
+    "duration_minutes": 60,
+    "is_active": true,
+    "image_url": "",
+    "description": "Pose d'extensions de cils effet naturel en soie (350 à 450 DH).",
+    "created_at": "2026-08-09T23:42:18.307Z"
+  }
+},
+{
+  "model": "core.service",
+  "pk": 57,
+  "fields": {
+    "name": "Microblading",
+    "category": "Esthétique",
+    "price": "1200.00",
+    "duration_minutes": 90,
+    "is_active": true,
+    "image_url": "",
+    "description": "Technique de maquillage semi-permanent des sourcils effet poil par poil.",
+    "created_at": "2026-08-09T23:42:18.309Z"
+  }
+},
+{
+  "model": "core.service",
+  "pk": 58,
+  "fields": {
+    "name": "Soins de Visage",
+    "category": "Esthétique",
+    "price": "300.00",
+    "duration_minutes": 60,
+    "is_active": true,
+    "image_url": "",
+    "description": "Soin du visage nettoyant, hydratant et revitalisant (300 à 400 DH).",
+    "created_at": "2026-08-09T23:42:18.310Z"
+  }
+},
+{
+  "model": "core.product",
+  "pk": 1,
+  "fields": {
+    "name": "Olaplex No.3 Hair Perfector",
+    "category": "Cheveux",
+    "price": "380.00",
+    "stock": 25,
+    "is_available": true,
+    "image_url": "",
+    "description": "Soin réparateur avant-shampoing breveté qui répare les liaisons capillaires abîmées.",
+    "created_at": "2026-08-10T00:11:29.819Z"
+  }
+},
+{
+  "model": "core.product",
+  "pk": 2,
+  "fields": {
+    "name": "Olaplex No.7 Bonding Oil",
+    "category": "Cheveux",
+    "price": "390.00",
+    "stock": 20,
+    "is_available": true,
+    "image_url": "",
+    "description": "Huile de coiffage réparatrice ultra-légère, apporte une brillance miroir et protection thermique 232°C.",
+    "created_at": "2026-08-10T00:11:29.822Z"
+  }
+},
+{
+  "model": "core.product",
+  "pk": 3,
+  "fields": {
+    "name": "Garnier Ultra Doux Masque Huile d'Argan & Camélia",
+    "category": "Cheveux",
+    "price": "90.00",
+    "stock": 40,
+    "is_available": true,
+    "image_url": "",
+    "description": "Masque réconfortant aux huiles merveilleuses pour nourrir intensément les cheveux secs.",
+    "created_at": "2026-08-10T00:11:29.823Z"
+  }
+},
+{
+  "model": "core.product",
+  "pk": 4,
+  "fields": {
+    "name": "L'Oréal Paris Elseve Extraordinaire Huile de Soin",
+    "category": "Cheveux",
+    "price": "140.00",
+    "stock": 35,
+    "is_available": true,
+    "image_url": "",
+    "description": "Soin sublimateur enrichi aux 6 huiles de fleurs rares pour une matière cheveux soyeuse.",
+    "created_at": "2026-08-10T00:11:29.824Z"
+  }
+},
+{
+  "model": "core.product",
+  "pk": 5,
+  "fields": {
+    "name": "Salvatore Tanino Therapy Treatment (Taninoplastie)",
+    "category": "Cheveux",
+    "price": "1100.00",
+    "stock": 15,
+    "is_available": true,
+    "image_url": "",
+    "description": "Soin lissant professionnel Taninoplastie naturelle aux tanins végétaux sans formol.",
+    "created_at": "2026-08-10T00:11:29.825Z"
+  }
+},
+{
+  "model": "core.product",
+  "pk": 6,
+  "fields": {
+    "name": "Kératine Pure Soin Réparateur Intense",
+    "category": "Cheveux",
+    "price": "650.00",
+    "stock": 18,
+    "is_available": true,
+    "image_url": "",
+    "description": "Traitement concentré en kératine végétale pour lisser, gainer et réparer la fibre capillaire.",
+    "created_at": "2026-08-10T00:11:29.826Z"
+  }
+},
+{
+  "model": "core.product",
+  "pk": 7,
+  "fields": {
+    "name": "L'Oréal Professionnel Absolut Repair Molecular",
+    "category": "Cheveux",
+    "price": "420.00",
+    "stock": 30,
+    "is_available": true,
+    "image_url": "",
+    "description": "Soin sérum à rincer qui restaure la structure moléculaire des cheveux très abîmés.",
+    "created_at": "2026-08-10T00:11:29.828Z"
+  }
+},
+{
+  "model": "core.product",
+  "pk": 8,
+  "fields": {
+    "name": "L'Oréal Professionnel Metal Detox Masque",
+    "category": "Cheveux",
+    "price": "450.00",
+    "stock": 22,
+    "is_available": true,
+    "image_url": "",
+    "description": "Masque protecteur anti-dépôt de métal pour préserver l'éclat des colorations et balayages.",
+    "created_at": "2026-08-10T00:11:29.829Z"
+  }
+},
+{
+  "model": "core.product",
+  "pk": 9,
+  "fields": {
+    "name": "Kérastase Elixir Ultime L'Huile Originale",
+    "category": "Cheveux",
+    "price": "590.00",
+    "stock": 25,
+    "is_available": true,
+    "image_url": "",
+    "description": "Huile capillaire sublimatrice rechargeable infusée à l'huile de camélia sauvage.",
+    "created_at": "2026-08-10T00:11:29.830Z"
+  }
+},
+{
+  "model": "core.product",
+  "pk": 10,
+  "fields": {
+    "name": "Kérastase Bain Chronologiste",
+    "category": "Cheveux",
+    "price": "410.00",
+    "stock": 20,
+    "is_available": true,
+    "image_url": "",
+    "description": "Shampoing régénérant jeunesse enrichi en acide hyaluronique, abyssine et vitamine E.",
+    "created_at": "2026-08-10T00:11:29.831Z"
+  }
+},
+{
+  "model": "core.product",
+  "pk": 11,
+  "fields": {
+    "name": "Pantene Pro-V Huile Réparatrice Soie & Kératine",
+    "category": "Cheveux",
+    "price": "110.00",
+    "stock": 45,
+    "is_available": true,
+    "image_url": "",
+    "description": "Elixir capillaire nourrissant instantané pour sublimer les pointes et éviter les fourches.",
+    "created_at": "2026-08-10T00:11:29.832Z"
+  }
+},
+{
+  "model": "core.product",
+  "pk": 12,
+  "fields": {
+    "name": "Gisou Honey Infused Hair Oil",
+    "category": "Cheveux",
+    "price": "680.00",
+    "stock": 15,
+    "is_available": true,
+    "image_url": "",
+    "description": "Huile capillaire iconique au miel pur du Jardin Mirsalehi pour hydrater et faire briller.",
+    "created_at": "2026-08-10T00:11:29.834Z"
+  }
+},
+{
+  "model": "core.product",
+  "pk": 13,
+  "fields": {
+    "name": "Shiseido Fino Premium Touch Hair Mask",
+    "category": "Cheveux",
+    "price": "220.00",
+    "stock": 30,
+    "is_available": true,
+    "image_url": "",
+    "description": "Masque réparateur japonais culte à la gelée royale pour des cheveux soyeux et doux.",
+    "created_at": "2026-08-10T00:11:29.835Z"
+  }
+},
+{
+  "model": "core.product",
+  "pk": 14,
+  "fields": {
+    "name": "La Roche-Posay Effaclar Duo+ M Unifiant",
+    "category": "Visage & Skincare",
+    "price": "240.00",
+    "stock": 35,
+    "is_available": true,
+    "image_url": "",
+    "description": "Soin complet anti-imperfections et anti-marques pour peaux à tendance acnéique.",
+    "created_at": "2026-08-10T00:11:29.836Z"
+  }
+},
+{
+  "model": "core.product",
+  "pk": 15,
+  "fields": {
+    "name": "La Roche-Posay Cicaplast Baume B5+",
+    "category": "Visage & Skincare",
+    "price": "160.00",
+    "stock": 50,
+    "is_available": true,
+    "image_url": "",
+    "description": "Baume apaisant réparateur multi-indications pour peaux irritées ou fragilisées.",
+    "created_at": "2026-08-10T00:11:29.837Z"
+  }
+},
+{
+  "model": "core.product",
+  "pk": 16,
+  "fields": {
+    "name": "La Mer Crème de la Mer (30ml)",
+    "category": "Visage & Skincare",
+    "price": "2400.00",
+    "stock": 8,
+    "is_available": true,
+    "image_url": "",
+    "description": "Crème régénérante d'exception infusée au Miracle Broth concentré de mer.",
+    "created_at": "2026-08-10T00:11:29.838Z"
+  }
+},
+{
+  "model": "core.product",
+  "pk": 17,
+  "fields": {
+    "name": "Medicube Age-R Booster Pro Gel Serum",
+    "category": "Visage & Skincare",
+    "price": "490.00",
+    "stock": 12,
+    "is_available": true,
+    "image_url": "",
+    "description": "Sérum booster au collagène coréen pour raffermir et illuminer le teint.",
+    "created_at": "2026-08-10T00:11:29.838Z"
+  }
+},
+{
+  "model": "core.product",
+  "pk": 18,
+  "fields": {
+    "name": "Avène Cicalfate+ Crème Réparatrice",
+    "category": "Visage & Skincare",
+    "price": "150.00",
+    "stock": 40,
+    "is_available": true,
+    "image_url": "",
+    "description": "Soin apaisant et réparateur riche en eau thermale d'Avène.",
+    "created_at": "2026-08-10T00:11:29.840Z"
+  }
+},
+{
+  "model": "core.product",
+  "pk": 19,
+  "fields": {
+    "name": "Anua Heartleaf 77% Soothing Toner",
+    "category": "Visage & Skincare",
+    "price": "280.00",
+    "stock": 25,
+    "is_available": true,
+    "image_url": "",
+    "description": "Toner coréen apaisant infusé à 77% d'extrait de Heartleaf pour calmer les rougeurs.",
+    "created_at": "2026-08-10T00:11:29.841Z"
+  }
+},
+{
+  "model": "core.product",
+  "pk": 20,
+  "fields": {
+    "name": "Laneige Lip Sleeping Mask Berry",
+    "category": "Visage & Skincare",
+    "price": "250.00",
+    "stock": 30,
+    "is_available": true,
+    "image_url": "",
+    "description": "Masque de nuit nourrissant pour les lèvres aux extraits de baies sauvages.",
+    "created_at": "2026-08-10T00:11:29.842Z"
+  }
+},
+{
+  "model": "core.product",
+  "pk": 21,
+  "fields": {
+    "name": "Skin1004 Madagascar Centella Ampoule",
+    "category": "Visage & Skincare",
+    "price": "260.00",
+    "stock": 25,
+    "is_available": true,
+    "image_url": "",
+    "description": "Sérum 100% extrait de Centella Asiatica pure pour réparer la barrière cutanée.",
+    "created_at": "2026-08-10T00:11:29.843Z"
+  }
+},
+{
+  "model": "core.product",
+  "pk": 22,
+  "fields": {
+    "name": "Beauty of Joseon Relief Sun Rice + Probiotics",
+    "category": "Visage & Skincare",
+    "price": "230.00",
+    "stock": 35,
+    "is_available": true,
+    "image_url": "",
+    "description": "Écran solaire coréen SPF50+ ultra-léger enrichi en extrait de riz et probiotiques.",
+    "created_at": "2026-08-10T00:11:29.844Z"
+  }
+},
+{
+  "model": "core.product",
+  "pk": 23,
+  "fields": {
+    "name": "Bioderma Sensibio H2O Eau Micellaire (500ml)",
+    "category": "Visage & Skincare",
+    "price": "190.00",
+    "stock": 45,
+    "is_available": true,
+    "image_url": "",
+    "description": "Eau micellaire démaquillante dermatologique référence des peaux sensibles.",
+    "created_at": "2026-08-10T00:11:29.845Z"
+  }
+},
+{
+  "model": "core.product",
+  "pk": 24,
+  "fields": {
+    "name": "Huda Beauty Easy Bake Loose Powder",
+    "category": "Maquillage",
+    "price": "480.00",
+    "stock": 20,
+    "is_available": true,
+    "image_url": "",
+    "description": "Poudre libre fixatrice effet floutant et longue tenue sans transfert.",
+    "created_at": "2026-08-10T00:11:29.846Z"
+  }
+},
+{
+  "model": "core.product",
+  "pk": 25,
+  "fields": {
+    "name": "Charlotte Tilbury Hollywood Flawless Filter",
+    "category": "Maquillage",
+    "price": "590.00",
+    "stock": 15,
+    "is_available": true,
+    "image_url": "",
+    "description": "Booster de teint hybride effet filtre illuminateur instantané.",
+    "created_at": "2026-08-10T00:11:29.847Z"
+  }
+},
+{
+  "model": "core.product",
+  "pk": 26,
+  "fields": {
+    "name": "Charlotte Tilbury Matte Revolution Lipstick (Pillow Talk)",
+    "category": "Maquillage",
+    "price": "420.00",
+    "stock": 25,
+    "is_available": true,
+    "image_url": "",
+    "description": "Rouge à lèvres mat hydratant teinte Nude iconique Pillow Talk.",
+    "created_at": "2026-08-10T00:11:29.848Z"
+  }
+},
+{
+  "model": "core.product",
+  "pk": 27,
+  "fields": {
+    "name": "Make Up For Ever HD Skin Foundation",
+    "category": "Maquillage",
+    "price": "520.00",
+    "stock": 18,
+    "is_available": true,
+    "image_url": "",
+    "description": "Fond de teint fluide imperceptible couvrance modulable tenue 24h.",
+    "created_at": "2026-08-10T00:11:29.850Z"
+  }
+},
+{
+  "model": "core.product",
+  "pk": 28,
+  "fields": {
+    "name": "Benefit Benetint Liquid Lip & Cheek Stain",
+    "category": "Maquillage",
+    "price": "340.00",
+    "stock": 22,
+    "is_available": true,
+    "image_url": "",
+    "description": "Eau de teint rosée joues et lèvres effet bonne mine longue durée.",
+    "created_at": "2026-08-10T00:11:29.851Z"
+  }
+},
+{
+  "model": "core.product",
+  "pk": 29,
+  "fields": {
+    "name": "Dior Beauty Dior Addict Lip Glow Oil",
+    "category": "Maquillage",
+    "price": "510.00",
+    "stock": 20,
+    "is_available": true,
+    "image_url": "",
+    "description": "Huile à lèvres nourrisante et brillante infusée à l'huile de cerise.",
+    "created_at": "2026-08-10T00:11:29.852Z"
+  }
+},
+{
+  "model": "core.product",
+  "pk": 30,
+  "fields": {
+    "name": "Rare Beauty Soft Pinch Liquid Blush",
+    "category": "Maquillage",
+    "price": "330.00",
+    "stock": 25,
+    "is_available": true,
+    "image_url": "",
+    "description": "Blush liquide ultra-pigmenté longue tenue fini radieux par Selena Gomez.",
+    "created_at": "2026-08-10T00:11:29.853Z"
+  }
+},
+{
+  "model": "core.product",
+  "pk": 31,
+  "fields": {
+    "name": "Too Faced Better Than Sex Mascara",
+    "category": "Maquillage",
+    "price": "360.00",
+    "stock": 30,
+    "is_available": true,
+    "image_url": "",
+    "description": "Mascara volume extrême enrichi en collagène pour un regard déployé.",
+    "created_at": "2026-08-10T00:11:29.854Z"
+  }
+},
+{
+  "model": "core.product",
+  "pk": 32,
+  "fields": {
+    "name": "YSL Beauty Libre Eau de Parfum (50ml)",
+    "category": "Maquillage",
+    "price": "1350.00",
+    "stock": 12,
+    "is_available": true,
+    "image_url": "",
+    "description": "Parfum iconique Yves Saint Laurent aux notes de lavande florale et fleur d'oranger.",
+    "created_at": "2026-08-10T00:11:29.855Z"
+  }
+},
+{
+  "model": "core.product",
+  "pk": 33,
+  "fields": {
+    "name": "NYX Fat Oil Lip Drip",
+    "category": "Maquillage",
+    "price": "130.00",
+    "stock": 40,
+    "is_available": true,
+    "image_url": "",
+    "description": "Gloss huile lèvres ultra-brillant enrichi en huile de framboise et mûre.",
+    "created_at": "2026-08-10T00:11:29.857Z"
+  }
+},
+{
+  "model": "core.product",
+  "pk": 34,
+  "fields": {
+    "name": "Flormar Silk Matte Liquid Lipstick",
+    "category": "Maquillage",
+    "price": "95.00",
+    "stock": 50,
+    "is_available": true,
+    "image_url": "",
+    "description": "Rouge à lèvres liquide fini mat velours confort extrême.",
+    "created_at": "2026-08-10T00:11:29.858Z"
+  }
+},
+{
+  "model": "core.product",
+  "pk": 35,
+  "fields": {
+    "name": "Essence Lash Princess False Lash Effect Mascara",
+    "category": "Maquillage",
+    "price": "60.00",
+    "stock": 60,
+    "is_available": true,
+    "image_url": "",
+    "description": "Mascara effet faux-cils spectaculaire volume et longueur.",
+    "created_at": "2026-08-10T00:11:29.859Z"
+  }
+},
+{
+  "model": "core.product",
+  "pk": 36,
+  "fields": {
+    "name": "Fenty Beauty Gloss Bomb Universal Lip Luminizer",
+    "category": "Maquillage",
+    "price": "310.00",
+    "stock": 25,
+    "is_available": true,
+    "image_url": "",
+    "description": "Gloss universel éclat ultime au beurre de karité par Rihanna.",
+    "created_at": "2026-08-10T00:11:29.860Z"
+  }
+},
+{
+  "model": "core.product",
+  "pk": 37,
+  "fields": {
+    "name": "Vernis Gel UV/LED Construction (Toutes Couleurs)",
+    "category": "Ongles & Vernis",
+    "price": "180.00",
+    "stock": 45,
+    "is_available": true,
+    "image_url": "",
+    "description": "Gels de construction et de couleur haute qualité pour extension et modelage ongles.",
+    "created_at": "2026-08-10T00:11:29.861Z"
+  }
+},
+{
+  "model": "core.product",
+  "pk": 38,
+  "fields": {
+    "name": "BIAB Builder In A Bottle (Nuances Nude & Rose)",
+    "category": "Ongles & Vernis",
+    "price": "220.00",
+    "stock": 35,
+    "is_available": true,
+    "image_url": "",
+    "description": "Vernis constructeur BIAB gainant et fortifiant pour ongles naturels résistant.",
+    "created_at": "2026-08-10T00:11:29.862Z"
+  }
+},
+{
+  "model": "core.product",
+  "pk": 39,
+  "fields": {
+    "name": "Vernis Permanent Haute Brilliance (Nuancier Complet)",
+    "category": "Ongles & Vernis",
+    "price": "140.00",
+    "stock": 50,
+    "is_available": true,
+    "image_url": "",
+    "description": "Vernis permanent professionnel longue tenue 3 à 4 semaines.",
+    "created_at": "2026-08-10T00:11:29.863Z"
+  }
+},
+{
+  "model": "core.product",
+  "pk": 40,
+  "fields": {
+    "name": "Vernis Semi-Permanent Pro (Palette Toutes Couleurs)",
+    "category": "Ongles & Vernis",
+    "price": "120.00",
+    "stock": 60,
+    "is_available": true,
+    "image_url": "",
+    "description": "Large gamme de vernis semi-permanents couleurs tendance et séchage UV/LED.",
+    "created_at": "2026-08-10T00:11:29.864Z"
+  }
+},
+{
+  "model": "core.product",
+  "pk": 41,
+  "fields": {
+    "name": "L'Oréal Professionnel Coloration Inoa / Majirel",
+    "category": "Coloration Cheveux",
+    "price": "160.00",
+    "stock": 40,
+    "is_available": true,
+    "image_url": "",
+    "description": "Tubes de coloration professionnelle L'Oréal toutes nuances (Inoa sans ammoniaque & Majirel).",
+    "created_at": "2026-08-10T00:11:29.866Z"
+  }
+},
+{
+  "model": "core.product",
+  "pk": 42,
+  "fields": {
+    "name": "Inebrya Coloration Crème Professionnelle",
+    "category": "Coloration Cheveux",
+    "price": "130.00",
+    "stock": 35,
+    "is_available": true,
+    "image_url": "",
+    "description": "Coloration italienne de prestige enrichie en lin et aloe vera pour une brillance intense.",
+    "created_at": "2026-08-10T00:11:29.867Z"
+  }
+},
+{
+  "model": "core.product",
+  "pk": 43,
+  "fields": {
+    "name": "Garnier Olia Coloration aux Huiles de Fleurs",
+    "category": "Coloration Cheveux",
+    "price": "110.00",
+    "stock": 45,
+    "is_available": true,
+    "image_url": "",
+    "description": "Coloration permanente à domicile sans ammoniaque propulsée par 60% d'huiles.",
+    "created_at": "2026-08-10T00:11:29.868Z"
+  }
+}
+]

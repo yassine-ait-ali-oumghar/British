@@ -1,0 +1,111 @@
+{% extends 'core/base.html' %}
+{% load static %}
+
+{% block title %}L'Équipe & Experts | British Style{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'styles/pages/equipe.css' %}?v=4">
+{% endblock %}
+
+{% block content %}
+<!-- Team / Équipe Section with 10s Automatic Carousel -->
+<section class="team-section py-5" id="equipe" style="padding-top: 140px !important;">
+    <div class="container py-4">
+        <div class="text-center mb-5 section-header">
+            <span class="badge-tag"><i class="bi bi-star-fill me-1 text-gold" style="color: #c5a059;"></i> Nos Experts & Stylistes</span>
+            <h2 class="section-title mt-2">L'Équipe British Style</h2>
+            <p class="section-subtitle mx-auto">Des passionnés de la coiffure, du soin et de la haute cosmétique. Cliquez sur n'importe quelle carte pour zoomer son profil et lui attribuer une note !</p>
+        </div>
+
+        <div class="row g-4 justify-content-center" id="teamContainer">
+            {% for member in team_members %}
+            <div class="col-lg-4 col-md-6">
+                <div class="team-card team-card-clickable text-center p-4 rounded-4 bg-white shadow-sm border position-relative h-100 d-flex flex-column justify-content-center cursor-pointer"
+                     data-name="{{ member.full_name }}"
+                     data-role="{{ member.position }}"
+                     data-bio="{{ member.department }}"
+                     data-icon="bi-person-badge">
+                    <div class="team-avatar mx-auto mb-3" style="color: #fff; width: 70px; height: 70px; border-radius: 50%; display: flex; align-items: center; justify-content: center; overflow: hidden;" data-bg="{{ member.avatar_color|default:'#c5a059' }}">
+                        {% if member.photo %}
+                        <img src="{{ member.photo }}" alt="{{ member.full_name }}" class="w-100 h-100 rounded-circle" style="object-fit: cover;">
+                        {% else %}
+                        <i class="bi bi-person-fill fs-2"></i>
+                        {% endif %}
+                    </div>
+                    <h4 class="team-name h5 fw-bold mb-1">{{ member.full_name }}</h4>
+                    <span class="team-role text-gold fw-semibold" style="color: #c5a059;">{{ member.position }}</span>
+                    <p class="team-bio mt-2 text-muted small mb-0">Spécialité & Domaine: {{ member.department }}</p>
+                </div>
+            </div>
+            {% empty %}
+            <div class="col-12 text-center py-5 text-muted">
+                <i class="bi bi-people fs-1 d-block mb-2 text-muted"></i>
+                <p>Aucun membre d'équipe enregistré dans la base de données pour le moment.</p>
+            </div>
+            {% endfor %}
+        </div>
+
+    </div>
+</section>
+
+<!-- Team Zoom & Interactive Star Rating Modal -->
+<div class="modal fade" id="teamZoomModal" tabindex="-1" aria-labelledby="teamZoomModalLabel" aria-hidden="true" style="z-index: 1065;">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content rounded-4 border-0 shadow-lg" style="background-color: #ffffff;">
+            <div class="modal-header border-bottom p-4" style="background-color: #121212; color: #ffffff;">
+                <h5 class="modal-title fw-bold m-0 d-flex align-items-center gap-2" id="teamZoomModalLabel" style="font-family: var(--font-serif, 'Playfair Display', serif);">
+                    <i class="bi bi-person-badge-fill text-gold" style="color: #c5a059;"></i> Profil d'Expert British Style
+                </h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Fermer"></button>
+            </div>
+
+            <div class="modal-body p-4" style="background-color: #fcfbfa;">
+                
+                <!-- Member Zoom Header -->
+                <div class="text-center mb-4">
+                    <div class="zoom-avatar-circle mx-auto mb-3 shadow-sm rounded-circle d-flex align-items-center justify-content-center" style="width: 90px; height: 90px; background-color: rgba(197, 160, 89, 0.15); color: #c5a059;">
+                        <i id="zoomMemberIcon" class="bi bi-person-circle fs-1"></i>
+                    </div>
+                    <h3 class="fw-bold text-dark mb-1" id="zoomMemberName">Arthur Pendelton</h3>
+                    <span class="badge bg-gold text-white px-3 py-1 rounded-pill small fw-semibold" style="background-color: #c5a059 !important;" id="zoomMemberRole">Maître Coiffeur</span>
+                    <div class="mt-2 text-muted small" id="zoomMemberStats">
+                        <i class="bi bi-star-fill text-warning me-1"></i>Note Moyenne Générale : <strong id="zoomAvgLabel" class="text-dark">4.9 / 5</strong> (<span id="zoomCountLabel">10</span> avis)
+                    </div>
+                    <p class="text-muted small mt-2 px-3" id="zoomMemberBio">Créateur de styles iconiques.</p>
+                </div>
+
+                <!-- Interactive Star Rating Form -->
+                <div class="rating-box bg-white p-4 rounded-4 border text-center shadow-sm">
+                    <h6 class="fw-bold text-dark mb-2">Évaluer cet expert</h6>
+                    <p class="text-muted small mb-3">Attribuez une note avec les étoiles pour donner votre avis sur cet expert :</p>
+                    
+                    <div id="teamStarContainer" class="d-flex align-items-center justify-content-center gap-2 mb-3">
+                        <i class="bi bi-star-fill fs-2 star-icon text-warning cursor-pointer" onclick="setStarRating(1)" title="1 Étoile"></i>
+                        <i class="bi bi-star-fill fs-2 star-icon text-warning cursor-pointer" onclick="setStarRating(2)" title="2 Étoiles"></i>
+                        <i class="bi bi-star-fill fs-2 star-icon text-warning cursor-pointer" onclick="setStarRating(3)" title="3 Étoiles"></i>
+                        <i class="bi bi-star-fill fs-2 star-icon text-warning cursor-pointer" onclick="setStarRating(4)" title="4 Étoiles"></i>
+                        <i class="bi bi-star-fill fs-2 star-icon text-warning cursor-pointer" onclick="setStarRating(5)" title="5 Étoiles"></i>
+                    </div>
+
+                    <div class="fw-bold text-dark fs-5 mb-3" id="ratingScoreLabel">5 / 5 ⭐</div>
+
+                    <form onsubmit="submitTeamRating(event)">
+                        <button type="submit" class="btn btn-dark w-100 py-3 rounded-3 fw-bold d-flex align-items-center justify-content-center gap-2" style="background-color: #121212; border: none;">
+                            <i class="bi bi-star-fill text-gold" style="color: #c5a059;"></i>Envoyer ma note
+                        </button>
+                    </form>
+                </div>
+
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        document.querySelectorAll('[data-bg]').forEach(function(el) {
+            el.style.backgroundColor = el.getAttribute('data-bg');
+        });
+    });
+</script>
+{% endblock %}

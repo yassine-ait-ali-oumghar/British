@@ -1,0 +1,68 @@
+{% extends "core/base.html" %}
+{% load i18n %}
+
+{% block title %}Gestion des Adresses Email | British Style{% endblock %}
+
+{% block content %}
+<div class="container py-5" style="padding-top: 140px !important; min-height: 80vh;">
+    <div class="row justify-content-center">
+        <div class="col-md-7 col-lg-6">
+            <div class="luxury-card p-4 p-md-5">
+                <div class="text-center mb-4">
+                    <span class="badge-tag-auth">Sécurité</span>
+                    <h2 class="page-title mt-2">Gestion de l'Email</h2>
+                    <p class="text-muted small">Gérez les adresses email associées à votre compte British Style</p>
+                </div>
+
+                {% if user.emailaddress_set.all %}
+                <p class="fw-bold mb-2 text-dark small">Vos adresses e-mail actuelles :</p>
+                <form action="{% url 'account_email' %}" class="email_list mb-4" method="post">
+                    {% csrf_token %}
+                    <div class="list-group mb-3">
+                        {% for emailaddress in user.emailaddress_set.all %}
+                        <label for="email_radio_{{forloop.counter}}" class="list-group-item d-flex align-items-center justify-content-between p-3 rounded-3 mb-2 border border-secondary-subtle">
+                            <div class="form-check m-0">
+                                <input id="email_radio_{{forloop.counter}}" type="radio" name="email" {% if emailaddress.primary or user.emailaddress_set.count == 1 %}checked="checked"{%endif%} value="{{emailaddress.email}}" class="form-check-input me-2"/>
+                                <span class="fw-semibold text-dark">{{ emailaddress.email }}</span>
+                            </div>
+                            <div>
+                                {% if emailaddress.verified %}
+                                <span class="badge bg-success-subtle text-success border border-success-subtle rounded-pill px-3 py-1">Vérifié</span>
+                                {% else %}
+                                <span class="badge bg-warning-subtle text-warning border border-warning-subtle rounded-pill px-3 py-1">Non Vérifié</span>
+                                {% endif %}
+                                {% if emailaddress.primary %}
+                                <span class="badge bg-gold-subtle text-gold border border-gold-subtle rounded-pill px-3 py-1 ms-1">Primaire</span>
+                                {% endif %}
+                            </div>
+                        </label>
+                        {% endfor %}
+                    </div>
+
+                    <div class="d-flex flex-wrap gap-2 mb-4">
+                        <button class="btn btn-outline-dark rounded-pill btn-sm px-3" type="submit" name="action_primary">Définir comme primaire</button>
+                        <button class="btn btn-outline-secondary rounded-pill btn-sm px-3" type="submit" name="action_send">Renvoyer vérification</button>
+                        <button class="btn btn-outline-danger rounded-pill btn-sm px-3" type="submit" name="action_remove">Supprimer</button>
+                    </div>
+                </form>
+                {% endif %}
+
+                <hr class="my-4">
+
+                <div class="text-center mb-3">
+                    <h5 class="fw-bold">Ajouter une nouvelle adresse email</h5>
+                </div>
+
+                <form method="post" action="{% url 'account_email' %}" class="luxury-form">
+                    {% csrf_token %}
+                    <div class="mb-3">
+                        <label for="id_email" class="form-label">Nouvelle Adresse Email</label>
+                        <input type="email" name="email" placeholder="votre.nouvel@email.com" class="form-control rounded-3" required id="id_email">
+                    </div>
+                    <button name="action_add" type="submit" class="luxury-btn-danger w-100 border-0">Ajouter l'email</button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

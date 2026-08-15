@@ -1,0 +1,636 @@
+{% extends 'core/reception/reception_base.html' %}
+
+{% block title %}Paiements & Caisse | Réception British Style{% endblock %}
+
+{% block header_title %}Gestion des Paiements & Caisse Salon{% endblock %}
+
+{% block content %}
+<!-- Metrics Cards Grid - Dashboard de la Caisse -->
+<div class="row g-3 mb-4">
+    <!-- 💰 Caisse encaissée aujourd'hui -->
+    <div class="col-xl-3 col-lg-6 col-md-6">
+        <div class="luxury-card border-0 shadow-sm d-flex align-items-center gap-3 p-3" style="background: linear-gradient(135deg, #ffffff, #f0fdf4);">
+            <div class="stat-icon bg-success bg-opacity-10 text-success p-3 rounded-4 fs-2">
+                <i class="bi bi-cash-coin"></i>
+            </div>
+            <div>
+                <div class="text-muted small fw-semibold text-uppercase">Caisse Encaissée Aujourd'hui</div>
+                <div class="fs-2 fw-bold text-success">{{ total_today }} DH</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 📅 Caisse du Mois -->
+    <div class="col-xl-3 col-lg-6 col-md-6">
+        <div class="luxury-card border-0 shadow-sm d-flex align-items-center gap-3 p-3" style="background: linear-gradient(135deg, #ffffff, #eff6ff);">
+            <div class="stat-icon bg-primary bg-opacity-10 text-primary p-3 rounded-4 fs-2">
+                <i class="bi bi-calendar-check"></i>
+            </div>
+            <div>
+                <div class="text-muted small fw-semibold text-uppercase">Caisse du Mois en cours</div>
+                <div class="fs-2 fw-bold text-primary">{{ total_month }} DH</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 💇 Revenus Services Aujourd'hui -->
+    <div class="col-xl-3 col-lg-6 col-md-6">
+        <div class="luxury-card border-0 shadow-sm d-flex align-items-center gap-3 p-3" style="background: linear-gradient(135deg, #ffffff, #f3e8ff);">
+            <div class="stat-icon text-purple p-3 rounded-4 fs-2" style="background-color: #f3e8ff; color: #6b21a8;">
+                <i class="bi bi-scissors"></i>
+            </div>
+            <div>
+                <div class="text-muted small fw-semibold text-uppercase">Revenus Services Aujourd'hui</div>
+                <div class="fs-2 fw-bold" style="color: #6b21a8;">{{ services_today }} DH</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 🛍️ Revenus Boutique Aujourd'hui -->
+    <div class="col-xl-3 col-lg-6 col-md-6">
+        <div class="luxury-card border-0 shadow-sm d-flex align-items-center gap-3 p-3" style="background: linear-gradient(135deg, #ffffff, #fffbeb);">
+            <div class="stat-icon bg-warning bg-opacity-10 text-warning p-3 rounded-4 fs-2">
+                <i class="bi bi-bag-check-fill"></i>
+            </div>
+            <div>
+                <div class="text-muted small fw-semibold text-uppercase">Revenus Boutique Aujourd'hui</div>
+                <div class="fs-2 fw-bold text-dark">{{ boutique_today }} DH</div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Encaissement Action Bar & Advanced Filters -->
+<div class="luxury-card border-0 shadow-sm mb-4">
+    <div class="d-flex align-items-center justify-content-between flex-wrap gap-3 pb-3 border-bottom">
+        <h5 class="fw-bold mb-0 d-flex align-items-center gap-2">
+            <i class="bi bi-receipt-cutoff text-gold" style="color: #c5a059;"></i>
+            Historique des Transactions & Caisse
+        </h5>
+        
+        <div class="d-flex align-items-center flex-wrap gap-2">
+            <!-- Button Encaisser RDV -->
+            <button class="btn btn-gold text-white rounded-3 shadow-sm" data-bs-toggle="modal" data-bs-target="#payReservationModal">
+                <i class="bi bi-credit-card me-1"></i> Encaisser RDV
+            </button>
+            
+            <!-- Button Encaisser Commande -->
+            <button class="btn btn-primary text-white rounded-3 shadow-sm" data-bs-toggle="modal" data-bs-target="#payOrderModal">
+                <i class="bi bi-bag-check me-1"></i> Encaisser Commande
+            </button>
+
+            <!-- Button Nouvel Encaissement Direct -->
+            <button class="btn btn-outline-dark rounded-3 shadow-sm" data-bs-toggle="modal" data-bs-target="#directPaymentModal">
+                <i class="bi bi-plus-circle me-1"></i> Nouvel Encaissement
+            </button>
+        </div>
+    </div>
+
+    <!-- Filters Form -->
+    <form method="get" action="{% url 'reception_payments' %}" class="row g-3 mt-2">
+        <div class="col-lg-3 col-md-6">
+            <label class="form-label small fw-semibold text-muted">Recherche Globale</label>
+            <div class="input-group">
+                <span class="input-group-text bg-light border-end-0"><i class="bi bi-search text-muted"></i></span>
+                <input type="text" name="q" class="form-control border-start-0 rounded-end-3" placeholder="Nom, Tel, #PAY-xx, #Cmd..." value="{{ search_query }}">
+            </div>
+        </div>
+
+        <div class="col-lg-2 col-md-6">
+            <label class="form-label small fw-semibold text-muted">Date Encaissement</label>
+            <input type="date" name="date" class="form-control rounded-3" value="{{ date_filter }}">
+        </div>
+
+        <div class="col-lg-2 col-md-6">
+            <label class="form-label small fw-semibold text-muted">Origine</label>
+            <select name="origin" class="form-select rounded-3" onchange="this.form.submit()">
+                <option value="">-- Toutes les origines --</option>
+                <option value="SERVICE" {% if origin_filter == 'SERVICE' %}selected{% endif %}>💇 Service</option>
+                <option value="CLICK_COLLECT" {% if origin_filter == 'CLICK_COLLECT' %}selected{% endif %}>🏪 Click & Collect</option>
+                <option value="LIVRAISON" {% if origin_filter == 'LIVRAISON' %}selected{% endif %}>📦 Livraison</option>
+                <option value="BOUTIQUE" {% if origin_filter == 'BOUTIQUE' %}selected{% endif %}>🛍️ Boutique</option>
+                <option value="DIRECT" {% if origin_filter == 'DIRECT' %}selected{% endif %}>🏪 Encaissement Direct</option>
+            </select>
+        </div>
+
+        <div class="col-lg-2 col-md-6">
+            <label class="form-label small fw-semibold text-muted">Moyen de paiement</label>
+            <select name="method" class="form-select rounded-3" onchange="this.form.submit()">
+                <option value="">-- Tous les modes --</option>
+                {% for code, label in payment_methods %}
+                <option value="{{ code }}" {% if method_filter == code %}selected{% endif %}>{{ label }}</option>
+                {% endfor %}
+            </select>
+        </div>
+
+        <div class="col-lg-2 col-md-6">
+            <label class="form-label small fw-semibold text-muted">Statut</label>
+            <select name="status" class="form-select rounded-3" onchange="this.form.submit()">
+                <option value="">-- Tous les statuts --</option>
+                {% for code, label in payment_statuses %}
+                <option value="{{ code }}" {% if status_filter == code %}selected{% endif %}>{{ label }}</option>
+                {% endfor %}
+            </select>
+        </div>
+
+        <div class="col-lg-1 col-md-6 d-flex align-items-end">
+            <button type="submit" class="btn btn-gold w-100 rounded-3 text-white" title="Appliquer les filtres">
+                <i class="bi bi-funnel-fill"></i>
+            </button>
+        </div>
+    </form>
+</div>
+
+<!-- Table History -->
+<div class="luxury-card border-0 shadow-sm">
+    {% if payments %}
+    <div class="table-responsive">
+        <table class="table align-middle table-hover border-0 mb-0">
+            <thead class="table-light text-muted small text-uppercase">
+                <tr>
+                    <th>Référence</th>
+                    <th>Date & Heure</th>
+                    <th>Cliente</th>
+                    <th>Origine</th>
+                    <th>RDV / Commande</th>
+                    <th>Prestation / Produit</th>
+                    <th>Montant</th>
+                    <th>Mode</th>
+                    <th>Statut</th>
+                    <th>Réceptionniste</th>
+                    <th class="text-end">Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for p in payments %}
+                <tr>
+                    <!-- Reference -->
+                    <td class="fw-bold">
+                        <span class="font-monospace text-dark">{{ p.reference_code }}</span>
+                    </td>
+
+                    <!-- Date & Time -->
+                    <td class="small text-nowrap">
+                        <i class="bi bi-calendar-event me-1 text-muted"></i>{{ p.created_at|date:"d/m/Y H:i" }}
+                    </td>
+
+                    <!-- Client -->
+                    <td class="fw-semibold">
+                        <div class="d-flex align-items-center gap-2">
+                            <div class="avatar-circle-sm bg-gold text-white rounded-circle d-flex align-items-center justify-content-center fw-bold" style="width:28px; height:28px; font-size:12px; background-color:#c5a059;">
+                                {{ p.client_display_name|slice:":1"|upper }}
+                            </div>
+                            <span>{{ p.client_display_name }}</span>
+                        </div>
+                    </td>
+
+                    <!-- Origine Badge -->
+                    <td>
+                        <span class="badge {{ p.origin_info.badge_class }} rounded-pill px-3 py-1 small" style="color: #000000 !important;">
+                            <i class="bi {{ p.origin_info.icon }} me-1"></i>{{ p.origin_info.display }}
+                        </span>
+                    </td>
+
+                    <!-- Linked Reservation or Order -->
+                    <td>
+                        {% if p.reservation %}
+                        <span class="badge bg-purple bg-opacity-10 text-dark fw-bold border rounded-3" style="background-color: #f3e8ff; color: #000000 !important;">
+                            RDV #{{ p.reservation.id }}
+                        </span>
+                        {% elif p.order %}
+                        <span class="badge bg-info bg-opacity-10 text-dark fw-bold border rounded-3" style="color: #000000 !important;">
+                            Cmd #{{ p.order.id }}
+                        </span>
+                        {% else %}
+                        <span class="text-muted small">-</span>
+                        {% endif %}
+                    </td>
+
+                    <!-- Service or Product -->
+                    <td class="small fw-medium text-truncate" style="max-width: 180px;" title="{{ p.service_or_product_display }}">
+                        {{ p.service_or_product_display }}
+                    </td>
+
+                    <!-- Amount DH -->
+                    <td class="fw-bold fs-6 text-nowrap {% if p.status == 'REFUNDED' %}text-danger text-decoration-line-through{% else %}text-success{% endif %}">
+                        {{ p.amount }} DH
+                    </td>
+
+                    <!-- Payment Mode -->
+                    <td>
+                        <span class="fw-semibold small">
+                            {% if p.payment_method == 'CASH' %}💵 Espèces
+                            {% elif p.payment_method == 'CARD' %}💳 Carte
+                            {% elif p.payment_method == 'DIGITAL' %}📱 Paiement élec
+                            {% else %}{{ p.get_payment_method_display }}
+                            {% endif %}
+                        </span>
+                    </td>
+
+                    <!-- Status -->
+                    <td>
+                        {% if p.status == 'PAID' %}
+                        <span class="badge bg-success bg-opacity-10 text-success rounded-pill px-3 py-1">🟢 Payé</span>
+                        {% elif p.status == 'PENDING' %}
+                        <span class="badge bg-warning bg-opacity-10 text-warning rounded-pill px-3 py-1">🟡 En attente</span>
+                        {% else %}
+                        <span class="badge bg-danger bg-opacity-10 text-danger rounded-pill px-3 py-1">🔴 Remboursé</span>
+                        {% endif %}
+                    </td>
+
+                    <!-- Receptionist -->
+                    <td class="small text-muted">
+                        <i class="bi bi-person-badge me-1"></i>{{ p.receptionist_display_name }}
+                    </td>
+
+                    <!-- Actions -->
+                    <td class="text-end">
+                        <div class="btn-group btn-group-sm">
+                            <!-- Button Details -->
+                            <button type="button" class="btn btn-outline-secondary rounded-2" data-bs-toggle="modal" data-bs-target="#detailModal{{ p.id }}" title="Voir les détails">
+                                <i class="bi bi-eye"></i>
+                            </button>
+
+                            <!-- Button Refund -->
+                            {% if p.status == 'PAID' %}
+                            <button type="button" class="btn btn-outline-danger rounded-2" data-bs-toggle="modal" data-bs-target="#refundModal{{ p.id }}" title="Demander / Effectuer un remboursement">
+                                <i class="bi bi-arrow-return-left"></i>
+                            </button>
+                            {% endif %}
+                        </div>
+                    </td>
+                </tr>
+
+                <!-- MODAL DETAILS TRANSACTION -->
+                <div class="modal fade" id="detailModal{{ p.id }}" tabindex="-1" aria-hidden="true">
+                    <div class="modal-dialog modal-dialog-centered">
+                        <div class="modal-content border-0 shadow-lg rounded-4">
+                            <div class="modal-header border-0 bg-dark text-white p-4">
+                                <h5 class="modal-title fw-bold d-flex align-items-center gap-2">
+                                    <i class="bi bi-receipt text-gold" style="color: #c5a059;"></i>
+                                    Détails Transaction {{ p.reference_code }}
+                                </h5>
+                                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+                            </div>
+                            <div class="modal-body p-4">
+                                <div class="text-center pb-3 border-bottom mb-3">
+                                    <span class="fs-1 fw-bold text-success">{{ p.amount }} DH</span>
+                                    <div class="mt-1">
+                                        {% if p.status == 'PAID' %}
+                                        <span class="badge bg-success rounded-pill px-3 py-1">🟢 Payé</span>
+                                        {% elif p.status == 'PENDING' %}
+                                        <span class="badge bg-warning text-dark rounded-pill px-3 py-1">🟡 En attente</span>
+                                        {% else %}
+                                        <span class="badge bg-danger rounded-pill px-3 py-1">🔴 Remboursé</span>
+                                        {% endif %}
+                                    </div>
+                                </div>
+
+                                <div class="row g-3 small">
+                                    <div class="col-6">
+                                        <span class="text-muted d-block">Cliente</span>
+                                        <strong class="fs-6 text-dark">{{ p.client_display_name }}</strong>
+                                    </div>
+                                    <div class="col-6">
+                                        <span class="text-muted d-block">Date & Heure</span>
+                                        <strong class="fs-6 text-dark">{{ p.created_at|date:"d/m/Y H:i:s" }}</strong>
+                                    </div>
+                                    <div class="col-6">
+                                        <span class="text-muted d-block">Mode de règlement</span>
+                                        <strong class="fs-6 text-dark">{{ p.get_payment_method_display }}</strong>
+                                    </div>
+                                    <div class="col-6">
+                                        <span class="text-muted d-block">Origine Transaction</span>
+                                        <strong class="fs-6 text-dark">{{ p.origin_info.display }}</strong>
+                                    </div>
+
+                                    {% if p.reservation %}
+                                    <div class="col-12 p-3 bg-light rounded-3 border">
+                                        <span class="fw-bold text-purple d-block mb-1" style="color: #6b21a8;">💇 Rendez-vous Salon Lié</span>
+                                        <div><strong>RDV N° :</strong> #{{ p.reservation.id }}</div>
+                                        <div><strong>Service :</strong> {{ p.reservation.service.name }}</div>
+                                        <div><strong>Employé(e) :</strong> {{ p.reservation.employee.full_name }}</div>
+                                        <div><strong>Date & Creneau :</strong> {{ p.reservation.date|date:"d/m/Y" }} de {{ p.reservation.start_time|time:"H:i" }} à {{ p.reservation.end_time|time:"H:i" }}</div>
+                                    </div>
+                                    {% endif %}
+
+                                    {% if p.order %}
+                                    <div class="col-12 p-3 bg-light rounded-3 border">
+                                        <span class="fw-bold text-primary d-block mb-1">🛍️ Commande Boutique Liée</span>
+                                        <div><strong>Commande N° :</strong> #{{ p.order.id }}</div>
+                                        <div><strong>Mode livraison :</strong> {{ p.order.get_delivery_mode_display }}</div>
+                                        <div><strong>Articles :</strong></div>
+                                        <ul class="mb-0 ps-3">
+                                            {% for item in p.order.items.all %}
+                                            <li>{{ item.quantity }}x {{ item.product_name }} ({{ item.subtotal }} DH)</li>
+                                            {% endfor %}
+                                        </ul>
+                                    </div>
+                                    {% endif %}
+
+                                    <div class="col-12">
+                                        <span class="text-muted d-block">Réceptionniste ayant encaissé</span>
+                                        <strong class="text-dark"><i class="bi bi-person-circle me-1"></i>{{ p.receptionist_display_name }}</strong>
+                                    </div>
+
+                                    {% if p.notes %}
+                                    <div class="col-12">
+                                        <span class="text-muted d-block">Notes & Remarques</span>
+                                        <div class="p-2 bg-light rounded border text-secondary">{{ p.notes|linebreaksbr }}</div>
+                                    </div>
+                                    {% endif %}
+
+                                    {% if p.status == 'REFUNDED' %}
+                                    <div class="col-12 p-3 bg-danger bg-opacity-10 rounded-3 border border-danger">
+                                        <strong class="text-danger d-block mb-1"><i class="bi bi-exclamation-triangle-fill me-1"></i> Informations de Remboursement</strong>
+                                        <div><strong>Date remboursement :</strong> {{ p.refunded_at|date:"d/m/Y H:i"|default:"Non spécifiée" }}</div>
+                                        <div><strong>Remboursé par :</strong> {% if p.refunded_by %}{{ p.refunded_by.get_full_name|default:p.refunded_by.username }}{% else %}Réception{% endif %}</div>
+                                        <div><strong>Motif :</strong> {{ p.refund_reason|default:"Aucun motif précisé" }}</div>
+                                    </div>
+                                    {% endif %}
+                                </div>
+                            </div>
+                            <div class="modal-footer border-0 p-4 pt-0">
+                                <button type="button" class="btn btn-secondary rounded-3 px-4" data-bs-dismiss="modal">Fermer</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- MODAL REMBOURSEMENT -->
+                {% if p.status == 'PAID' %}
+                <div class="modal fade" id="refundModal{{ p.id }}" tabindex="-1" aria-hidden="true">
+                    <div class="modal-dialog modal-dialog-centered">
+                        <div class="modal-content border-0 shadow-lg rounded-4">
+                            <div class="modal-header border-0 bg-danger text-white p-4">
+                                <h5 class="modal-title fw-bold d-flex align-items-center gap-2">
+                                    <i class="bi bi-arrow-return-left me-1"></i>
+                                    Rembourser la transaction {{ p.reference_code }}
+                                </h5>
+                                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+                            </div>
+                            <form method="post" action="{% url 'reception_payments' %}">
+                                {% csrf_token %}
+                                <input type="hidden" name="action" value="refund">
+                                <input type="hidden" name="payment_id" value="{{ p.id }}">
+
+                                <div class="modal-body p-4">
+                                    <div class="alert alert-warning border-0 rounded-3 small mb-3">
+                                        <i class="bi bi-exclamation-circle-fill me-1"></i>
+                                        Cette action marquera la transaction comme <strong>🔴 Remboursée</strong> et déduira le montant de <strong>{{ p.amount }} DH</strong> du total de la caisse.
+                                    </div>
+
+                                    <div class="mb-3">
+                                        <label class="form-label fw-semibold">Montant à rembourser</label>
+                                        <input type="text" class="form-control rounded-3 fw-bold text-danger fs-5" value="{{ p.amount }} DH" readonly disabled>
+                                    </div>
+
+                                    <div class="mb-3">
+                                        <label class="form-label fw-semibold">Motif / Raison du remboursement <span class="text-danger">*</span></label>
+                                        <textarea name="refund_reason" class="form-control rounded-3" rows="3" placeholder="Annulation client, insatisfaction, erreur d'encaissement..." required></textarea>
+                                    </div>
+                                </div>
+                                <div class="modal-footer border-0 p-4 pt-0">
+                                    <button type="button" class="btn btn-light rounded-3" data-bs-dismiss="modal">Annuler</button>
+                                    <button type="submit" class="btn btn-danger rounded-3 px-4">Confirmer le Remboursement</button>
+                                </div>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+                {% endif %}
+
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+    {% else %}
+    <div class="text-center py-5 text-muted">
+        <i class="bi bi-wallet2 fs-1 text-gold mb-3 d-block" style="color: #c5a059;"></i>
+        <h5>Aucune transaction ne correspond à votre recherche ou filtre.</h5>
+    </div>
+    {% endif %}
+</div>
+
+
+<!-- MODAL ENCAISSER RENDEZ-VOUS -->
+<div class="modal fade" id="payReservationModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content border-0 shadow-lg rounded-4">
+            <div class="modal-header border-0 bg-dark text-white p-4">
+                <h5 class="modal-title fw-bold d-flex align-items-center gap-2">
+                    <i class="bi bi-scissors text-gold" style="color: #c5a059;"></i>
+                    Encaisser un Rendez-vous Salon
+                </h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <form method="post" action="{% url 'reception_payments' %}">
+                {% csrf_token %}
+                <input type="hidden" name="action" value="pay_reservation">
+
+                <div class="modal-body p-4">
+                    <div class="mb-3">
+                        <label class="form-label fw-semibold">Sélectionner le Rendez-vous <span class="text-danger">*</span></label>
+                        <select name="reservation_id" id="resSelect" class="form-select rounded-3" required onchange="updateResAmount(this)">
+                            <option value="">-- Choisir un rendez-vous en attente de paiement --</option>
+                            {% for r in pending_reservations %}
+                            <option value="{{ r.id }}" data-price="{{ r.service.price }}">
+                                RDV #{{ r.id }} - {{ r.client.first_name }} {{ r.client.last_name }} ({{ r.service.name }} par {{ r.employee.full_name }} - {{ r.service.price }} DH)
+                            </option>
+                            {% empty %}
+                            <option value="" disabled>Aucun rendez-vous en attente de paiement</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label fw-semibold">Montant à encaisser (DH) <span class="text-danger">*</span></label>
+                        <input type="number" step="0.01" name="amount" id="resAmountInput" class="form-control rounded-3 fs-5 fw-bold text-success" placeholder="0.00" required>
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label fw-semibold">Mode de paiement <span class="text-danger">*</span></label>
+                        <select name="payment_method" class="form-select rounded-3" required>
+                            <option value="CASH">💵 Espèces</option>
+                        </select>
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label fw-semibold">Note / Information complémentaire</label>
+                        <textarea name="notes" class="form-control rounded-3" rows="2" placeholder="Numéro de ticket, reçu..."></textarea>
+                    </div>
+                </div>
+
+                <div class="modal-footer border-0 p-4 pt-0">
+                    <button type="button" class="btn btn-light rounded-3" data-bs-dismiss="modal">Annuler</button>
+                    <button type="submit" class="btn btn-gold rounded-3 px-4">Valider l'Encaissement RDV</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+
+<!-- MODAL ENCAISSER COMMANDE BOUTIQUE -->
+<div class="modal fade" id="payOrderModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content border-0 shadow-lg rounded-4">
+            <div class="modal-header border-0 bg-dark text-white p-4">
+                <h5 class="modal-title fw-bold d-flex align-items-center gap-2">
+                    <i class="bi bi-shop text-gold" style="color: #c5a059;"></i>
+                    Encaisser une Commande Boutique
+                </h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <form method="post" action="{% url 'reception_payments' %}">
+                {% csrf_token %}
+                <input type="hidden" name="action" value="pay_order">
+
+                <div class="modal-body p-4">
+                    <div class="mb-3">
+                        <label class="form-label fw-semibold">Sélectionner la Commande <span class="text-danger">*</span></label>
+                        <select name="order_id" id="orderSelect" class="form-select rounded-3" required onchange="updateOrderAmount(this)">
+                            <option value="">-- Choisir une commande en attente de paiement --</option>
+                            {% for o in pending_orders %}
+                            <option value="{{ o.id }}" data-price="{{ o.total }}">
+                                Cmd #{{ o.id }} - {{ o.client_name }} ({{ o.get_delivery_mode_display }} - {{ o.total }} DH)
+                            </option>
+                            {% empty %}
+                            <option value="" disabled>Aucune commande boutique en attente</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label fw-semibold">Montant Général (DH) <span class="text-danger">*</span></label>
+                        <input type="number" step="0.01" name="amount" id="orderAmountInput" class="form-control rounded-3 fs-5 fw-bold text-success" placeholder="0.00" required>
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label fw-semibold">Mode de paiement <span class="text-danger">*</span></label>
+                        <select name="payment_method" class="form-select rounded-3" required>
+                            <option value="CASH">💵 Espèces</option>
+                        </select>
+                    </div>
+
+                    <div class="form-check mb-3">
+                        <input class="form-check-input" type="checkbox" name="mark_retrieved" value="true" id="checkRetrieved" checked>
+                        <label class="form-check-label small fw-semibold" for="checkRetrieved">
+                            Marquer la commande comme retirée / livrée
+                        </label>
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label fw-semibold">Notes</label>
+                        <textarea name="notes" class="form-control rounded-3" rows="2" placeholder="Remarques éventuelles..."></textarea>
+                    </div>
+                </div>
+
+                <div class="modal-footer border-0 p-4 pt-0">
+                    <button type="button" class="btn btn-light rounded-3" data-bs-dismiss="modal">Annuler</button>
+                    <button type="submit" class="btn btn-primary rounded-3 px-4">Valider l'Encaissement Commande</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+
+<!-- MODAL NOUVEL ENCAISSEMENT DIRECT -->
+<div class="modal fade" id="directPaymentModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content border-0 shadow-lg rounded-4">
+            <div class="modal-header border-0 bg-dark text-white p-4">
+                <h5 class="modal-title fw-bold d-flex align-items-center gap-2">
+                    <i class="bi bi-cash-stack text-gold" style="color: #c5a059;"></i>
+                    Nouvel Encaissement Direct
+                </h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <form method="post" action="{% url 'reception_payments' %}">
+                {% csrf_token %}
+                <input type="hidden" name="action" value="direct_payment">
+
+                <div class="modal-body p-4">
+                    <div class="mb-3">
+                        <label class="form-label fw-semibold">Cliente</label>
+                        <select name="client_id" class="form-select rounded-3">
+                            <option value="">-- Sélectionner cliente (ou laisser vide pour cliente de passage) --</option>
+                            {% for c in all_clients %}
+                            <option value="{{ c.id }}">{{ c.get_full_name|default:c.username }} ({{ c.email }})</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label fw-semibold">Type d'encaissement <span class="text-danger">*</span></label>
+                        <select name="payment_type" class="form-select rounded-3" required>
+                            <option value="SERVICE">💇 Service / Prestation</option>
+                            <option value="BOUTIQUE">🛍️ Produit Boutique</option>
+                            <option value="AUTRE">🏪 Autre / Divers</option>
+                        </select>
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label fw-semibold">Description / Motifs <span class="text-danger">*</span></label>
+                        <input type="text" name="description" class="form-control rounded-3" placeholder="ex: Shampoing spécial, soin rapide de passage..." required>
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label fw-semibold">Montant (DH) <span class="text-danger">*</span></label>
+                        <input type="number" step="0.01" name="amount" class="form-control rounded-3 fs-5 fw-bold text-success" placeholder="0.00" required>
+                    </div>
+
+                    <div class="row g-3 mb-3">
+                        <div class="col-md-6">
+                            <label class="form-label fw-semibold">Moyen de paiement <span class="text-danger">*</span></label>
+                            <select name="payment_method" class="form-select rounded-3" required>
+                                <option value="CASH">💵 Espèces</option>
+                            </select>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label fw-semibold">Statut initial <span class="text-danger">*</span></label>
+                            <select name="status" class="form-select rounded-3" required>
+                                <option value="PAID">🟢 Payé</option>
+                                <option value="PENDING">🟡 En attente</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label fw-semibold">Notes / Détails règlement</label>
+                        <textarea name="notes" class="form-control rounded-3" rows="2" placeholder="Numéro de reçu..."></textarea>
+                    </div>
+                </div>
+
+                <div class="modal-footer border-0 p-4 pt-0">
+                    <button type="button" class="btn btn-light rounded-3" data-bs-dismiss="modal">Annuler</button>
+                    <button type="submit" class="btn btn-gold rounded-3 px-4">Enregistrer l'Encaissement</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<script>
+function updateResAmount(selectElem) {
+    var selectedOption = selectElem.options[selectElem.selectedIndex];
+    var price = selectedOption.getAttribute('data-price');
+    if (price) {
+        document.getElementById('resAmountInput').value = parseFloat(price).toFixed(2);
+    } else {
+        document.getElementById('resAmountInput').value = '';
+    }
+}
+
+function updateOrderAmount(selectElem) {
+    var selectedOption = selectElem.options[selectElem.selectedIndex];
+    var price = selectedOption.getAttribute('data-price');
+    if (price) {
+        document.getElementById('orderAmountInput').value = parseFloat(price).toFixed(2);
+    } else {
+        document.getElementById('orderAmountInput').value = '';
+    }
+}
+</script>
+{% endblock %}

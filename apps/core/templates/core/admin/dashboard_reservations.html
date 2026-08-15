@@ -1,0 +1,292 @@
+{% extends base_template|default:'core/admin/admin_base.html' %}
+
+{% block title %}Gestion des Réservations - ERP | British Style{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <div>
+        <h4 class="fw-bold text-dark mb-1">Gestion des Réservations & Rendez-vous</h4>
+        <p class="text-muted small mb-0">Consultez, filtrez et gérez le statut de l'ensemble des soins réservés par les clients.</p>
+    </div>
+</div>
+
+{% if msg %}
+<div class="alert alert-{{ msg_type }} alert-auto-dismiss alert-dismissible fade show rounded-4 mb-4" role="alert" data-dismiss-delay="5000">
+    <i class="bi bi-check-circle me-2"></i>{{ msg }}
+    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+</div>
+{% endif %}
+
+<!-- Top Stats Cards -->
+<div class="row g-3 mb-4">
+    <div class="col-md-3">
+        <div class="erp-card mb-0">
+            <div class="text-uppercase small text-muted fw-bold mb-1">TOTAL RÉSERVATIONS</div>
+            <div class="fs-2 fw-bold text-dark">{{ total_count }}</div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="erp-card mb-0">
+            <div class="text-uppercase small text-warning fw-bold mb-1">NOUVELLES RÉSERVATIONS</div>
+            <div class="fs-2 fw-bold text-warning">{{ pending_count }}</div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="erp-card mb-0">
+            <div class="text-uppercase small text-primary fw-bold mb-1">PAIEMENTS EN ATTENTE</div>
+            <div class="fs-2 fw-bold text-primary">{{ pending_payments_count }}</div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="erp-card mb-0">
+            <div class="text-uppercase small text-success fw-bold mb-1">CHIFFRE D'AFFAIRES PAYÉ</div>
+            <div class="fs-2 fw-bold text-success">{{ paid_revenue|floatformat:"-2" }} DH</div>
+        </div>
+    </div>
+</div>
+
+<!-- Filters Bar -->
+<div class="erp-card p-3 mb-4">
+    <form method="get" class="row g-2 align-items-center">
+        <div class="col-md-3">
+            <label class="form-label small fw-bold mb-1">Employé</label>
+            <select name="employee_id" class="form-select form-select-sm">
+                <option value="">Tous les employés</option>
+                {% for emp in team_employees %}
+                <option value="{{ emp.id }}" {% if selected_employee_id == emp.id|stringformat:'s' %}selected{% endif %}>{{ emp.full_name }}</option>
+                {% endfor %}
+            </select>
+        </div>
+        <div class="col-md-3">
+            <label class="form-label small fw-bold mb-1">Date</label>
+            <input type="date" name="date" class="form-control form-control-sm" value="{{ selected_date|default:'' }}">
+        </div>
+        <div class="col-md-3">
+            <label class="form-label small fw-bold mb-1">Service</label>
+            <select name="service_id" class="form-select form-select-sm">
+                <option value="">Tous les services</option>
+                {% for serv in services %}
+                <option value="{{ serv.id }}" {% if selected_service_id == serv.id|stringformat:'s' %}selected{% endif %}>{{ serv.name }}</option>
+                {% endfor %}
+            </select>
+        </div>
+        <div class="col-md-2">
+            <label class="form-label small fw-bold mb-1">Statut</label>
+            <select name="status" class="form-select form-select-sm">
+                <option value="">Tous les statuts</option>
+                <option value="PENDING" {% if selected_status == 'PENDING' %}selected{% endif %}>🟡 En attente</option>
+                <option value="CONFIRMED" {% if selected_status == 'CONFIRMED' %}selected{% endif %}>🔵 Confirmé</option>
+                <option value="ARRIVED" {% if selected_status == 'ARRIVED' %}selected{% endif %}>🟣 Cliente arrivée</option>
+                <option value="IN_PROGRESS" {% if selected_status == 'IN_PROGRESS' %}selected{% endif %}>🟠 Soin en cours</option>
+                <option value="COMPLETED" {% if selected_status == 'COMPLETED' %}selected{% endif %}>🟢 Terminé</option>
+                <option value="CANCELLED" {% if selected_status == 'CANCELLED' %}selected{% endif %}>🔴 Annulé</option>
+                <option value="NO_SHOW" {% if selected_status == 'NO_SHOW' %}selected{% endif %}>⚫ Cliente absente</option>
+            </select>
+        </div>
+        <div class="col-md-1 d-flex align-items-end">
+            <button type="submit" class="btn btn-sm btn-dark w-100 mt-4">Filtrer</button>
+        </div>
+    </form>
+{% if no_show_reservations %}
+<!-- 🚨 Alert Widget Clientes Absentes (No-Show) -->
+<div class="erp-card p-3 mb-4 border-danger border-opacity-50 bg-danger bg-opacity-10 shadow-xs">
+    <div class="d-flex align-items-center justify-content-between mb-3">
+        <h6 class="fw-bold text-danger mb-0 d-flex align-items-center gap-2">
+            <i class="bi bi-exclamation-triangle-fill fs-5"></i>
+            <span>🚨 Clientes Absentes Signalées (No-Show)</span>
+        </h6>
+        <span class="badge bg-danger text-white rounded-pill px-3 py-1.5 fw-bold">{{ no_show_reservations|length }} cliente(s) absente(s)</span>
+    </div>
+    <div class="row g-3">
+        {% for ns in no_show_reservations %}
+        <div class="col-md-6">
+            <div class="p-3 bg-white rounded-3 border border-danger border-opacity-25 shadow-xs">
+                <div class="d-flex justify-content-between align-items-start mb-2">
+                    <div>
+                        <strong class="text-dark d-block" style="font-size:0.95rem;">
+                            <i class="bi bi-person-x-fill text-danger me-1"></i>{{ ns.client.first_name|default:ns.client.username }} {{ ns.client.last_name }}
+                        </strong>
+                        <small class="text-muted"><i class="bi bi-envelope me-1"></i>{{ ns.client.email }}</small>
+                    </div>
+                    <span class="badge bg-danger text-white rounded-pill px-2.5 py-1 small">#{{ ns.id }} - Absente</span>
+                </div>
+                <div class="p-2 bg-light rounded-2">
+                    <div class="small text-muted mb-1"><i class="bi bi-clock me-1 text-danger"></i>Date & Créneau : <strong class="text-dark">{{ ns.date|date:"d/m/Y" }} à {{ ns.start_time|time:"H:i" }} - {{ ns.end_time|time:"H:i" }}</strong></div>
+                    <div class="small text-muted mb-1"><i class="bi bi-scissors me-1" style="color:#c5a059;"></i>Prestation(s) : <strong class="text-dark">{{ ns.service.name }}</strong></div>
+                    <div class="small text-muted"><i class="bi bi-person-badge me-1 text-primary"></i>Expert(s) concerné(s) : <strong class="text-dark">{{ ns.experts_display }}</strong></div>
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+</div>
+{% endif %}
+
+<!-- Reservations Table -->
+<div class="erp-card p-0 overflow-hidden">
+    <div class="table-responsive">
+        <table class="table table-hover align-middle mb-0">
+            <thead class="table-light">
+                <tr>
+                    <th class="ps-3 py-3">RÉSERVATION</th>
+                    <th class="py-3">CLIENT & CONTACT</th>
+                    <th class="py-3">PRESTATION</th>
+                    <th class="py-3">EMPLOYÉ / EXPERT</th>
+                    <th class="py-3 text-end">TOTAL</th>
+                    <th class="py-3 text-center">STATUT PAIEMENT</th>
+                    <th class="py-3 text-center">STATUT SOIN</th>
+                    <th class="pe-3 py-3 text-end">ACTION</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for res in reservations %}
+                <tr>
+                    <td class="ps-3 fw-bold text-dark">
+                        #{{ res.id }}
+                        <div class="text-muted small fw-normal" style="font-size:0.75rem;">{{ res.date|date:"d/m/Y" }} {{ res.start_time|time:"H:i" }}</div>
+                    </td>
+                    <td>
+                        <div class="fw-semibold text-dark">{{ res.client.first_name|default:res.client.username }} {{ res.client.last_name }}</div>
+                        <div class="text-muted small" style="font-size:0.78rem;">
+                            <i class="bi bi-telephone text-gold me-1" style="color:#c5a059;"></i>{{ res.client.employee_profile.phone|default:res.client.email }}
+                        </div>
+                    </td>
+                    <td>
+                        <span class="fw-semibold text-dark">{{ res.service.name }}</span>
+                        <div class="text-muted small" style="font-size:0.72rem;">{{ res.duration_minutes }} min</div>
+                    </td>
+                    <td>
+                        {% if res.multi_services_breakdown %}
+                            <div class="d-flex flex-column gap-1">
+                                {% for item in res.multi_services_breakdown %}
+                                <div class="small" style="font-size:0.75rem;">
+                                    <span class="text-dark fw-semibold">{{ item.service_name }}</span> :
+                                    <span class="badge bg-warning-subtle text-dark border border-warning px-1.5 py-0.5" style="font-size:0.7rem;">{{ item.expert_name }}</span>
+                                </div>
+                                {% endfor %}
+                            </div>
+                        {% else %}
+                            <div class="d-flex align-items-center gap-2">
+                                <span class="avatar-circle rounded-circle text-white fw-bold d-inline-flex align-items-center justify-content-center" style="width: 26px; height: 26px; background-color: {{ res.employee.avatar_color }}; font-size: 0.75rem;">
+                                    {{ res.employee.first_name|slice:":1" }}
+                                </span>
+                                <span class="fw-semibold small">{{ res.employee.full_name }}</span>
+                            </div>
+                        {% endif %}
+                    </td>
+                    <td class="text-end fw-bold text-dark">
+                        {{ res.service.price }} DH
+                    </td>
+                    <td class="text-center">
+                        {% if res.status == 'CANCELLED' or res.status == 'NO_SHOW' %}
+                        <span class="badge bg-danger-subtle text-danger border border-danger px-2.5 py-1 rounded-pill fw-bold">🔴 Annulée</span>
+                        {% elif res.is_paid %}
+                        <span class="badge bg-success text-white px-2 py-1 rounded-pill fw-bold"><i class="bi bi-check-circle me-1"></i>Payé</span>
+                        {% else %}
+                        <span class="badge bg-warning text-dark px-2 py-1 rounded-pill fw-bold"><i class="bi bi-clock me-1"></i>En attente</span>
+                        {% endif %}
+                    </td>
+                    <td class="text-center">
+                        {% if res.status == 'CANCELLED' %}
+                        <span class="badge bg-danger-subtle text-danger border border-danger px-2 py-1 rounded-pill fw-bold">🔴 Annulée</span>
+                        {% elif res.status == 'COMPLETED' %}
+                        <span class="badge bg-success-subtle text-success border border-success px-2 py-1 rounded-pill fw-bold">🟢 Terminé</span>
+                        {% elif res.status == 'CONFIRMED' %}
+                        <span class="badge bg-info-subtle text-info border border-info px-2 py-1 rounded-pill fw-bold">🔵 Confirmé</span>
+                        {% elif res.status == 'ARRIVED' %}
+                        <span class="badge bg-purple-subtle text-purple border border-purple px-2 py-1 rounded-pill fw-bold" style="color:#8e44ad;">🟣 Cliente arrivée</span>
+                        {% elif res.status == 'IN_PROGRESS' %}
+                        <span class="badge bg-warning-subtle text-dark border border-warning px-2 py-1 rounded-pill fw-bold">🟠 Soin en cours</span>
+                        {% elif res.status == 'NO_SHOW' %}
+                        <span class="badge bg-dark text-white px-2 py-1 rounded-pill fw-bold">⚫ Cliente absente</span>
+                        {% else %}
+                        <span class="badge bg-warning-subtle text-dark border border-warning px-2 py-1 rounded-pill fw-bold">🟡 En attente</span>
+                        {% endif %}
+                    </td>
+                    <td class="text-end pe-3">
+                        <button type="button" class="btn btn-sm btn-outline-secondary rounded-3 px-3 shadow-xs" data-bs-toggle="modal" data-bs-target="#historyModal{{ res.id }}">
+                            <i class="bi bi-clock-history me-1"></i>Historique
+                        </button>
+
+                        <!-- Modal Historique / Détails Réservation -->
+                        <div class="modal fade text-start" id="historyModal{{ res.id }}" tabindex="-1" aria-hidden="true">
+                            <div class="modal-dialog modal-dialog-centered">
+                                <div class="modal-content border-0 shadow-lg rounded-4">
+                                    <div class="modal-header border-0 bg-dark text-white p-4">
+                                        <h5 class="modal-title fw-bold d-flex align-items-center gap-2">
+                                            <i class="bi bi-clock-history text-gold" style="color:#c5a059;"></i>
+                                            Historique & Détails RDV #{{ res.id }}
+                                        </h5>
+                                        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+                                    </div>
+                                    <div class="modal-body p-4 text-dark">
+                                        <div class="p-3 bg-light rounded-3 mb-3 border">
+                                            <div class="fw-bold fs-5 text-gold mb-1" style="color: #c5a059;">{{ res.client.first_name|default:res.client.username }} {{ res.client.last_name }}</div>
+                                            <div class="text-muted small"><i class="bi bi-envelope me-1"></i>{{ res.client.email }}</div>
+                                            <div class="text-muted small"><i class="bi bi-telephone me-1"></i>{{ res.client.employee_profile.phone|default:"Non renseigné" }}</div>
+                                        </div>
+
+                                        <div class="row g-2 mb-3 small">
+                                            <div class="col-6">
+                                                <small class="text-muted d-block">Prestation</small>
+                                                <span class="fw-semibold">{{ res.service.name }}</span>
+                                            </div>
+                                            <div class="col-6">
+                                                <small class="text-muted d-block">Catégorie</small>
+                                                <span class="fw-semibold">{{ res.service.category }}</span>
+                                            </div>
+                                            <div class="col-6">
+                                                <small class="text-muted d-block">Employé(e) / Expert(s)</small>
+                                                <span class="fw-semibold">{{ res.experts_display|default:res.employee.full_name }}</span>
+                                            </div>
+                                            <div class="col-6">
+                                                <small class="text-muted d-block">Tarif</small>
+                                                <span class="fw-bold text-success">{{ res.service.price }} DH</span>
+                                            </div>
+                                            <div class="col-6">
+                                                <small class="text-muted d-block">Date & Créneau</small>
+                                                <span>{{ res.date|date:"d/m/Y" }} ({{ res.start_time|time:"H:i" }} - {{ res.end_time|time:"H:i" }})</span>
+                                            </div>
+                                            <div class="col-6">
+                                                <small class="text-muted d-block">Statut Actuel</small>
+                                                <span class="fw-bold">{{ res.get_status_display }}</span>
+                                            </div>
+                                        </div>
+
+                                        <!-- Refund Info Box if Refunded -->
+                                        {% for p in res.payments.all %}
+                                            {% if p.status == 'REFUNDED' %}
+                                            <div class="p-3 bg-danger bg-opacity-10 rounded-3 border border-danger mb-3 text-dark">
+                                                <strong class="text-danger d-block mb-1 fs-6"><i class="bi bi-exclamation-triangle-fill me-1"></i> Informations de Remboursement</strong>
+                                                <div class="small mb-1"><strong>Date remboursement :</strong> {{ p.refunded_at|date:"d/m/Y H:i"|default:p.created_at|date:"d/m/Y H:i" }}</div>
+                                                <div class="small mb-1"><strong>Remboursé par :</strong> {% if p.refunded_by %}{{ p.refunded_by.get_full_name|default:p.refunded_by.username }}{% elif p.receptionist %}{{ p.receptionist.get_full_name|default:p.receptionist.username }}{% else %}Réception{% endif %}</div>
+                                                <div class="small"><strong>Motif :</strong> {{ p.refund_reason|default:"Remboursement du soin enregistré." }}</div>
+                                            </div>
+                                            {% endif %}
+                                        {% endfor %}
+
+                                        {% if res.user_custom_notes %}
+                                        <div class="p-3 bg-light rounded-3 small mb-3 border">
+                                            <strong>Remarque du client :</strong>
+                                            <div class="text-muted mt-1"><i class="bi bi-chat-left-text me-1"></i> {{ res.user_custom_notes }}</div>
+                                        </div>
+                                        {% endif %}
+                                    </div>
+                                    <div class="modal-footer border-0 p-4 pt-0">
+                                        <button type="button" class="btn btn-secondary rounded-3 px-4" data-bs-dismiss="modal">Fermer</button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </td>
+                </tr>
+                {% empty %}
+                <tr>
+                    <td colspan="7" class="text-center py-5 text-muted">Aucune réservation trouvée.</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% endblock %}

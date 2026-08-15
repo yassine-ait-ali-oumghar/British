@@ -1,0 +1,288 @@
+/* Contact Page Styles (Doriano Style Map + Message Section) */
+
+.contact-page {
+    padding-top: clamp(90px, 12vh, 130px);
+    padding-bottom: 60px;
+    background-color: var(--bg-cream, #f7f1e8);
+    min-height: 100vh;
+}
+
+/* Header Banner */
+.contact-header {
+    text-align: center;
+    padding: 10px 20px 35px;
+}
+
+.contact-badge {
+    display: inline-block;
+    padding: 6px 18px;
+    background-color: rgba(197, 160, 89, 0.15);
+    color: var(--gold-accent, #c5a059);
+    font-size: 0.85rem;
+    font-weight: 600;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    border-radius: 30px;
+    margin-bottom: 12px;
+}
+
+.contact-title {
+    font-family: var(--font-serif, 'Playfair Display', serif);
+    font-size: 2.5rem;
+    font-weight: 700;
+    color: var(--dark-charcoal, #121212);
+    margin-bottom: 10px;
+}
+
+.contact-subtitle {
+    font-size: 1.05rem;
+    color: var(--text-muted, #6b5e52);
+    max-width: 600px;
+    margin: 0 auto;
+}
+
+/* Map & Schedule Hero Container */
+.map-hero-wrapper {
+    position: relative;
+    width: 100%;
+    height: 540px;
+    border-radius: 20px;
+    overflow: hidden;
+    box-shadow: 0 15px 35px rgba(0, 0, 0, 0.08);
+    background-color: #e5e3df;
+    border: 1px solid rgba(0, 0, 0, 0.06);
+}
+
+.map-iframe {
+    width: 100%;
+    height: 100%;
+    border: 0;
+    filter: contrast(1.02) saturate(1.05);
+}
+
+/* Overlay Card (Horaires & Téléphone - Doriano Style) */
+.schedule-overlay-card {
+    position: absolute;
+    top: 0;
+    left: 0;
+    bottom: 0;
+    width: 380px;
+    max-width: 90%;
+    background: rgba(255, 255, 255, 0.97);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    padding: 35px 30px;
+    z-index: 10;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    box-shadow: 8px 0 30px rgba(0, 0, 0, 0.1);
+    border-right: 1px solid rgba(0, 0, 0, 0.06);
+    overflow-y: auto;
+}
+
+.schedule-title {
+    font-family: var(--font-sans, 'Poppins', sans-serif);
+    font-size: 1.35rem;
+    font-weight: 600;
+    color: #333333;
+    margin-bottom: 20px;
+    letter-spacing: 0.02em;
+}
+
+.schedule-list {
+    list-style: none;
+    padding: 0;
+    margin: 0 0 20px 0;
+}
+
+.schedule-item {
+    font-size: 0.92rem;
+    color: #555555;
+    padding: 8px 0;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    border-bottom: 1px dashed rgba(0, 0, 0, 0.08);
+}
+
+.schedule-item:last-child {
+    border-bottom: none;
+}
+
+.schedule-day {
+    font-weight: 500;
+    color: #222222;
+}
+
+.schedule-hours {
+    color: #555555;
+    font-weight: 400;
+}
+
+.schedule-closed {
+    color: #a89d92;
+    font-style: italic;
+}
+
+.phone-section {
+    padding-top: 18px;
+    border-top: 1px solid rgba(0, 0, 0, 0.08);
+}
+
+.phone-title {
+    font-size: 1.2rem;
+    font-weight: 600;
+    color: #333333;
+    margin-bottom: 8px;
+}
+
+.phone-number {
+    font-size: 1.15rem;
+    font-weight: 600;
+    color: #c5a059;
+    text-decoration: none;
+    transition: color 0.2s ease;
+}
+
+.phone-number:hover {
+    color: #a8833e;
+}
+
+/* Custom Marker Tag on Map */
+.map-address-pin-badge {
+    position: absolute;
+    top: 42%;
+    left: 60%;
+    transform: translate(-50%, -100%);
+    z-index: 5;
+    pointer-events: none;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+
+.pin-tooltip-box {
+    background: #ffffff;
+    padding: 10px 18px;
+    border-radius: 6px;
+    box-shadow: 0 4px 20px rgba(0,0,0,0.18);
+    font-size: 0.88rem;
+    color: #222222;
+    text-align: center;
+    line-height: 1.35;
+    font-weight: 500;
+    margin-bottom: 6px;
+    border: 1px solid rgba(0,0,0,0.06);
+}
+
+.pin-icon-red {
+    width: 24px;
+    height: 34px;
+    background: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 384 512'%3E%3Cpath fill='%23e63946' d='M172.268 501.67C26.97 291.031 0 269.413 0 192 0 85.961 85.961 0 192 0s192 85.961 192 192c0 77.413-26.97 99.031-172.268 309.67-9.535 13.774-29.93 13.773-39.464 0zM192 272c44.183 0 80-35.817 80-80s-35.817-80-80-80-80 35.817-80 80 35.817 80 80 80z'/%3E%3C/svg%3E") no-repeat center center;
+    background-size: contain;
+    filter: drop-shadow(0 3px 6px rgba(0,0,0,0.3));
+}
+
+/* Section "Laisser un message" (Contact Form) */
+.leave-message-section {
+    padding: 60px 0 30px;
+}
+
+.message-card {
+    background: #ffffff;
+    border-radius: 20px;
+    padding: 45px 40px;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.05);
+    border: 1px solid rgba(0, 0, 0, 0.04);
+}
+
+.message-card-title {
+    font-family: var(--font-serif, 'Playfair Display', serif);
+    font-size: 2rem;
+    font-weight: 700;
+    color: var(--dark-charcoal, #121212);
+    margin-bottom: 8px;
+}
+
+.message-card-subtitle {
+    color: var(--text-muted, #6b5e52);
+    font-size: 0.98rem;
+    margin-bottom: 30px;
+}
+
+.luxury-contact-form .form-label {
+    font-size: 0.9rem;
+    font-weight: 600;
+    color: #333333;
+    margin-bottom: 8px;
+}
+
+.luxury-contact-form .form-control {
+    background-color: #fcfbfa;
+    border: 1px solid #e2ded8;
+    border-radius: 10px;
+    padding: 12px 16px;
+    font-size: 0.95rem;
+    color: #222222;
+    transition: all 0.25s ease;
+}
+
+.luxury-contact-form .form-control:focus {
+    background-color: #ffffff;
+    border-color: #c5a059;
+    box-shadow: 0 0 0 3px rgba(197, 160, 89, 0.2);
+    outline: none;
+}
+
+.btn-send-message {
+    background: #121212;
+    color: #ffffff;
+    padding: 14px 32px;
+    border-radius: 12px;
+    font-weight: 600;
+    font-size: 1rem;
+    border: none;
+    transition: all 0.3s ease;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+    box-shadow: 0 6px 18px rgba(0, 0, 0, 0.12);
+}
+
+.btn-send-message:hover {
+    background: #c5a059;
+    color: #ffffff;
+    transform: translateY(-2px);
+    box-shadow: 0 8px 22px rgba(197, 160, 89, 0.35);
+}
+
+/* Responsive adjustments */
+@media (max-width: 991px) {
+    .map-hero-wrapper {
+        height: auto;
+        display: flex;
+        flex-direction: column;
+    }
+    
+    .schedule-overlay-card {
+        position: relative;
+        width: 100%;
+        max-width: 100%;
+        box-shadow: none;
+        border-right: none;
+        border-bottom: 1px solid rgba(0, 0, 0, 0.08);
+        padding: 30px 25px;
+    }
+    
+    .map-iframe-container {
+        height: 380px;
+        position: relative;
+    }
+
+    .map-address-pin-badge {
+        left: 50%;
+        top: 50%;
+    }
+}

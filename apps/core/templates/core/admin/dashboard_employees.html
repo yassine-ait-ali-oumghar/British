@@ -1,0 +1,186 @@
+{% extends 'core/admin/admin_base.html' %}
+
+{% block title %}Gestion des Employés - ERP | British Style{% endblock %}
+
+{% block extra_css %}
+<style>
+    .badge-status {
+        padding: 0.35em 0.75em;
+        font-size: 0.78rem;
+        font-weight: 600;
+        border-radius: 50rem;
+        display: inline-flex;
+        align-items: center;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <div>
+        <h4 class="fw-bold text-dark mb-1">Gestion des Employés</h4>
+        <p class="text-muted small mb-0">Consultez l'annuaire des employés, leurs postes, départements et leur statut de présence en temps réel.</p>
+    </div>
+    <button type="button" class="btn btn-primary fw-semibold rounded-3 px-3 py-2 shadow-sm" data-bs-toggle="modal" data-bs-target="#createEmployeeModal">
+        <i class="bi bi-person-plus-fill me-1"></i> Ajouter un Employé
+    </button>
+</div>
+
+<!-- Search & Filter Bar -->
+<div class="erp-card p-3 mb-4">
+    <form method="get" class="d-flex gap-2">
+        <div class="input-group">
+            <span class="input-group-text bg-light border-end-0"><i class="bi bi-search text-muted"></i></span>
+            <input type="text" name="q" class="form-control bg-light border-start-0" placeholder="Rechercher par nom, poste, email..." value="{{ query }}">
+        </div>
+        <button type="submit" class="btn btn-dark fw-semibold px-4">Filtrer</button>
+        {% if query %}
+        <a href="{% url 'dashboard_employees' %}" class="btn btn-outline-secondary">Réinitialiser</a>
+        {% endif %}
+    </form>
+</div>
+
+<!-- Employees Table -->
+<div class="erp-card p-0 overflow-hidden">
+    <div class="w-100 overflow-hidden">
+        <table class="table table-hover align-middle mb-0 w-100">
+            <thead class="table-light">
+                <tr>
+                    <th class="ps-3 py-3">Employé</th>
+                    <th class="py-3">Poste & Département</th>
+                    <th class="py-3 text-nowrap">Rôle Métier</th>
+                    <th class="py-3 text-center text-nowrap">Heures (Ce Mois)</th>
+                    <th class="py-3 text-center text-nowrap">Statut de Présence</th>
+                    <th class="pe-3 py-3 text-end text-nowrap">Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for emp in employees %}
+                <tr>
+                    <td class="ps-3">
+                        <div class="d-flex align-items-center gap-2">
+                            <div class="avatar-circle rounded-circle text-white fw-bold d-flex align-items-center justify-content-center flex-shrink-0" style="width: 38px; height: 38px; background-color: {{ emp.avatar_color }}; font-size: 0.9rem;">
+                                {{ emp.first_name|slice:":1" }}{{ emp.last_name|slice:":1" }}
+                            </div>
+                            <div>
+                                <div class="fw-bold text-dark">{{ emp.full_name }}</div>
+                                <small class="text-muted" style="font-size: 0.78rem;">{{ emp.email|default:"Pas d'email" }} | {{ emp.phone|default:"Pas de téléphone" }}</small>
+                            </div>
+                        </div>
+                    </td>
+                    <td>
+                        <div class="fw-semibold text-dark small">{{ emp.position }}</div>
+                        <small class="text-muted" style="font-size: 0.75rem;"><i class="bi bi-building me-1"></i>{{ emp.department|default:"Salon" }}</small>
+                    </td>
+                    <td class="text-nowrap">
+                        <span class="badge bg-secondary rounded-pill px-2.5 py-1.5" style="font-size: 0.8rem;">{{ emp.get_role_display }}</span>
+                    </td>
+                    <td class="text-center text-nowrap">
+                        <span class="badge bg-light text-dark border px-2.5 py-1.5 fw-semibold" style="font-size: 0.8rem;">
+                            <i class="bi bi-clock me-1 text-primary"></i>{{ emp.get_hours_worked_this_month_formatted }}
+                        </span>
+                    </td>
+                    <td class="text-center text-nowrap">
+                        {% with st=emp.get_current_status %}
+                            {% if st == 'PRESENT' %}
+                                <span class="badge-status bg-badge-present"><i class="bi bi-record-fill me-1"></i>Présent</span>
+                            {% elif st == 'PAUSE' %}
+                                <span class="badge-status bg-badge-pause"><i class="bi bi-pause-circle-fill me-1"></i>En Pause</span>
+                            {% elif st == 'REPOS' %}
+                                <span class="badge-status bg-badge-repos"><i class="bi bi-moon-fill me-1"></i>En Repos</span>
+                            {% else %}
+                                <span class="badge-status bg-badge-absent"><i class="bi bi-x-circle-fill me-1"></i>Absent</span>
+                            {% endif %}
+                        {% endwith %}
+                    </td>
+                    <td class="pe-3 text-end text-nowrap">
+                        <div class="d-inline-flex align-items-center justify-content-end gap-1">
+                            <form method="post" class="d-inline" onsubmit="return confirm('Êtes-vous sûr de vouloir supprimer cet employé ?');">
+                                {% csrf_token %}
+                                <input type="hidden" name="action" value="delete">
+                                <input type="hidden" name="employee_id" value="{{ emp.id }}">
+                                <button type="submit" class="btn btn-sm btn-light border text-danger py-1 px-2" title="Supprimer">
+                                    <i class="bi bi-trash-fill"></i>
+                                </button>
+                            </form>
+                        </div>
+                    </td>
+                </tr>
+                {% empty %}
+                <tr>
+                    <td colspan="6" class="text-center py-5 text-muted">Aucun employé trouvé.</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<!-- Modal Create Employee -->
+<div class="modal fade" id="createEmployeeModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content border-0 shadow-lg rounded-4">
+            <div class="modal-header border-bottom-0">
+                <h5 class="modal-title fw-bold">Ajouter un Employé</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <form method="post" enctype="multipart/form-data">
+                {% csrf_token %}
+                <input type="hidden" name="action" value="create">
+                <div class="modal-body p-4">
+                    <div class="row g-3">
+                        <div class="col-6">
+                            <label class="form-label small fw-bold">Prénom</label>
+                            <input type="text" name="first_name" class="form-control" required>
+                        </div>
+                        <div class="col-6">
+                            <label class="form-label small fw-bold">Nom</label>
+                            <input type="text" name="last_name" class="form-control" required>
+                        </div>
+                        <div class="col-6">
+                            <label class="form-label small fw-bold">Poste / Intitulé</label>
+                            <input type="text" name="position" class="form-control" placeholder="ex: Coiffeur Senior" required>
+                        </div>
+                        <div class="col-6">
+                            <label class="form-label small fw-bold">Département</label>
+                            <input type="text" name="department" class="form-control" placeholder="ex: Salon, Administration" value="Salon" required>
+                        </div>
+                        <div class="col-6">
+                            <label class="form-label small fw-bold">Rôle Métier</label>
+                            <select name="role" class="form-select">
+                                <option value="EMPLOYEE">Employé</option>
+                                <option value="MANAGER">Manager</option>
+                                <option value="RESPONSABLE">Responsable</option>
+                                <option value="VENDEUR">Vendeur</option>
+                                <option value="LOGISTIQUE">Logistique</option>
+                                <option value="ADMINISTRATEUR">Administrateur</option>
+                            </select>
+                        </div>
+                        <div class="col-6">
+                            <label class="form-label small fw-bold">Couleur Avatar</label>
+                            <input type="color" name="avatar_color" class="form-control form-control-color w-100 rounded-3" value="#c5a059" style="height: 42px; padding: 4px 6px; cursor: pointer;">
+                        </div>
+                        <div class="col-12">
+                            <label class="form-label small fw-bold">Photo de Profil (Téléverser une image)</label>
+                            <input type="file" name="photo_file" accept="image/*" class="form-control">
+                        </div>
+                        <div class="col-6">
+                            <label class="form-label small fw-bold">Email</label>
+                            <input type="email" name="email" class="form-control">
+                        </div>
+                        <div class="col-6">
+                            <label class="form-label small fw-bold">Téléphone</label>
+                            <input type="text" name="phone" class="form-control">
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer border-top-0 pt-0">
+                    <button type="button" class="btn btn-light" data-bs-dismiss="modal">Annuler</button>
+                    <button type="submit" class="btn btn-primary fw-semibold px-4">Créer l'Employé</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}
+

@@ -1,0 +1,257 @@
+{% extends base_template|default:'core/employee/employee_base.html' %}
+{% load core_tags %}
+
+{% block title %}Mon Planning & Calendrier | Espace Employé{% endblock %}
+
+{% block extra_css %}
+<style>
+    .calendar-table {
+        table-layout: fixed;
+        width: 100%;
+    }
+    .calendar-day-cell {
+        height: 125px;
+        vertical-align: top;
+        position: relative;
+        cursor: pointer;
+        transition: all 0.2s ease;
+        background-color: #ffffff;
+    }
+    .calendar-day-cell:hover {
+        background-color: #f8fafc;
+        box-shadow: inset 0 0 0 2px var(--gold-accent);
+    }
+    .calendar-day-number {
+        font-weight: 700;
+        font-size: 1rem;
+        color: #334155;
+    }
+    .calendar-day-empty {
+        background-color: #f1f5f9;
+        cursor: default;
+    }
+    .badge-present { background-color: #27ae60; color: white; }
+    .badge-pause { background-color: #f1c40f; color: #1e293b; }
+    .badge-repos { background-color: #2980b9; color: white; }
+    .badge-absent { background-color: #e74c3c; color: white; }
+    .reservation-chip {
+        background: #1e293b;
+        color: #c5a059;
+        font-size: 0.72rem;
+        padding: 2px 6px;
+        border-radius: 4px;
+        margin-top: 2px;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+    }
+    .res-card-box {
+        border-left: 4px solid #c5a059;
+        background-color: #fcfbfa;
+        border-radius: 8px;
+        padding: 12px;
+        box-shadow: 0 2px 6px rgba(0,0,0,0.03);
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="row g-4">
+    <!-- Header Controls -->
+    <div class="col-12">
+        <div class="card border-0 shadow-sm rounded-4 p-4">
+            <div class="d-flex flex-wrap align-items-center justify-content-between gap-3">
+                <h4 class="fw-bold text-dark mb-0"><i class="bi bi-calendar3 text-warning me-2"></i>Mon Planning & Calendrier - {{ month_name }} {{ current_year }}</h4>
+
+                <!-- Legend -->
+                <div class="d-flex flex-wrap gap-3 align-items-center small fw-semibold">
+                    <span class="d-inline-flex align-items-center gap-1"><span class="badge badge-present p-2 rounded-circle"></span> 🟢 Présent</span>
+                    <span class="d-inline-flex align-items-center gap-1"><span class="badge badge-pause p-2 rounded-circle"></span> 🟡 Pause</span>
+                    <span class="d-inline-flex align-items-center gap-1"><span class="badge badge-repos p-2 rounded-circle"></span> 🔵 Repos</span>
+                    <span class="d-inline-flex align-items-center gap-1"><span class="badge badge-absent p-2 rounded-circle"></span> 🔴 Absent</span>
+                    <span class="d-inline-flex align-items-center gap-1"><span class="badge bg-dark p-2 rounded-circle"></span> ✂️ Réservations</span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Calendar Matrix -->
+    <div class="col-12">
+        <div class="card border-0 shadow-sm rounded-4 overflow-hidden">
+            <div class="card-body p-0">
+                <div class="table-responsive">
+                    <table class="table table-bordered calendar-table mb-0">
+                        <thead class="bg-dark text-white text-center">
+                            <tr>
+                                <th style="width: 14.28%;">Lundi</th>
+                                <th style="width: 14.28%;">Mardi</th>
+                                <th style="width: 14.28%;">Mercredi</th>
+                                <th style="width: 14.28%;">Jeudi</th>
+                                <th style="width: 14.28%;">Vendredi</th>
+                                <th style="width: 14.28%;">Samedi</th>
+                                <th style="width: 14.28%;">Dimanche</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for week in calendar_matrix %}
+                            <tr>
+                                {% for day_num in week %}
+                                    {% if day_num == 0 %}
+                                        <td class="calendar-day-empty"></td>
+                                    {% else %}
+                                        <td class="calendar-day-cell p-2" onclick="openDayDetailModal('{{ day_num }}')">
+                                            <div class="d-flex justify-content-between align-items-center mb-1">
+                                                <span class="calendar-day-number">{{ day_num }}</span>
+                                                {% if day_num == today.day and current_month == today.month and current_year == today.year %}
+                                                    <span class="badge bg-gold text-white small">Auj.</span>
+                                                {% endif %}
+                                            </div>
+
+                                            {% with records_dict|get_item:day_num as rec %}
+                                                {% if rec %}
+                                                    <span class="badge badge-{{ rec.status|lower }} w-100 py-1 d-block text-truncate mb-1">
+                                                        {{ rec.get_status_display }}
+                                                    </span>
+                                                {% endif %}
+                                            {% endwith %}
+
+                                            {% with reservations_by_day|get_item:day_num as day_res_list %}
+                                                {% if day_res_list %}
+                                                    {% for r in day_res_list|slice:":2" %}
+                                                    <div class="reservation-chip">
+                                                        <i class="bi bi-clock me-1"></i>{{ r.start_time|time:"H:i" }} {{ r.service.name|truncatechars:12 }}
+                                                    </div>
+                                                    {% endfor %}
+                                                    {% if day_res_list|length > 2 %}
+                                                    <div class="text-muted text-center" style="font-size:0.65rem;">+{{ day_res_list|length|add:"-2" }} réservation(s)</div>
+                                                    {% endif %}
+                                                {% endif %}
+                                            {% endwith %}
+                                        </td>
+                                    {% endif %}
+                                {% endfor %}
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Day Detail Modal -->
+<div class="modal fade" id="dayDetailModal" tabindex="-1" aria-labelledby="dayDetailModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg modal-dialog-centered">
+        <div class="modal-content border-0 shadow-lg rounded-4">
+            <div class="modal-header bg-dark text-white rounded-top-4">
+                <h5 class="modal-title fw-bold" id="dayDetailModalLabel"><i class="bi bi-calendar-event text-warning me-2"></i>Planning du Jour - <span id="modalDateStr">--</span></h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body p-4">
+                <div class="row g-4">
+                    <!-- Column 1: Pointage Status -->
+                    <div class="col-md-5 border-end">
+                        <h6 class="fw-bold text-dark mb-3"><i class="bi bi-clock-history me-2 text-primary"></i>Statut Pointage</h6>
+                        <div class="text-center mb-3">
+                            <span id="modalStatusBadge" class="status-badge fs-6 px-4 py-2">--</span>
+                        </div>
+                        <div class="list-group list-group-flush rounded-3 border small">
+                            <div class="list-group-item d-flex justify-content-between py-2">
+                                <span class="text-muted"><i class="bi bi-box-arrow-in-right text-success me-1"></i>Arrivée</span>
+                                <span class="fw-bold text-dark" id="modalCheckIn">--</span>
+                            </div>
+                            <div class="list-group-item d-flex justify-content-between py-2">
+                                <span class="text-muted"><i class="bi bi-box-arrow-right text-danger me-1"></i>Départ</span>
+                                <span class="fw-bold text-dark" id="modalCheckOut">--</span>
+                            </div>
+                            <div class="list-group-item d-flex justify-content-between py-2">
+                                <span class="text-muted"><i class="bi bi-hourglass-split text-primary me-1"></i>Durée pause</span>
+                                <span class="fw-bold text-dark" id="modalPauseMinutes">--</span>
+                            </div>
+                            <div class="list-group-item d-flex justify-content-between py-2">
+                                <span class="text-muted"><i class="bi bi-briefcase text-dark me-1"></i>Total travaillé</span>
+                                <span class="fw-bold text-primary" id="modalHoursWorked">--</span>
+                            </div>
+                        </div>
+                        <div class="mt-3 p-2 bg-light rounded-3">
+                            <small class="text-muted d-block fw-semibold">Notes :</small>
+                            <span id="modalNotes" class="small text-dark">Aucune note</span>
+                        </div>
+                    </div>
+
+                    <!-- Column 2: Service Reservations List -->
+                    <div class="col-md-7">
+                        <h6 class="fw-bold text-dark mb-3"><i class="bi bi-scissors me-2 text-gold" style="color: #c5a059;"></i>Réservations & Soins Assignés</h6>
+                        <div id="modalReservationsContainer" class="d-flex flex-column gap-3 max-height-300 overflow-auto">
+                            <div class="text-muted small">Chargement des réservations...</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    function openDayDetailModal(dayNum) {
+        const year = "{{ current_year }}";
+        const month = "{{ current_month }}";
+
+        fetch(`/employee/api/calendar-detail/${dayNum}/?year=${year}&month=${month}`, {
+            headers: { 'X-Requested-With': 'XMLHttpRequest' }
+        })
+        .then(response => response.json())
+        .then(data => {
+            document.getElementById('modalDateStr').innerText = data.date;
+            
+            const att = data.attendance || {};
+            document.getElementById('modalCheckIn').innerText = att.check_in || '-';
+            document.getElementById('modalCheckOut').innerText = att.check_out || '-';
+            document.getElementById('modalPauseMinutes').innerText = att.pause_minutes || '0 min';
+            document.getElementById('modalHoursWorked').innerText = att.hours_worked || '0h 00m';
+            document.getElementById('modalNotes').innerText = att.notes || 'Aucune note';
+
+            const badge = document.getElementById('modalStatusBadge');
+            badge.className = `status-badge status-${att.status} fs-6 px-4 py-2`;
+            badge.innerText = att.status_display || 'Absent';
+
+            // Populate Reservations Cards
+            const resContainer = document.getElementById('modalReservationsContainer');
+            if (data.reservations && data.reservations.length > 0) {
+                let html = '';
+                data.reservations.forEach(r => {
+                    let badgeClass = 'bg-warning text-dark';
+                    if (r.status === 'CONFIRMED') badgeClass = 'bg-success';
+                    if (r.status === 'COMPLETED') badgeClass = 'bg-primary';
+                    if (r.status === 'CANCELLED') badgeClass = 'bg-danger';
+
+                    html += `
+                        <div class="res-card-box">
+                            <div class="d-flex justify-content-between align-items-start mb-1">
+                                <div class="fw-bold fs-6 text-dark">${r.start_time} <span class="text-muted font-normal fs-7">(${r.start_time} - ${r.end_time})</span></div>
+                                <span class="badge ${badgeClass} small">${r.status_display}</span>
+                            </div>
+                            <div class="fw-semibold text-dark">${r.service_name} <span class="text-muted small">(${r.duration})</span></div>
+                            <div class="small text-muted"><i class="bi bi-person me-1"></i>Client : <strong class="text-dark">${r.client_name}</strong></div>
+                        </div>
+                    `;
+                });
+                resContainer.innerHTML = html;
+            } else {
+                resContainer.innerHTML = `
+                    <div class="p-3 text-center text-muted bg-light rounded-3 small">
+                        <i class="bi bi-calendar-x me-1"></i> Aucune réservation pour cette journée.
+                    </div>
+                `;
+            }
+
+            const modal = new bootstrap.Modal(document.getElementById('dayDetailModal'));
+            modal.show();
+        })
+        .catch(err => console.error('Error fetching calendar detail:', err));
+    }
+</script>
+{% endblock %}

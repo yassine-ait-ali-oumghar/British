@@ -1,4 +1,117 @@
 {% extends 'core/base.html' %}
+{% load static %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'styles/pages/frontpage.css' %}">
+{% endblock %}
 {% block content %}
-<h1>Welcome to the Front Page</h1>
+<!-- Hero Section -->
+<section class="hero-section" id="accueil">
+    <div class="section-content">
+        <div class="hero-details">
+            <h1 class="title">British Style</h1>
+            <h2 class="subtitle">L'élégance britannique à portée de main</h2>
+            <p class="description">
+                Sublimez votre beauté naturelle avec notre gamme cosmétique haut de gamme. Des soins d'exception conçus
+                avec le savoir-faire et l'élégance britannique.
+            </p>
+            <div class="buttons">
+                <a href="{% url 'boutique' %}" class="button order-now">Commander maintenant</a>
+                <a href="{% url 'contact' %}" class="button contact-us">Contactez-nous</a>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Presentation Section (Doriano Style) -->
+<section class="intro-presentation-section py-5">
+    <div class="container-fluid px-4 px-lg-5 py-5">
+        <div class="row align-items-center g-5">
+            <div class="col-lg-6">
+                <h2 class="brand-huge-title">BRITISH STYLE</h2>
+                <h4 class="brand-subtitle-accent">VOTRE SALON DE COIFFURE & BEAUTÉ À CASABLANCA</h4>
+                <div class="mt-4">
+                    <a href="{% url 'services' %}" class="btn-reserver">réserver</a>
+                </div>
+            </div>
+            <div class="col-lg-6">
+                <div class="intro-description-text">
+                    <p class="mb-4">
+                        Bienvenue chez <strong>British Style</strong>, votre salon de coiffure et de beauté à
+                        Casablanca. Dans un cadre élégant, moderne et chaleureux, nous vous accueillons pour vous offrir
+                        une expérience unique où le bien-être, le confort et la qualité de service sont au cœur de
+                        chaque visite. Notre objectif est de révéler votre beauté naturelle grâce à un accompagnement
+                        personnalisé et des prestations réalisées avec passion.
+                    </p>
+                    <p class="mb-0">
+                        Notre équipe de professionnels met son expertise à votre service pour répondre à toutes vos envies. Que ce soit pour une <strong>coupe moderne</strong>, une <strong>coloration</strong>, un <strong>balayage</strong>, un <strong>lissage</strong>, des <strong>soins capillaires</strong> ou une coiffure pour un événement, nous vous conseillons selon votre style, la nature de vos cheveux et la morphologie de votre visage. Chez <strong>British Style</strong>, nous utilisons des produits professionnels de haute qualité afin de garantir des résultats durables tout en préservant la santé et la beauté de vos cheveux.
+                    </p>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Craftsmanship / Savoir-Faire Section -->
+<section class="craftsmanship-section py-5">
+    <div class="container-fluid px-4 px-lg-5 py-4">
+        <div class="row align-items-center g-5">
+            <div class="col-lg-6">
+                <span class="badge-tag">Savoir-Faire Britannique</span>
+                <h2 class="section-title mt-2">L'Art de la Cosmétique Raffinée</h2>
+                <p class="lead-text mt-3">
+                    Chez British Style, nous croyons en une beauté authentique, guidée par la recherche de la perfection
+                    et l'héritage des grands laboratoires britanniques.
+                </p>
+                <div class="features-list mt-4">
+                    <div class="feature-item d-flex gap-3 mb-3">
+                        <div class="feature-icon"><i class="bi bi-check-lg"></i></div>
+                        <div>
+                            <h5>Formulations 100% Organiques</h5>
+                            <p>Ingrédients naturels rigoureusement sélectionnés sans sulfates ni parabènes.</p>
+                        </div>
+                    </div>
+                    <div class="feature-item d-flex gap-3 mb-3">
+                        <div class="feature-icon"><i class="bi bi-check-lg"></i></div>
+                        <div>
+                            <h5>Fabrication Artisanale UK</h5>
+                            <p>Conçus et fabriqués selon les plus hauts standards de qualité britanniques.</p>
+                        </div>
+                    </div>
+                    <div class="feature-item d-flex gap-3">
+                        <div class="feature-icon"><i class="bi bi-check-lg"></i></div>
+                        <div>
+                            <h5>Éco-Responsable & Cruelty-Free</h5>
+                            <p>Engagés pour le respect des animaux et l'emballage éco-conçu.</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-lg-6">
+                <div class="craftsmanship-card p-5">
+                    <h3 class="craft-card-title mb-4">Commandez Votre Rituel Beauté</h3>
+                    <p>Découvrez notre gamme complète et bénéficiez de conseils personnalisés auprès de nos experts
+                        beauté.</p>
+                    <div class="d-flex flex-column gap-3 mt-4">
+                        <div class="d-flex align-items-center gap-3">
+                            <i class="bi bi-truck fs-3 text-gold"></i>
+                            <div>
+                                <strong>Livraison Offerte</strong>
+                                <div class="small text-muted"></div>Envoyé sous 3 à 5 jours via la poste
+                            </div>
+                        </div>
+                        <div class="d-flex align-items-center gap-3">
+                            <i class="bi bi-shield-check fs-3 text-gold"></i>
+                            <div>
+                                <strong>Click and Collect</strong>
+                                <div class="small text-muted">Retrait gratuit aux magasins</div>
+                            </div>
+                        </div>
+                    </div>
+                    <a href="{% url 'boutique' %}" class="btn-gold w-100 mt-4 text-center">Commander maintenant</a>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
 {% endblock %}

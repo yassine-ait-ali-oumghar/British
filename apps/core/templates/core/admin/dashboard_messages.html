@@ -1,0 +1,172 @@
+{% extends 'core/admin/admin_base.html' %}
+
+{% block title %}Messages de Contact - ERP | British Style{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <div>
+        <h4 class="fw-bold text-dark mb-1">Boîte de Réception - Contact Us</h4>
+        <p class="text-muted small mb-0">Consultez et traitez les messages et demandes d'information envoyés depuis le site web.</p>
+    </div>
+</div>
+
+<!-- Filter Tabs -->
+<div class="erp-card p-2 mb-4">
+    <div class="d-flex gap-2">
+        <a href="?status=all" class="btn btn-sm {% if status_filter == 'all' %}btn-dark{% else %}btn-outline-secondary{% endif %} rounded-pill px-3">Tous les messages</a>
+        <a href="?status=new" class="btn btn-sm {% if status_filter == 'new' %}btn-danger{% else %}btn-outline-danger{% endif %} rounded-pill px-3">Nouveaux</a>
+        <a href="?status=read" class="btn btn-sm {% if status_filter == 'read' %}btn-warning text-dark{% else %}btn-outline-warning text-dark{% endif %} rounded-pill px-3">Lus</a>
+        <a href="?status=processed" class="btn btn-sm {% if status_filter == 'processed' %}btn-success{% else %}btn-outline-success{% endif %} rounded-pill px-3">Traités</a>
+    </div>
+</div>
+
+<!-- Messages List -->
+<div class="erp-card p-0 overflow-hidden">
+    <div class="w-100 overflow-hidden">
+        <table class="table table-hover align-middle mb-0 w-100">
+            <thead class="table-light">
+                <tr>
+                    <th class="ps-4 py-3">Expéditeur</th>
+                    <th class="py-3">Sujet</th>
+                    <th class="py-3">Extrait du Message</th>
+                    <th class="py-3">Date</th>
+                    <th class="py-3 text-center">Statut</th>
+                    <th class="pe-4 py-3 text-end">Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for msg in messages %}
+                <tr class="{% if msg.status == 'NEW' %}fw-bold table-light{% endif %}">
+                    <td class="ps-4">
+                        <div class="fw-bold text-dark">{{ msg.name }}</div>
+                        <small class="text-muted">{{ msg.email }} {% if msg.phone %}| {{ msg.phone }}{% endif %}</small>
+                    </td>
+                    <td><span class="text-dark">{{ msg.subject }}</span></td>
+                    <td class="text-muted small text-truncate" style="max-width: 250px;">{{ msg.message }}</td>
+                    <td class="text-muted small">{{ msg.created_at|date:"d/m/Y H:i" }}</td>
+                    <td class="text-center status-badge-cell">
+                        {% if msg.status == 'NEW' %}
+                            <span class="badge bg-danger rounded-pill px-3 py-2">Nouveau</span>
+                        {% elif msg.status == 'READ' %}
+                            <span class="badge bg-warning text-dark rounded-pill px-3 py-2">Lu</span>
+                        {% else %}
+                            <span class="badge bg-success rounded-pill px-3 py-2">Traité</span>
+                        {% endif %}
+                    </td>
+                    <td class="pe-4 text-end text-nowrap">
+                        <div class="d-inline-flex align-items-center justify-content-end gap-1">
+                            <button class="btn btn-sm btn-light border text-dark read-msg-btn" title="Lire" data-status="{{ msg.status }}" onclick="viewMessage(this, {{ msg.id }}, '{{ msg.name|escapejs }}', '{{ msg.email|escapejs }}', '{{ msg.phone|escapejs }}', '{{ msg.subject|escapejs }}', '{{ msg.message|escapejs }}', '{{ msg.created_at|date:"d/m/Y H:i" }}')">
+                                <i class="bi bi-eye-fill me-1"></i> Read
+                            </button>
+                            <form method="post" class="d-inline" onsubmit="return confirm('Supprimer ce message ?');">
+                                {% csrf_token %}
+                                <input type="hidden" name="action" value="delete">
+                                <input type="hidden" name="message_id" value="{{ msg.id }}">
+                                <button type="submit" class="btn btn-sm btn-light border text-danger" title="Supprimer">
+                                    <i class="bi bi-trash-fill"></i>
+                                </button>
+                            </form>
+                        </div>
+                    </td>
+                </tr>
+                {% empty %}
+                <tr>
+                    <td colspan="6" class="text-center py-5 text-muted">Aucun message trouvé.</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<!-- View Message Modal -->
+<div class="modal fade" id="viewMessageModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content border-0 shadow-lg rounded-4">
+            <div class="modal-header border-bottom-0">
+                <h5 class="modal-title fw-bold" id="msgModalSubject">Détail du Message</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body p-4">
+                <div class="d-flex justify-content-between align-items-center mb-3 p-3 bg-light rounded-3">
+                    <div>
+                        <div class="fw-bold text-dark fs-6" id="msgModalName">--</div>
+                        <small class="text-muted" id="msgModalContact">--</small>
+                    </div>
+                    <span class="text-muted small" id="msgModalDate">--</span>
+                </div>
+                <div class="p-3 bg-light rounded-3 mb-4">
+                    <div class="small fw-bold text-muted mb-1">Message :</div>
+                    <p class="text-dark mb-0 text-break" id="msgModalBody">--</p>
+                </div>
+                <div class="d-flex gap-2">
+                    <form method="post" action="" class="flex-grow-1">
+                        {% csrf_token %}
+                        <input type="hidden" name="action" value="mark_processed">
+                        <input type="hidden" name="message_id" id="msgModalFormId">
+                        <button type="submit" class="btn btn-success fw-semibold w-100"><i class="bi bi-check-circle me-1"></i> Marquer comme Traité</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    let msgModalObj = null;
+    let hasStatusChanged = false;
+
+    document.addEventListener('DOMContentLoaded', () => {
+        const modalEl = document.getElementById('viewMessageModal');
+        msgModalObj = new bootstrap.Modal(modalEl);
+
+        modalEl.addEventListener('hidden.bs.modal', () => {
+            if (hasStatusChanged) {
+                location.reload();
+            }
+        });
+    });
+
+    function viewMessage(btnElement, id, name, email, phone, subject, body, date) {
+        document.getElementById('msgModalFormId').value = id;
+        document.getElementById('msgModalSubject').textContent = subject;
+        document.getElementById('msgModalName').textContent = name;
+        document.getElementById('msgModalContact').textContent = `${email} ${phone ? '| ' + phone : ''}`;
+        document.getElementById('msgModalDate').textContent = date;
+        document.getElementById('msgModalBody').textContent = body;
+
+        const currentStatus = btnElement.getAttribute('data-status');
+
+        // Auto mark as READ via POST if NEW
+        if (currentStatus === 'NEW') {
+            const formData = new FormData();
+            formData.append('csrfmiddlewaretoken', '{{ csrf_token }}');
+            formData.append('action', 'mark_read');
+            formData.append('message_id', id);
+
+            fetch('', { 
+                method: 'POST', 
+                body: formData,
+                headers: { 'X-Requested-With': 'XMLHttpRequest' }
+            }).then(response => response.json()).then(data => {
+                if (data.status === 'success') {
+                    btnElement.setAttribute('data-status', 'READ');
+                    hasStatusChanged = true;
+                    const row = btnElement.closest('tr');
+                    if (row) {
+                        row.classList.remove('fw-bold', 'table-light');
+                        const statusCell = row.querySelector('.status-badge-cell');
+                        if (statusCell) {
+                            statusCell.innerHTML = '<span class="badge bg-warning text-dark rounded-pill px-3 py-2">Lu</span>';
+                        }
+                    }
+                }
+            });
+        }
+
+        msgModalObj.show();
+    }
+</script>
+{% endblock %}

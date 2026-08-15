@@ -1,0 +1,137 @@
+{% extends base_template|default:'core/employee/employee_base.html' %}
+
+{% block title %}Mon Profil | Espace Employé{% endblock %}
+
+{% block content %}
+<div class="row g-4">
+    {% if msg %}
+    <div class="col-12">
+        <div class="alert alert-{{ msg_type }} alert-auto-dismiss alert-dismissible fade show rounded-3" role="alert" data-dismiss-delay="5000">
+            <i class="bi bi-info-circle-fill me-2"></i> {{ msg }}
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        </div>
+    </div>
+    {% endif %}
+
+    <!-- Employee Overview Card -->
+    <div class="col-lg-4">
+        <div class="card border-0 shadow-sm rounded-4 text-center p-4">
+            <div class="position-relative d-inline-block mx-auto mb-3">
+                {% if employee.photo %}
+                    <img src="{{ employee.photo }}" alt="Avatar" class="rounded-circle border border-4 border-warning shadow" style="width: 120px; height: 120px; object-fit: cover;">
+                {% else %}
+                    <div class="rounded-circle d-flex align-items-center justify-content-center text-white fw-bold display-4 border border-4 border-warning shadow mx-auto" style="width: 120px; height: 120px; background-color: {{ employee.avatar_color|default:'#c5a059' }};">
+                        {{ employee.first_name|slice:":1" }}{{ employee.last_name|slice:":1" }}
+                    </div>
+                {% endif %}
+            </div>
+
+            <h4 class="fw-bold text-dark mb-1">{{ employee.full_name }}</h4>
+            <p class="text-muted small mb-3">{{ employee.email|default:"Email non renseigné" }}</p>
+
+            <div class="d-flex justify-content-center gap-2 mb-4">
+                <span class="badge bg-gold px-3 py-2 text-white"><i class="bi bi-briefcase me-1"></i>{{ employee.position }}</span>
+                <span class="badge bg-dark px-3 py-2 text-white"><i class="bi bi-building me-1"></i>{{ employee.department }}</span>
+            </div>
+
+            <!-- Readonly Professional Fields -->
+            <div class="border-top pt-3 text-start small">
+                <div class="d-flex justify-content-between py-2 border-bottom">
+                    <span class="text-muted">Rôle Métier :</span>
+                    <span class="fw-semibold text-dark">{{ employee.get_role_display }}</span>
+                </div>
+                <div class="d-flex justify-content-between py-2 border-bottom">
+                    <span class="text-muted">Département :</span>
+                    <span class="fw-semibold text-dark">{{ employee.department }}</span>
+                </div>
+                <div class="d-flex justify-content-between py-2 border-bottom">
+                    <span class="text-muted">Poste :</span>
+                    <span class="fw-semibold text-dark">{{ employee.position }}</span>
+                </div>
+                <div class="d-flex justify-content-between py-2">
+                    <span class="text-muted">Date d'embauche :</span>
+                    <span class="fw-semibold text-dark">{{ employee.created_at|date:"d/m/Y" }}</span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Edit Forms -->
+    <div class="col-lg-8">
+        <!-- 1. Editable Personal Info -->
+        <div class="card border-0 shadow-sm rounded-4 p-4 mb-4">
+            <h5 class="fw-bold text-dark mb-3"><i class="bi bi-person-gear text-warning me-2"></i>Modifier mes coordonnées</h5>
+            <form method="POST" action="." enctype="multipart/form-data">
+                {% csrf_token %}
+                <input type="hidden" name="action" value="update_info">
+
+                <div class="row g-3">
+                    <div class="col-md-6">
+                        <label class="form-label small text-muted fw-semibold">Numéro de Téléphone</label>
+                        <input type="text" name="phone" class="form-control rounded-3" value="{{ employee.phone|default:'' }}" placeholder="+33 6 12 34 56 78">
+                    </div>
+
+                    <div class="col-md-6">
+                        <label class="form-label small text-muted fw-semibold">Photo de Profil (Téléverser une image)</label>
+                        <input type="file" name="photo_file" accept="image/*" class="form-control rounded-3">
+                    </div>
+                </div>
+
+                <!-- Non-editable Readonly Fields Displayed in Form to reinforce immutability -->
+                <div class="row g-3 mt-2">
+                    <div class="col-md-4">
+                        <label class="form-label small text-muted fw-semibold">Rôle (Non modifiable)</label>
+                        <input type="text" class="form-control rounded-3 bg-light text-muted" value="{{ employee.get_role_display }}" readonly disabled>
+                    </div>
+                    <div class="col-md-4">
+                        <label class="form-label small text-muted fw-semibold">Département (Non modifiable)</label>
+                        <input type="text" class="form-control rounded-3 bg-light text-muted" value="{{ employee.department }}" readonly disabled>
+                    </div>
+                    <div class="col-md-4">
+                        <label class="form-label small text-muted fw-semibold">Poste (Non modifiable)</label>
+                        <input type="text" class="form-control rounded-3 bg-light text-muted" value="{{ employee.position }}" readonly disabled>
+                    </div>
+                </div>
+
+                <div class="text-end mt-4">
+                    <button type="submit" class="btn btn-gold px-4 rounded-3 fw-semibold">
+                        <i class="bi bi-check-lg me-1"></i> Enregistrer la photo & téléphone
+                    </button>
+                </div>
+            </form>
+        </div>
+
+        <!-- 2. Password Change Form -->
+        <div class="card border-0 shadow-sm rounded-4 p-4">
+            <h5 class="fw-bold text-dark mb-3"><i class="bi bi-key text-warning me-2"></i>Changer mon mot de passe</h5>
+            <form method="POST" action=".">
+                {% csrf_token %}
+                <input type="hidden" name="action" value="change_password">
+
+                <div class="row g-3">
+                    <div class="col-12">
+                        <label class="form-label small text-muted fw-semibold">Mot de passe actuel</label>
+                        <input type="password" name="old_password" class="form-control rounded-3" required>
+                    </div>
+
+                    <div class="col-md-6">
+                        <label class="form-label small text-muted fw-semibold">Nouveau mot de passe</label>
+                        <input type="password" name="new_password1" class="form-control rounded-3" minlength="6" required>
+                    </div>
+
+                    <div class="col-md-6">
+                        <label class="form-label small text-muted fw-semibold">Confirmer le nouveau mot de passe</label>
+                        <input type="password" name="new_password2" class="form-control rounded-3" minlength="6" required>
+                    </div>
+                </div>
+
+                <div class="text-end mt-4">
+                    <button type="submit" class="btn btn-outline-dark px-4 rounded-3 fw-semibold">
+                        <i class="bi bi-shield-lock me-1"></i> Mettre à jour le mot de passe
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}

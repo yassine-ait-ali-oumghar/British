@@ -1,0 +1,563 @@
+{% extends 'core/base.html' %}
+{% load static %}
+
+{% block title %}Nos Services & Prestations | British Style{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'styles/pages/services.css' %}?v=2">
+<style>
+    .slot-pill-modal {
+        border: 1px solid #cbd5e1;
+        border-radius: 20px;
+        padding: 0.4rem 1rem;
+        font-weight: 600;
+        font-size: 0.85rem;
+        color: #334155;
+        background: #ffffff;
+        cursor: pointer;
+        transition: all 0.2s ease;
+    }
+    .slot-pill-modal:hover {
+        border-color: #c5a059;
+        color: #c5a059;
+        background: #fdfbf7;
+    }
+    .slot-pill-modal.selected {
+        background-color: #121212;
+        color: #c5a059;
+        border-color: #121212;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<!-- Prestations & Services Section -->
+<section class="services-section py-5" id="services" style="padding-top: 140px !important;">
+    <div class="container py-4">
+        <div class="text-center mb-5 section-header">
+            <span class="badge-tag"><i class="bi bi-scissors me-1"></i> Salon de Coiffure & Beauté</span>
+            <h2 class="section-title mt-2">Nos Prestations & Tarifs</h2>
+            <p class="section-subtitle mx-auto">Découvrez la carte officielle de nos prestations en Dirhams (DH). Sélectionnez votre soin, la date, l'heure et votre expert préféré.</p>
+        </div>
+
+        <!-- Filter & Search Controls -->
+        <div class="row align-items-center justify-content-between mb-4 g-3">
+            <div class="col-lg-8">
+                <div class="d-flex flex-wrap gap-2" id="categoryFilterContainer">
+                    <button type="button" class="btn btn-dark rounded-pill px-4 py-2 filter-btn active" data-category="all">
+                        <i class="bi bi-grid-fill me-1"></i> Tous les services
+                    </button>
+                    <button type="button" class="btn btn-outline-dark rounded-pill px-4 py-2 filter-btn" data-category="Onglerie">
+                        💅 Onglerie
+                    </button>
+                    <button type="button" class="btn btn-outline-dark rounded-pill px-4 py-2 filter-btn" data-category="Coiffure">
+                        💇‍♀️ Coiffure
+                    </button>
+                    <button type="button" class="btn btn-outline-dark rounded-pill px-4 py-2 filter-btn" data-category="Esthétique">
+                        ✨ Esthétique
+                    </button>
+                </div>
+            </div>
+            <div class="col-lg-4">
+                <div class="input-group">
+                    <span class="input-group-text bg-white border-end-0 rounded-start-pill ps-3"><i class="bi bi-search text-muted"></i></span>
+                    <input type="text" id="serviceSearchInput" class="form-control border-start-0 rounded-end-pill py-2" placeholder="Rechercher une prestation...">
+                </div>
+            </div>
+        </div>
+
+        <div class="row g-4" id="servicesGrid">
+            {% for serv in services_list %}
+            <div class="col-lg-4 col-md-6 service-item-wrapper" data-category="{{ serv.category }}" data-name="{{ serv.name|lower }}" data-desc="{{ serv.description|lower }}">
+                <div class="service-card p-4 rounded-4 bg-white shadow-sm border position-relative h-100 d-flex flex-column justify-content-between">
+                    <div>
+                        <div class="d-flex align-items-center justify-content-between mb-3">
+                            <span class="badge px-3 py-2 rounded-pill font-semibold" style="background: rgba(197, 160, 89, 0.15); color: #c5a059;">
+                                {% if serv.category == 'Onglerie' %}💅{% elif serv.category == 'Coiffure' %}💇‍♀️{% elif serv.category == 'Esthétique' %}✨{% else %}✂️{% endif %} {{ serv.category|default:"Soin" }}
+                            </span>
+                            <span class="text-muted small"><i class="bi bi-clock me-1"></i>{{ serv.duration_minutes }} min</span>
+                        </div>
+                        <h3 class="service-name h5 fw-bold mb-2">{{ serv.name }}</h3>
+                        <p class="service-desc text-muted small mb-0">{{ serv.description|default:"Diagnostic personnalisé et soin d'exception." }}</p>
+                    </div>
+                    <div class="service-footer d-flex align-items-center justify-content-between pt-3 border-top mt-3">
+                        <span class="service-price fs-4 fw-bold text-dark">{{ serv.price|floatformat:"0" }} DH</span>
+                        <button type="button" class="btn btn-dark rounded-3 px-4 py-2 fw-semibold btn-reserver-service" style="background-color: #c5a059; border-color: #c5a059; color: #ffffff;"
+                                data-bs-toggle="modal" 
+                                data-bs-target="#bookingModal"
+                                data-service-id="{{ serv.id }}"
+                                data-service-name="{{ serv.name }}"
+                                data-service-category="{{ serv.category }}"
+                                data-service-duration="{{ serv.duration_minutes }}"
+                                data-service-price="{{ serv.price|floatformat:'0' }}">
+                            <i class="bi bi-calendar-check me-2 text-white"></i>Réserver
+                        </button>
+                    </div>
+                </div>
+            </div>
+            {% empty %}
+            <div class="col-12 text-center py-5 text-muted">
+                <i class="bi bi-info-circle me-2"></i>Aucun service disponible pour le moment.
+            </div>
+            {% endfor %}
+        </div>
+
+        <div id="noResultsMsg" class="text-center py-5 text-muted d-none">
+            <i class="bi bi-search fs-2 mb-2 d-block text-gold" style="color: #c5a059;"></i>
+            <h5>Aucune prestation trouvée</h5>
+            <p class="small">Essayez un autre mot-clé ou filtre de catégorie.</p>
+        </div>
+    </div>
+</section>
+
+<!-- Pop-up Modal de Réservation Directe -->
+<div class="modal fade" id="bookingModal" tabindex="-1" aria-labelledby="bookingModalLabel" aria-hidden="true" style="z-index: 1065;">
+    <div class="modal-dialog modal-dialog-centered modal-lg">
+        <div class="modal-content rounded-4 border-0 shadow-lg" style="background-color: #ffffff;">
+            <div class="modal-header border-bottom p-4" style="background-color: #121212; color: #ffffff;">
+                <h5 class="modal-title fw-bold m-0 d-flex align-items-center gap-2" id="bookingModalLabel" style="font-family: var(--font-serif, 'Playfair Display', serif);">
+                    <i class="bi bi-calendar-event text-gold" style="color: #c5a059;"></i> Réserver un Rendez-vous
+                </h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Fermer"></button>
+            </div>
+            
+            <form method="post" action="{% url 'reservation_create' %}" id="modalBookingForm">
+                {% csrf_token %}
+                <input type="hidden" name="service_id" id="modalServiceId">
+                <input type="hidden" name="additional_service_ids" id="modalAdditionalServiceIds" value="">
+                <input type="hidden" name="start_time" id="modalStartTime">
+
+                <div class="modal-body p-4" style="background-color: #fcfbfa;">
+                    
+                    <!-- Prestation summary banner -->
+                    <div class="p-3 bg-white rounded-3 border mb-3 d-flex align-items-center justify-content-between shadow-sm">
+                        <div>
+                            <span class="text-muted small">Soin(s) choisi(s)</span>
+                            <h6 class="fw-bold mb-0 text-dark" id="modalServiceName">--</h6>
+                            <small class="text-muted" id="modalServiceMeta">-- min</small>
+                        </div>
+                        <span class="fs-4 fw-bold" style="color: #c5a059;" id="modalServicePrice">-- DH</span>
+                    </div>
+
+                    <!-- Multi-service additional selector -->
+                    <div class="mb-3">
+                        <button type="button" class="btn btn-outline-dark btn-sm rounded-pill w-100 py-2 d-flex align-items-center justify-content-between px-3" data-bs-toggle="collapse" data-bs-target="#additionalServicesCollapse" style="border-style: dashed; border-color: #c5a059; color: #121212; background: #fffdf9;">
+                            <span><i class="bi bi-plus-circle-fill me-2" style="color: #c5a059;"></i>Ajouter d'autres prestations (Formule Multi-Soins)</span>
+                            <i class="bi bi-chevron-down small"></i>
+                        </button>
+                        <div class="collapse mt-2" id="additionalServicesCollapse">
+                            <div class="p-3 bg-white rounded-3 border" style="max-height: 200px; overflow-y: auto;">
+                                <div class="small fw-bold text-muted mb-2"><i class="bi bi-check2-square me-1"></i>Cochez des soins complémentaires à ajouter à votre séance :</div>
+                                <div class="d-flex flex-column gap-2" id="additionalServicesList">
+                                    {% for extra_s in services_list %}
+                                    <div class="form-check extra-service-item p-2 rounded-2 border-bottom" data-service-id="{{ extra_s.id }}">
+                                        <input class="form-check-input extra-service-check" type="checkbox" value="{{ extra_s.id }}" 
+                                               data-name="{{ extra_s.name }}" data-category="{{ extra_s.category }}" data-duration="{{ extra_s.duration_minutes }}" data-price="{{ extra_s.price|floatformat:'0' }}" 
+                                               id="extraCheck{{ extra_s.id }}" onchange="updateSelectedComboServices()">
+                                        <label class="form-check-label small text-dark cursor-pointer w-100 d-flex justify-content-between align-items-center ps-2" for="extraCheck{{ extra_s.id }}">
+                                            <span><span class="badge bg-light text-secondary me-1 border">{{ extra_s.category }}</span> <strong>{{ extra_s.name }}</strong></span>
+                                            <span class="fw-bold" style="color: #c5a059;">{{ extra_s.price|floatformat:"0" }} DH <small class="text-muted font-normal">({{ extra_s.duration_minutes }} min)</small></span>
+                                        </label>
+                                    </div>
+                                    {% endfor %}
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    {% if not user.is_authenticated %}
+                    <div class="alert alert-warning small rounded-3 mb-3">
+                        <i class="bi bi-info-circle me-1"></i> Vous devez être connecté pour finaliser votre réservation. <a href="{% url 'account_login' %}?next={{ request.path }}" class="fw-bold text-dark text-decoration-underline">Se connecter</a>
+                    </div>
+                    {% endif %}
+
+                    <div class="row g-3 mb-3">
+                        <!-- Employee selection -->
+                        <div class="col-md-6">
+                            <label class="form-label small fw-bold text-dark">Expert pour le soin principal <span class="text-danger">*</span></label>
+                            <select name="employee_id" id="modalEmployeeSelect" class="form-select rounded-3 py-2" onchange="fetchModalAvailableSlots()" required>
+                                <option value="">-- Sélectionner un expert --</option>
+                                {% for emp in employees_list %}
+                                <option value="{{ emp.id }}" data-department="{{ emp.department }}" data-position="{{ emp.position }}">{{ emp.full_name }} ({{ emp.position }})</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+
+                        <!-- Date selection -->
+                        <div class="col-md-6">
+                            <label class="form-label small fw-bold text-dark">Date du rendez-vous <span class="text-danger">*</span></label>
+                            <input type="date" name="date" id="modalDateInput" class="form-control rounded-3 py-2" onchange="fetchModalAvailableSlots()" required>
+                        </div>
+                    </div>
+
+                    <!-- Extra Services Dedicated Employees Container -->
+                    <div id="extraEmployeesContainer" class="mb-3 d-none">
+                        <div class="small fw-bold text-dark mb-2"><i class="bi bi-people-fill me-1" style="color: #c5a059;"></i>Expert(s) pour soin(s) complémentaire(s) :</div>
+                        <div id="extraEmployeesList" class="d-flex flex-column gap-2"></div>
+                    </div>
+
+                    <!-- Available time slots container -->
+                    <div class="mb-3">
+                        <label class="form-label small fw-bold text-dark mb-2">Créneaux horaires disponibles en temps réel</label>
+                        <div id="modalSlotsContainer" class="d-flex flex-wrap gap-2 p-3 bg-white rounded-3 border min-h-60 align-items-center">
+                            <span class="text-muted small"><i class="bi bi-clock me-1"></i>Chargement des créneaux...</span>
+                        </div>
+                    </div>
+
+                    <!-- Optional Notes -->
+                    <div class="mb-2">
+                        <label class="form-label small fw-bold text-dark">Notes / Demande particulière (optionnel)</label>
+                        <textarea name="notes" class="form-control rounded-3" rows="2" placeholder="Précisez vos souhaits particuliers..."></textarea>
+                    </div>
+
+                </div>
+
+                <div class="modal-footer border-top p-3 bg-white">
+                    <button type="button" class="btn btn-outline-secondary rounded-3 px-4 fw-semibold" data-bs-dismiss="modal">Annuler</button>
+                    <button type="submit" id="btnModalSubmit" class="btn btn-dark rounded-3 px-4 py-2 fw-bold" style="background-color: #121212;" disabled>
+                        <i class="bi bi-check2-circle me-1" style="color: #c5a059;"></i>Confirmer la Réservation
+                    </button>
+                </div>
+            </form>
+
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    let primaryServiceId = null;
+    let primaryServiceName = "";
+    let primaryServiceCategory = "";
+    let primaryServiceDuration = 0;
+    let primaryServicePrice = 0;
+    let allModalEmployees = [];
+
+    document.addEventListener('DOMContentLoaded', function() {
+        // Cache master employees list from initial DOM
+        const empSelect = document.getElementById('modalEmployeeSelect');
+        if (empSelect) {
+            for (let i = 1; i < empSelect.options.length; i++) {
+                const opt = empSelect.options[i];
+                const pos = (opt.getAttribute('data-position') || '').toLowerCase();
+                const dept = (opt.getAttribute('data-department') || '').toLowerCase();
+                // Exclude receptionists (adam_coiffure) from direct service booking
+                if (pos.includes('réception') || pos.includes('reception') || dept.includes('accueil')) {
+                    continue;
+                }
+                allModalEmployees.push({
+                    id: opt.value,
+                    text: opt.text,
+                    department: opt.getAttribute('data-department') || '',
+                    position: opt.getAttribute('data-position') || ''
+                });
+            }
+        }
+
+        // Category filtering & Search logic
+        const filterBtns = document.querySelectorAll('.filter-btn');
+        const searchInput = document.getElementById('serviceSearchInput');
+        const serviceCards = document.querySelectorAll('.service-item-wrapper');
+        const noResultsMsg = document.getElementById('noResultsMsg');
+
+        let selectedCategory = 'all';
+
+        function filterServices() {
+            const query = searchInput ? searchInput.value.toLowerCase().trim() : '';
+            const selCat = (selectedCategory || 'all').toLowerCase().trim();
+            let visibleCount = 0;
+
+            serviceCards.forEach(card => {
+                const cat = (card.getAttribute('data-category') || '').toLowerCase().trim();
+                const name = (card.getAttribute('data-name') || '').toLowerCase().trim();
+                const desc = (card.getAttribute('data-desc') || '').toLowerCase().trim();
+
+                const matchesCat = (selCat === 'all' || cat === selCat);
+                const matchesSearch = !query || name.includes(query) || desc.includes(query) || cat.includes(query);
+
+                if (matchesCat && matchesSearch) {
+                    card.classList.remove('d-none');
+                    visibleCount++;
+                } else {
+                    card.classList.add('d-none');
+                }
+            });
+
+            if (noResultsMsg) {
+                if (visibleCount === 0) {
+                    noResultsMsg.classList.remove('d-none');
+                } else {
+                    noResultsMsg.classList.add('d-none');
+                }
+            }
+        }
+
+        filterBtns.forEach(btn => {
+            btn.addEventListener('click', function(e) {
+                e.preventDefault();
+                filterBtns.forEach(b => {
+                    b.classList.remove('active', 'btn-dark');
+                    b.classList.add('btn-outline-dark');
+                });
+                this.classList.remove('btn-outline-dark');
+                this.classList.add('active', 'btn-dark');
+
+                selectedCategory = this.getAttribute('data-category') || 'all';
+                filterServices();
+            });
+        });
+
+        if (searchInput) {
+            searchInput.addEventListener('input', filterServices);
+        }
+
+        const bookingModal = document.getElementById('bookingModal');
+        if (bookingModal) {
+            bookingModal.addEventListener('show.bs.modal', function (event) {
+                const button = event.relatedTarget;
+                if (!button) return;
+                
+                primaryServiceId = button.getAttribute('data-service-id');
+                primaryServiceName = button.getAttribute('data-service-name');
+                primaryServiceCategory = (button.getAttribute('data-service-category') || '').toLowerCase().trim();
+                primaryServiceDuration = parseInt(button.getAttribute('data-service-duration'), 10) || 0;
+                primaryServicePrice = parseFloat(button.getAttribute('data-service-price')) || 0;
+
+                document.getElementById('modalServiceId').value = primaryServiceId;
+
+                // Reset additional services checkboxes
+                document.querySelectorAll('.extra-service-check').forEach(chk => {
+                    chk.checked = false;
+                });
+
+                // Hide primary service from extra services list
+                document.querySelectorAll('.extra-service-item').forEach(item => {
+                    if (item.getAttribute('data-service-id') === String(primaryServiceId)) {
+                        item.classList.add('d-none');
+                    } else {
+                        item.classList.remove('d-none');
+                    }
+                });
+
+                // Auto-set today date
+                const today = new Date().toISOString().split('T')[0];
+                const dateInput = document.getElementById('modalDateInput');
+                dateInput.value = today;
+                dateInput.min = today;
+
+                document.getElementById('modalStartTime').value = "";
+                document.getElementById('btnModalSubmit').disabled = true;
+
+                // Update combo totals and auto fetch slots
+                updateSelectedComboServices();
+            });
+        }
+    });
+
+    function getFilteredEmployeesForCategory(catStr) {
+        const catClean = (catStr || '').toLowerCase().trim();
+        return allModalEmployees.filter(emp => {
+            const dept = emp.department.toLowerCase();
+            const pos = emp.position.toLowerCase();
+
+            if (catClean.includes('ongle')) {
+                return dept.includes('ongle') || pos.includes('ongle');
+            } else if (catClean.includes('esth')) {
+                return dept.includes('esth') || pos.includes('esth');
+            } else if (catClean.includes('coiff') || catClean.includes('color') || catClean.includes('barb')) {
+                return dept.includes('coiff') || pos.includes('coiff') || dept.includes('barb') || pos.includes('barb');
+            } else {
+                return dept.includes(catClean) || pos.includes(catClean);
+            }
+        });
+    }
+
+    function filterEmployeeSelectForCategories(categoriesArray) {
+        const empSelect = document.getElementById('modalEmployeeSelect');
+        if (!empSelect || allModalEmployees.length === 0) return;
+
+        const currentVal = empSelect.value;
+        const cleanCats = (categoriesArray || []).map(c => (c || '').toLowerCase().trim()).filter(Boolean);
+
+        const filtered = allModalEmployees.filter(emp => {
+            const dept = emp.department.toLowerCase();
+            const pos = emp.position.toLowerCase();
+
+            return cleanCats.some(catClean => {
+                if (catClean.includes('ongle')) {
+                    return dept.includes('ongle') || pos.includes('ongle');
+                } else if (catClean.includes('esth')) {
+                    return dept.includes('esth') || pos.includes('esth');
+                } else if (catClean.includes('coiff') || catClean.includes('color') || catClean.includes('barb')) {
+                    return dept.includes('coiff') || pos.includes('coiff') || dept.includes('barb') || pos.includes('barb');
+                } else {
+                    return dept.includes(catClean) || pos.includes(catClean);
+                }
+            });
+        });
+
+        // Rebuild primary select options dynamically in DOM
+        empSelect.innerHTML = '<option value="">-- Sélectionner un expert --</option>';
+
+        let selectedStillValid = false;
+        filtered.forEach(emp => {
+            const opt = document.createElement('option');
+            opt.value = emp.id;
+            opt.textContent = emp.text;
+            opt.setAttribute('data-department', emp.department);
+            opt.setAttribute('data-position', emp.position);
+
+            if (emp.id === currentVal) {
+                opt.selected = true;
+                selectedStillValid = true;
+            }
+
+            empSelect.appendChild(opt);
+        });
+
+        if (!selectedStillValid && filtered.length > 0) {
+            empSelect.options[1].selected = true;
+        }
+    }
+
+    function updateSelectedComboServices() {
+        const checkedExtras = Array.from(document.querySelectorAll('.extra-service-check:checked'));
+        let combinedDuration = primaryServiceDuration;
+        let combinedPrice = primaryServicePrice;
+        let selectedNames = [primaryServiceName];
+        let extraIds = [];
+
+        // Primary service employee select is strictly filtered for primaryServiceCategory
+        filterEmployeeSelectForCategories([primaryServiceCategory]);
+
+        const extraEmployeesContainer = document.getElementById('extraEmployeesContainer');
+        const extraEmployeesList = document.getElementById('extraEmployeesList');
+        if (extraEmployeesList) {
+            extraEmployeesList.innerHTML = '';
+        }
+
+        if (checkedExtras.length > 0) {
+            if (extraEmployeesContainer) extraEmployeesContainer.classList.remove('d-none');
+
+            checkedExtras.forEach(chk => {
+                const extraId = chk.value;
+                const extraName = chk.getAttribute('data-name');
+                const extraDur = parseInt(chk.getAttribute('data-duration'), 10) || 0;
+                const extraPrice = parseFloat(chk.getAttribute('data-price')) || 0;
+                const extraCat = chk.getAttribute('data-category') || '';
+
+                combinedDuration += extraDur;
+                combinedPrice += extraPrice;
+                selectedNames.push(extraName);
+                extraIds.push(extraId);
+
+                // Render dedicated expert selection card for this added extra service
+                if (extraEmployeesList) {
+                    const card = document.createElement('div');
+                    card.className = 'p-3 bg-white rounded-3 border shadow-xs';
+                    card.id = `extraEmpCard_${extraId}`;
+
+                    const label = document.createElement('label');
+                    label.className = 'form-label small fw-bold text-dark mb-1 d-flex justify-content-between align-items-center';
+                    label.innerHTML = `<span><i class="bi bi-person-fill-check me-1" style="color:#c5a059;"></i>Expert pour <strong>${extraName}</strong></span> <span class="badge bg-light text-secondary border">${extraCat}</span>`;
+
+                    const select = document.createElement('select');
+                    select.name = `extra_employee_${extraId}`;
+                    select.className = 'form-select form-select-sm rounded-3 py-1.5 extra-emp-select';
+                    select.required = true;
+                    select.onchange = fetchModalAvailableSlots;
+
+                    let optionsHtml = '<option value="">-- Choisir un expert --</option>';
+                    const matchingEmps = getFilteredEmployeesForCategory(extraCat);
+                    matchingEmps.forEach((emp, idx) => {
+                        optionsHtml += `<option value="${emp.id}" ${idx === 0 ? 'selected' : ''}>${emp.text}</option>`;
+                    });
+                    select.innerHTML = optionsHtml;
+
+                    card.appendChild(label);
+                    card.appendChild(select);
+                    extraEmployeesList.appendChild(card);
+                }
+            });
+        } else {
+            if (extraEmployeesContainer) extraEmployeesContainer.classList.add('d-none');
+        }
+
+        document.getElementById('modalAdditionalServiceIds').value = extraIds.join(',');
+        document.getElementById('modalServiceName').innerText = selectedNames.join(' + ');
+        document.getElementById('modalServiceMeta').innerText = `${combinedDuration} min`;
+        document.getElementById('modalServicePrice').innerText = `${combinedPrice.toFixed(0)} DH`;
+
+        fetchModalAvailableSlots();
+    }
+
+    function selectModalSlot(timeStr, el) {
+        document.querySelectorAll('.slot-pill-modal').forEach(p => p.classList.remove('selected'));
+        el.classList.add('selected');
+        document.getElementById('modalStartTime').value = timeStr;
+        document.getElementById('btnModalSubmit').disabled = false;
+    }
+
+    function fetchModalAvailableSlots() {
+        const empSelect = document.getElementById('modalEmployeeSelect');
+        const dateInput = document.getElementById('modalDateInput');
+        const slotsContainer = document.getElementById('modalSlotsContainer');
+        const btnSubmit = document.getElementById('btnModalSubmit');
+
+        if (!empSelect || !dateInput || !slotsContainer) return;
+
+        const empId = empSelect.value;
+        const dateVal = dateInput.value;
+
+        btnSubmit.disabled = true;
+        document.getElementById('modalStartTime').value = "";
+
+        if (!primaryServiceId || !empId || !dateVal) {
+            slotsContainer.innerHTML = '<span class="text-muted small"><i class="bi bi-info-circle me-1"></i>Veuillez choisir un expert et une date.</span>';
+            return;
+        }
+
+        const extraIds = document.getElementById('modalAdditionalServiceIds').value;
+        const serviceIds = [primaryServiceId];
+        if (extraIds) {
+            extraIds.split(',').forEach(id => {
+                if (id.trim()) serviceIds.push(id.trim());
+            });
+        }
+
+        slotsContainer.innerHTML = '<div class="spinner-border spinner-border-sm text-warning me-2"></div><span class="text-muted small">Vérification de la disponibilité...</span>';
+
+        fetch(`/api/available-slots/?service_ids=${serviceIds.join(',')}&employee_id=${empId}&date=${dateVal}`)
+            .then(res => res.json())
+            .then(data => {
+                if (data.error) {
+                    slotsContainer.innerHTML = `<span class="text-danger small"><i class="bi bi-exclamation-triangle me-1"></i>${data.error}</span>`;
+                    return;
+                }
+
+                if (data.available_slots && data.available_slots.length > 0) {
+                    let html = '';
+                    data.available_slots.forEach(slot => {
+                        html += `
+                            <button type="button" class="slot-pill-modal" onclick="selectModalSlot('${slot.start}', this)">
+                                <i class="bi bi-clock me-1 text-warning"></i>${slot.display}
+                            </button>
+                        `;
+                    });
+                    slotsContainer.innerHTML = html;
+                } else {
+                    const noticeText = data.notice || `Aucun créneau libre pour ${data.employee_name} le ${data.date} (Durée totale : ${data.duration_minutes} min). Veuillez choisir un autre jour ou expert.`;
+                    slotsContainer.innerHTML = `
+                        <div class="text-warning small w-100 p-1">
+                            <i class="bi bi-exclamation-circle me-1"></i> ${noticeText}
+                        </div>
+                    `;
+                }
+            })
+            .catch(err => {
+                slotsContainer.innerHTML = '<span class="text-danger small">Erreur de chargement des créneaux.</span>';
+            });
+    }
+</script>
+{% endblock %}

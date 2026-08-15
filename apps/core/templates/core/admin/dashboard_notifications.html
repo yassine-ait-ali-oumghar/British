@@ -1,0 +1,197 @@
+{% extends 'core/admin/admin_base.html' %}
+
+{% block title %}Gestion des Notifications & Annonces - ERP | British Style{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4 flex-wrap gap-2">
+    <div>
+        <h4 class="fw-bold text-dark mb-1">Notifications & Annonces d'Équipe</h4>
+        <p class="text-muted small mb-0">Rédigez et diffusez des annonces, des consignes d'administration ou des modifications de planning directement à l'équipe.</p>
+    </div>
+    <div>
+        <button class="btn btn-primary fw-semibold rounded-3 px-3 py-2 d-inline-flex align-items-center gap-2" data-bs-toggle="modal" data-bs-target="#createNotificationModal">
+            <i class="bi bi-plus-lg fs-6"></i> Publier une Notification
+        </button>
+    </div>
+</div>
+
+{% if msg %}
+<div class="alert alert-{{ msg_type }} alert-auto-dismiss alert-dismissible fade show rounded-3 shadow-sm border-0 mb-4" role="alert" data-dismiss-delay="5000">
+    <i class="bi {% if msg_type == 'success' %}bi-check-circle-fill me-2{% else %}bi-exclamation-triangle-fill me-2{% endif %}"></i> {{ msg }}
+    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+</div>
+{% endif %}
+
+<!-- KPI Cards -->
+<div class="row g-3 mb-4">
+    <div class="col-md-3">
+        <div class="erp-card d-flex align-items-center justify-content-between p-3 mb-0">
+            <div>
+                <div class="text-muted small fw-semibold text-uppercase">Total Publiées</div>
+                <div class="fs-3 fw-bold text-dark mt-1">{{ total_count }}</div>
+            </div>
+            <div class="rounded-circle bg-primary bg-opacity-10 text-primary p-3 d-flex align-items-center justify-content-center" style="width: 48px; height: 48px;">
+                <i class="bi bi-bell-fill fs-4"></i>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="erp-card d-flex align-items-center justify-content-between p-3 mb-0">
+            <div>
+                <div class="text-muted small fw-semibold text-uppercase">Annonces</div>
+                <div class="fs-3 fw-bold text-primary mt-1">{{ announcement_count }}</div>
+            </div>
+            <div class="rounded-circle bg-primary bg-opacity-10 text-primary p-3 d-flex align-items-center justify-content-center" style="width: 48px; height: 48px;">
+                <i class="bi bi-megaphone-fill fs-4"></i>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="erp-card d-flex align-items-center justify-content-between p-3 mb-0">
+            <div>
+                <div class="text-muted small fw-semibold text-uppercase">Consignes Admin</div>
+                <div class="fs-3 fw-bold text-danger mt-1">{{ admin_count }}</div>
+            </div>
+            <div class="rounded-circle bg-danger bg-opacity-10 text-danger p-3 d-flex align-items-center justify-content-center" style="width: 48px; height: 48px;">
+                <i class="bi bi-shield-lock-fill fs-4"></i>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="erp-card d-flex align-items-center justify-content-between p-3 mb-0">
+            <div>
+                <div class="text-muted small fw-semibold text-uppercase">Plannings</div>
+                <div class="fs-3 fw-bold text-success mt-1">{{ schedule_count }}</div>
+            </div>
+            <div class="rounded-circle bg-success bg-opacity-10 text-success p-3 d-flex align-items-center justify-content-center" style="width: 48px; height: 48px;">
+                <i class="bi bi-calendar-event-fill fs-4"></i>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Notifications Table -->
+<div class="erp-card p-0 overflow-hidden">
+    <div class="w-100 overflow-hidden">
+        <table class="table table-hover align-middle mb-0 w-100">
+            <thead class="table-light">
+                <tr>
+                    <th class="ps-4 py-3">Type</th>
+                    <th class="py-3">Destinataire</th>
+                    <th class="py-3">Titre & Message</th>
+                    <th class="py-3 text-nowrap">Date de création</th>
+                    <th class="pe-4 py-3 text-end text-nowrap">Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for notif in notifications %}
+                <tr>
+                    <td class="ps-4 text-nowrap">
+                        {% if notif.type == 'ANNOUNCEMENT' %}
+                            <span class="badge bg-primary bg-opacity-10 text-primary border border-primary border-opacity-25 px-3 py-2 rounded-pill fw-medium">
+                                <i class="bi bi-megaphone me-1"></i> Annonce
+                            </span>
+                        {% elif notif.type == 'ADMIN' %}
+                            <span class="badge bg-danger bg-opacity-10 text-danger border border-danger border-opacity-25 px-3 py-2 rounded-pill fw-medium">
+                                <i class="bi bi-shield-lock me-1"></i> Administration
+                            </span>
+                        {% else %}
+                            <span class="badge bg-success bg-opacity-10 text-success border border-success border-opacity-25 px-3 py-2 rounded-pill fw-medium">
+                                <i class="bi bi-calendar-event me-1"></i> Planning
+                            </span>
+                        {% endif %}
+                    </td>
+                    <td class="text-nowrap">
+                        {% if notif.employee %}
+                            <div class="d-inline-flex align-items-center gap-2 bg-light border px-2.5 py-1 rounded-pill small">
+                                <div class="avatar-circle rounded-circle text-white fw-bold d-flex align-items-center justify-content-center flex-shrink-0" style="width: 22px; height: 22px; background-color: {{ notif.employee.avatar_color }}; font-size: 0.65rem;">
+                                    {{ notif.employee.first_name|slice:":1" }}{{ notif.employee.last_name|slice:":1" }}
+                                </div>
+                                <span class="fw-semibold text-dark">{{ notif.employee.full_name }}</span>
+                            </div>
+                        {% else %}
+                            <span class="badge bg-dark bg-opacity-10 text-dark border px-3 py-1.5 rounded-pill fw-medium">
+                                <i class="bi bi-people-fill me-1 text-secondary"></i> Tous les employés
+                            </span>
+                        {% endif %}
+                    </td>
+                    <td>
+                        <div class="fw-bold text-dark mb-0.5">{{ notif.title }}</div>
+                        <div class="text-muted small text-truncate" style="max-width: 480px;">{{ notif.message }}</div>
+                    </td>
+                    <td class="text-muted small text-nowrap">
+                        <i class="bi bi-clock me-1 text-muted"></i>{{ notif.created_at|date:"d/m/Y H:i" }}
+                    </td>
+                    <td class="pe-4 text-end text-nowrap">
+                        <form method="post" class="d-inline" onsubmit="return confirm('Supprimer définitivement cette notification ?');">
+                            {% csrf_token %}
+                            <input type="hidden" name="action" value="delete">
+                            <input type="hidden" name="notification_id" value="{{ notif.id }}">
+                            <button type="submit" class="btn btn-sm btn-light border text-danger rounded-3 px-2.5 py-1" title="Supprimer la notification">
+                                <i class="bi bi-trash-fill"></i> Supprimer
+                            </button>
+                        </form>
+                    </td>
+                </tr>
+                {% empty %}
+                <tr>
+                    <td colspan="5" class="text-center py-5 text-muted">
+                        <i class="bi bi-bell-slash display-5 d-block mb-2 text-muted"></i>
+                        Aucune notification enregistrée. Cliquez sur "Publier une Notification" pour en créer une.
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<!-- Modal Publier Notification -->
+<div class="modal fade" id="createNotificationModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content border-0 shadow-lg rounded-4">
+            <div class="modal-header border-bottom-0 pb-0">
+                <h5 class="modal-title fw-bold">Publier une Notification</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <form method="post">
+                {% csrf_token %}
+                <input type="hidden" name="action" value="create">
+                <div class="modal-body p-4">
+                    <div class="row g-3">
+                        <div class="col-12">
+                            <label class="form-label small fw-bold">Titre de la notification <span class="text-danger">*</span></label>
+                            <input type="text" name="title" class="form-control" placeholder="ex: Modification des horaires, Réunion d'équipe..." required>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label small fw-bold">Type <span class="text-danger">*</span></label>
+                            <select name="type" class="form-select" required>
+                                <option value="ANNOUNCEMENT" selected>📢 Annonce Générale</option>
+                                <option value="ADMIN">🛡️ Message Administration</option>
+                                <option value="SCHEDULE">📅 Changement de Planning</option>
+                            </select>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label small fw-bold">Destinataire <span class="text-danger">*</span></label>
+                            <select name="employee_id" class="form-select" required>
+                                <option value="all" selected>👥 Tous les employés de l'équipe</option>
+                                {% for emp in team_employees %}
+                                <option value="{{ emp.id }}">👤 {{ emp.full_name }} ({{ emp.position }})</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        <div class="col-12">
+                            <label class="form-label small fw-bold">Contenu du message <span class="text-danger">*</span></label>
+                            <textarea name="message" class="form-control" rows="4" placeholder="Rédigez ici le texte détaillé de la notification destinée aux employés..." required></textarea>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer border-top-0 pt-0">
+                    <button type="button" class="btn btn-light" data-bs-dismiss="modal">Annuler</button>
+                    <button type="submit" class="btn btn-primary fw-semibold px-4">Publier la Notification</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}

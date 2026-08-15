@@ -1,0 +1,405 @@
+{% extends 'core/reception/reception_base.html' %}
+
+{% block title %}Tableau de Bord Réception | British Style{% endblock %}
+
+{% block header_title %}Tableau de Bord Réception{% endblock %}
+
+{% block content %}
+<!-- Live Stats Cards Grid -->
+<div class="row g-3 mb-4">
+    <!-- 📅 Rendez-vous aujourd'hui -->
+    <div class="col-xl-2 col-lg-4 col-md-6">
+        <div class="stat-card border-0 shadow-sm" style="background: linear-gradient(135deg, #ffffff, #f8fafc);">
+            <div class="stat-icon bg-primary bg-opacity-10 text-primary">
+                <i class="bi bi-calendar-event-fill"></i>
+            </div>
+            <div>
+                <div class="stat-val" id="kpi-today-rdv">{{ today_reservations_count }}</div>
+                <div class="stat-label">RDV Aujourd'hui</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ⏳ Rendez-vous en attente -->
+    <div class="col-xl-2 col-lg-4 col-md-6">
+        <div class="stat-card border-0 shadow-sm" style="background: linear-gradient(135deg, #ffffff, #fffbeb);">
+            <div class="stat-icon bg-warning bg-opacity-10 text-warning">
+                <i class="bi bi-hourglass-split"></i>
+            </div>
+            <div>
+                <div class="stat-val text-warning" id="kpi-pending-rdv">{{ pending_reservations_count }}</div>
+                <div class="stat-label">RDV en attente</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 👩 Clientes attendues -->
+    <div class="col-xl-3 col-lg-4 col-md-6">
+        <div class="stat-card border-0 shadow-sm" style="background: linear-gradient(135deg, #ffffff, #f3e8ff);">
+            <div class="stat-icon text-purple" style="background-color: #f3e8ff; color: #6b21a8;">
+                <i class="bi bi-person-hearts"></i>
+            </div>
+            <div>
+                <div class="stat-val" style="color: #6b21a8;" id="kpi-expected-clients">{{ expected_clients_count }}</div>
+                <div class="stat-label">Clientes Attendues</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 💰 Encaissement du jour -->
+    <div class="col-xl-2 col-lg-6 col-md-6">
+        <div class="stat-card border-0 shadow-sm" style="background: linear-gradient(135deg, #ffffff, #f0fdf4);">
+            <div class="stat-icon bg-success bg-opacity-10 text-success">
+                <i class="bi bi-cash-coin"></i>
+            </div>
+            <div>
+                <div class="stat-val text-success" id="kpi-today-payments">{{ today_payments_total }} DH</div>
+                <div class="stat-label">Caisse du jour</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 📦 Click & Collect à retirer -->
+    <div class="col-xl-3 col-lg-6 col-md-6">
+        <div class="stat-card border-0 shadow-sm" style="background: linear-gradient(135deg, #ffffff, #eff6ff);">
+            <div class="stat-icon bg-info bg-opacity-10 text-info">
+                <i class="bi bi-box-seam-fill"></i>
+            </div>
+            <div>
+                <div class="stat-val text-info" id="kpi-click-collect">{{ click_collect_pending_count }}</div>
+                <div class="stat-label">Click & Collect à retirer</div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Main Planning & Arrivées Section -->
+<div class="row g-4">
+    <!-- Left Column: Planning du Jour & Actions Arrivée -->
+    <div class="col-xl-8 col-lg-8">
+        <div class="luxury-card border-0 shadow-sm p-3">
+            <div class="d-flex align-items-center justify-content-between mb-3 pb-3 border-bottom flex-wrap gap-2">
+                <h5 class="fw-bold mb-0 d-flex align-items-center gap-2">
+                    <i class="bi bi-clock-history text-gold" style="color: #c5a059;"></i>
+                    Planning des Arrivées du Jour ({{ today_date|date:"d/m/Y" }})
+                </h5>
+                <a href="{% url 'reception_planning' %}" class="btn btn-outline-gold btn-sm rounded-3">
+                    <i class="bi bi-calendar3 me-1"></i> Planning
+                </a>
+            </div>
+
+            {% if schedule_reservations %}
+            <div class="table-responsive">
+                <table class="table table-sm align-middle table-hover border-0 mb-0">
+                    <thead class="table-light text-muted small text-uppercase">
+                        <tr>
+                            <th style="min-width: 95px;">Heure</th>
+                            <th>Cliente</th>
+                            <th>Prestation</th>
+                            <th>Employé</th>
+                            <th>Statut</th>
+                            <th class="text-end" style="min-width: 140px;">Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for r in schedule_reservations %}
+                        {% for win in r.get_service_windows_breakdown %}
+                        <tr id="rdv-row-{{ r.id }}" class="{% if win.status == 'ARRIVED' %}table-purple{% elif win.status == 'CANCELLED' %}table-danger bg-opacity-10 opacity-50{% endif %}">
+                            <td class="fw-bold text-nowrap small">
+                                <i class="bi bi-clock me-1 text-gold"></i>{{ win.start_time|time:"H:i" }}-{{ win.end_time|time:"H:i" }}
+                            </td>
+                            <td>
+                                <div class="fw-semibold text-nowrap" style="font-size: 0.85rem;">{{ r.client.first_name }} {{ r.client.last_name }}</div>
+                                <div class="small text-muted text-truncate" style="max-width: 130px;" title="{{ r.client.employee_profile.phone|default:r.client.email }}">
+                                    <i class="bi bi-telephone me-1"></i>{{ r.client.employee_profile.phone|default:r.client.email }}
+                                </div>
+                            </td>
+                            <td>
+                                <span class="category-pill {% if 'ongl' in win.service_category|lower %}cat-onglerie{% elif 'coiff' in win.service_category|lower %}cat-coiffure{% else %}cat-esthetique{% endif %} mb-1 d-inline-block" style="font-size: 0.7rem; padding: 2px 6px;">
+                                    {% if 'ongl' in win.service_category|lower %}💅 Onglerie{% elif 'coiff' in win.service_category|lower %}💇‍♀️ Coiffure{% else %}✨ Esthétique{% endif %}
+                                </span>
+                                <div class="small fw-medium text-truncate" style="max-width: 140px;" title="{{ win.service_name }} ({{ win.duration_minutes }} min)">
+                                    {{ win.service_name }}
+                                </div>
+                            </td>
+                            <td>
+                                <div class="d-flex align-items-center gap-1">
+                                    <div class="rounded-circle text-white d-flex align-items-center justify-content-center fw-bold" style="width:24px; height:24px; background-color: {{ win.employee.avatar_color|default:'#c5a059' }}; font-size: 0.7rem;">
+                                        {{ win.employee.first_name|first }}{{ win.employee.last_name|first }}
+                                    </div>
+                                    <span class="small fw-semibold text-nowrap" style="font-size: 0.8rem;">{{ win.employee.first_name }}</span>
+                                </div>
+                            </td>
+                            <td>
+                                <span class="badge-status badge-{{ win.status|lower }} small" id="status-badge-{{ r.id }}" style="font-size: 0.75rem;">
+                                    {% if win.status == 'PENDING' %}🟡 Attente
+                                    {% elif win.status == 'CONFIRMED' %}🔵 Confirmé
+                                    {% elif win.status == 'ARRIVED' %}🟣 Arrivée
+                                    {% elif win.status == 'IN_PROGRESS' %}🟠 En cours
+                                    {% elif win.status == 'COMPLETED' %}🟢 Terminé
+                                    {% elif win.status == 'CANCELLED' %}🔴 Absente
+                                    {% elif win.status == 'NO_SHOW' %}⚫ Absente
+                                    {% else %}{{ win.status_display }}
+                                    {% endif %}
+                                </span>
+                                <div class="small text-muted mt-1" id="arrival-time-{{ r.id }}" style="font-size: 0.7rem;">
+                                    {% if r.arrival_time %}
+                                    <span class="text-success fw-bold">🟢 {{ r.arrival_time|date:"H:i" }}</span>
+                                    {% endif %}
+                                </div>
+                            </td>
+                            <td class="text-end text-nowrap">
+                                {% if r.is_paid %}
+                                <span class="badge bg-success bg-opacity-10 text-success rounded-pill px-2 py-1 fw-bold me-1 border border-success" style="font-size: 0.75rem;">
+                                    🟢 Payé
+                                </span>
+                                {% elif win.status != 'CANCELLED' and win.status != 'NO_SHOW' and r.status != 'CANCELLED' and r.status != 'NO_SHOW' %}
+                                <button type="button" class="btn btn-sm btn-gold text-white rounded-3 fw-semibold px-2 py-1 me-1 shadow-sm" data-bs-toggle="modal" data-bs-target="#payRDVModal{{ r.id }}" style="background-color: #c5a059; font-size: 0.75rem;">
+                                    <i class="bi bi-credit-card me-1"></i>Encaisser
+                                </button>
+                                {% endif %}
+
+                                {% if win.status != 'ARRIVED' and win.status != 'COMPLETED' and win.status != 'CANCELLED' and win.status != 'NO_SHOW' %}
+                                <button type="button" class="btn btn-sm btn-success rounded-3 fw-semibold px-2 py-1 me-1" onclick="markArrived({{ r.id }}, '{{ r.client.first_name|escapejs }}')" style="font-size: 0.75rem;">
+                                    <i class="bi bi-geo-alt-fill me-1"></i>Arrivée
+                                </button>
+                                {% endif %}
+                                <button type="button" class="btn btn-sm btn-light border rounded-3 px-2 py-1" data-bs-toggle="modal" data-bs-target="#detailRDVModal{{ r.id }}" title="Détails" style="font-size: 0.75rem;">
+                                    <i class="bi bi-eye"></i>
+                                </button>
+                            </td>
+                        </tr>
+                        {% endfor %}
+
+                        <!-- Modal Détails RDV -->
+                        <div class="modal fade" id="detailRDVModal{{ r.id }}" tabindex="-1" aria-hidden="true">
+                            <div class="modal-dialog modal-dialog-centered">
+                                <div class="modal-content border-0 shadow-lg rounded-4">
+                                    <div class="modal-header border-0 bg-dark text-white p-4">
+                                        <h5 class="modal-title fw-bold">Détails du Rendez-vous #{{ r.id }}</h5>
+                                        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+                                    </div>
+                                    <div class="modal-body p-4">
+                                        <div class="mb-3 p-3 rounded-3 bg-light border">
+                                            <div class="fw-bold fs-5 text-gold" style="color: #c5a059;">{{ r.client.first_name }} {{ r.client.last_name }}</div>
+                                            <div class="text-muted"><i class="bi bi-envelope me-1"></i>{{ r.client.email }}</div>
+                                            <div class="text-muted"><i class="bi bi-telephone me-1"></i>{{ r.client.employee_profile.phone|default:"Non renseigné" }}</div>
+                                        </div>
+
+                                        <div class="row g-2 mb-3">
+                                            <div class="col-6">
+                                                <small class="text-muted d-block">Service</small>
+                                                <span class="fw-semibold">{{ r.service.name }}</span>
+                                            </div>
+                                            <div class="col-6">
+                                                <small class="text-muted d-block">Catégorie</small>
+                                                <span class="fw-semibold">{{ r.service.category }}</span>
+                                            </div>
+                                            <div class="col-6">
+                                                <small class="text-muted d-block">Employé(e)</small>
+                                                <span class="fw-semibold">{{ r.employee.full_name }}</span>
+                                            </div>
+                                            <div class="col-6">
+                                                <small class="text-muted d-block">Prix</small>
+                                                <span class="fw-bold text-success">{{ r.service.price }} DH</span>
+                                            </div>
+                                            <div class="col-6">
+                                                <small class="text-muted d-block">Horaire</small>
+                                                <span>{{ r.date|date:"d/m/Y" }} à {{ r.start_time|time:"H:i" }}</span>
+                                            </div>
+                                            <div class="col-6">
+                                                <small class="text-muted d-block">Statut Actuel</small>
+                                                <span class="fw-bold">{{ r.get_status_display }}</span>
+                                            </div>
+                                        </div>
+
+                                        {% if r.user_custom_notes %}
+                                        <div class="p-2 bg-light rounded-3 small mb-3 text-muted border">
+                                            <i class="bi bi-chat-left-text me-1"></i> {{ r.user_custom_notes }}
+                                        </div>
+                                        {% endif %}
+
+                                        <div class="d-flex align-items-center justify-content-between pt-2 border-top flex-wrap gap-2">
+                                            {% if r.status != 'CANCELLED' %}
+                                            <button type="button" class="btn btn-outline-danger btn-sm rounded-3" data-bs-toggle="modal" data-bs-target="#cancelRDVModal{{ r.id }}" data-bs-dismiss="modal">
+                                                <i class="bi bi-x-circle me-1"></i> Annuler
+                                            </button>
+                                            {% endif %}
+
+                                            {% if r.is_paid %}
+                                            <span class="badge bg-success bg-opacity-10 text-success rounded-pill px-3 py-2 fw-bold border border-success">
+                                                🟢 Payé ({{ r.paid_payment.amount }} DH)
+                                            </span>
+                                            {% elif r.status != 'CANCELLED' and r.status != 'NO_SHOW' %}
+                                            <button type="button" class="btn btn-gold btn-sm rounded-3 px-3 shadow-sm text-white" data-bs-toggle="modal" data-bs-target="#payRDVModal{{ r.id }}">
+                                                <i class="bi bi-credit-card me-1"></i> Encaisser ({{ r.service.price }} DH)
+                                            </button>
+
+                                            <!-- Modal Encaissement RDV Direct -->
+                                            <div class="modal fade" id="payRDVModal{{ r.id }}" tabindex="-1" aria-hidden="true">
+                                                <div class="modal-dialog modal-dialog-centered">
+                                                    <div class="modal-content border-0 shadow-lg rounded-4 text-start">
+                                                        <div class="modal-header border-0 bg-dark text-white p-4">
+                                                            <h5 class="modal-title fw-bold d-flex align-items-center gap-2">
+                                                                <i class="bi bi-credit-card text-gold" style="color: #c5a059;"></i>
+                                                                Encaisser RDV #{{ r.id }} ({{ r.service.name }})
+                                                            </h5>
+                                                            <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+                                                        </div>
+                                                        <form method="post" action="{% url 'reception_payments' %}">
+                                                            {% csrf_token %}
+                                                            <input type="hidden" name="action" value="pay_reservation">
+                                                            <input type="hidden" name="reservation_id" value="{{ r.id }}">
+                                                            <div class="modal-body p-4 text-dark">
+                                                                <div class="p-3 bg-light rounded-3 mb-3 border">
+                                                                    <div><strong>Cliente :</strong> {{ r.client.first_name }} {{ r.client.last_name }}</div>
+                                                                    <div><strong>Prestation :</strong> {{ r.service.name }} ({{ r.service.category }})</div>
+                                                                    <div><strong>Employé(e) :</strong> {{ r.employee.full_name }}</div>
+                                                                    <div><strong>Tarif de référence :</strong> {{ r.service.price }} DH</div>
+                                                                </div>
+
+                                                                <div class="mb-3">
+                                                                    <label class="form-label fw-semibold">Montant (DH) <span class="text-danger">*</span></label>
+                                                                    <input type="number" step="0.01" name="amount" class="form-control rounded-3 fs-5 fw-bold text-success" value="{{ r.service.price }}" required>
+                                                                </div>
+
+                                                                <div class="mb-3">
+                                                                    <label class="form-label fw-semibold">Mode de paiement <span class="text-danger">*</span></label>
+                                                                    <select name="payment_method" class="form-select rounded-3" required>
+                                                                        <option value="CASH">💵 Espèces</option>
+                                                                    </select>
+                                                                </div>
+
+                                                                <div class="mb-3">
+                                                                    <label class="form-label fw-semibold">Note / Reçu</label>
+                                                                    <textarea name="notes" class="form-control rounded-3" rows="2" placeholder="Numéro de règlement..."></textarea>
+                                                                </div>
+                                                            </div>
+                                                            <div class="modal-footer border-0 p-4 pt-0">
+                                                                <button type="button" class="btn btn-light rounded-3" data-bs-dismiss="modal">Annuler</button>
+                                                                <button type="submit" class="btn btn-gold text-white rounded-3 px-4">Valider l'Encaissement (Payé 🟢)</button>
+                                                            </div>
+                                                        </form>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                            {% endif %}
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Modal Annulation RDV -->
+                        <div class="modal fade" id="cancelRDVModal{{ r.id }}" tabindex="-1" aria-hidden="true">
+                            <div class="modal-dialog modal-dialog-centered">
+                                <div class="modal-content border-0 shadow-lg rounded-4">
+                                    <div class="modal-header border-0 bg-danger text-white p-4">
+                                        <h5 class="modal-title fw-bold">Annuler le Rendez-vous #{{ r.id }}</h5>
+                                        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+                                    </div>
+                                    <form method="post" action="{% url 'reception_reservation_cancel' r.id %}">
+                                        {% csrf_token %}
+                                        <div class="modal-body p-4">
+                                            <p class="text-muted">Veuillez sélectionner la raison de l'annulation. Le créneau horaire de l'employé sera automatiquement rendu disponible.</p>
+                                            
+                                            <div class="mb-3">
+                                                <label class="form-label fw-semibold">Raison de l'annulation <span class="text-danger">*</span></label>
+                                                <select name="cancellation_reason" class="form-select rounded-3" required>
+                                                    <option value="Cliente demande l'annulation">Cliente demande l'annulation</option>
+                                                    <option value="Employé indisponible">Employé indisponible</option>
+                                                    <option value="Cliente absente">Cliente absente (No-show)</option>
+                                                    <option value="Erreur de réservation">Erreur de réservation</option>
+                                                    <option value="Autre">Autre motif</option>
+                                                </select>
+                                            </div>
+
+                                            <div class="mb-3">
+                                                <label class="form-label fw-semibold">Précisions (Optionnel)</label>
+                                                <textarea name="cancellation_note" class="form-control rounded-3" rows="2" placeholder="Précisez la raison si nécessaire..."></textarea>
+                                            </div>
+                                        </div>
+                                        <div class="modal-footer border-0 p-4 pt-0">
+                                            <button type="button" class="btn btn-light rounded-3" data-bs-dismiss="modal">Retour</button>
+                                            <button type="submit" class="btn btn-danger rounded-3 px-4">Confirmer l'annulation</button>
+                                        </div>
+                                    </form>
+                                </div>
+                            </div>
+                        </div>
+
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+            {% else %}
+            <div class="text-center py-5 text-muted">
+                <i class="bi bi-calendar-x fs-1 text-gold mb-3 d-block" style="color: #c5a059;"></i>
+                <h5>Aucun rendez-vous prévu aujourd'hui.</h5>
+                <p class="small">Utilisez le bouton "Nouveau RDV" pour planifier un soin.</p>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+
+    <!-- Right Column: Live Notifications & Quick Actions -->
+    <div class="col-xl-4 col-lg-4">
+        <!-- Live Notifications Activity -->
+        <div class="luxury-card border-0 shadow-sm mb-4">
+            <div class="d-flex align-items-center justify-content-between mb-3 pb-2 border-bottom">
+                <h6 class="fw-bold mb-0 d-flex align-items-center gap-2">
+                    <i class="bi bi-bell-fill text-gold" style="color: #c5a059;"></i>
+                    Flux d'Activité Réception
+                </h6>
+                <a href="{% url 'reception_notifications' %}" class="small text-gold text-decoration-none fw-semibold">Tout voir</a>
+            </div>
+
+            <div class="notification-feed" style="max-height: 420px; overflow-y: auto;">
+                {% if recent_notifications %}
+                {% for n in recent_notifications %}
+                <div class="p-3 mb-2 rounded-3 bg-light border border-opacity-50">
+                    <div class="d-flex align-items-center justify-content-between mb-1">
+                        <span class="fw-bold small text-dark">{{ n.title }}</span>
+                        <span class="small text-muted" style="font-size: 0.75rem;">{{ n.created_at|date:"H:i" }}</span>
+                    </div>
+                    <p class="small text-secondary mb-0" style="font-size: 0.82rem;">{{ n.message }}</p>
+                </div>
+                {% endfor %}
+                {% else %}
+                <p class="text-center text-muted small py-4">Aucune notification recente.</p>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+function markArrived(resId, clientName) {
+    fetch(`/reception/reservations/${resId}/arrived/`, {
+        method: 'POST',
+        headers: {
+            'X-CSRFToken': '{{ csrf_token }}',
+            'X-Requested-With': 'XMLHttpRequest'
+        }
+    })
+    .then(res => res.json())
+    .then(data => {
+        if (data.success) {
+            const badge = document.getElementById(`status-badge-${resId}`);
+            if (badge) {
+                badge.className = 'badge-status badge-arrived';
+                badge.innerText = '🟣 Cliente arrivée';
+            }
+            const timeDiv = document.getElementById(`arrival-time-${resId}`);
+            if (timeDiv) {
+                timeDiv.innerHTML = `<span class="text-success fw-bold">🟢 Arrivée à ${data.arrival_time}</span>`;
+            }
+            alert(`🟢 Cliente ${clientName} marquée comme arrivée à ${data.arrival_time} ! Notification envoyée à l'employé(e).`);
+        }
+    })
+    .catch(err => console.error("Error marking arrived:", err));
+}
+</script>
+{% endblock %}

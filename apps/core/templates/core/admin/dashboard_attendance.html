@@ -1,0 +1,136 @@
+{% extends 'core/admin/admin_base.html' %}
+
+{% block title %}Gestion du Pointage & Historique - ERP | British Style{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <div>
+        <h4 class="fw-bold text-dark mb-1">Historique & Registre du Pointage</h4>
+        <p class="text-muted small mb-0">Consultez l'historique complet des heures travaillées, pauses, retards et heures supplémentaires.</p>
+    </div>
+</div>
+
+<!-- Dynamic Summary Bar -->
+<div class="row g-3 mb-4">
+    <div class="col-md-4">
+        <div class="erp-card mb-0 p-3">
+            <div class="text-muted small fw-bold text-uppercase">Cumul Heures Sélectionnées</div>
+            <div class="fs-2 fw-bold text-primary">{{ total_hours_sum }}</div>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="erp-card mb-0 p-3">
+            <div class="text-muted small fw-bold text-uppercase">Heures Supplémentaires (> 8h/j)</div>
+            <div class="fs-2 fw-bold text-success">{{ total_overtime_sum }}</div>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="erp-card mb-0 p-3">
+            <div class="text-muted small fw-bold text-uppercase">Retards Constatés (> 09h15)</div>
+            <div class="fs-2 fw-bold text-danger">{{ total_lateness_count }}</div>
+        </div>
+    </div>
+</div>
+
+<!-- Filters Bar -->
+<div class="erp-card p-3 mb-4">
+    <form method="get" class="row g-3 align-items-center">
+        <div class="col-md-5">
+            <label class="form-label small fw-bold mb-1">Période Temporelle</label>
+            <div class="btn-group w-100" role="group">
+                <a href="?period=today&employee_id={{ selected_emp_id }}" class="btn btn-sm {% if period == 'today' %}btn-dark{% else %}btn-outline-secondary{% endif %}">Aujourd'hui</a>
+                <a href="?period=week&employee_id={{ selected_emp_id }}" class="btn btn-sm {% if period == 'week' %}btn-dark{% else %}btn-outline-secondary{% endif %}">Cette Semaine</a>
+                <a href="?period=month&employee_id={{ selected_emp_id }}" class="btn btn-sm {% if period == 'month' %}btn-dark{% else %}btn-outline-secondary{% endif %}">Ce Mois</a>
+                <a href="?period=all&employee_id={{ selected_emp_id }}" class="btn btn-sm {% if period == 'all' %}btn-dark{% else %}btn-outline-secondary{% endif %}">Tout Tout</a>
+            </div>
+        </div>
+
+        <div class="col-md-5">
+            <label class="form-label small fw-bold mb-1">Filtrer par Employé</label>
+            <select name="employee_id" class="form-select form-select-sm" onchange="this.form.submit()">
+                <option value="all" {% if selected_emp_id == 'all' %}selected{% endif %}>Tous les employés de l'équipe</option>
+                {% for emp in employees %}
+                <option value="{{ emp.id }}" {% if selected_emp_id == emp.id|stringformat:"s" %}selected{% endif %}>{{ emp.full_name }} ({{ emp.position }})</option>
+                {% endfor %}
+            </select>
+            <input type="hidden" name="period" value="{{ period }}">
+        </div>
+
+        <div class="col-md-2 text-end pt-3">
+            <a href="{% url 'dashboard_attendance_log' %}" class="btn btn-sm btn-outline-secondary w-100">Réinitialiser</a>
+        </div>
+    </form>
+</div>
+
+<!-- Attendance Logs Table -->
+<div class="erp-card p-0 overflow-hidden">
+    <div class="w-100 overflow-hidden">
+        <table class="table table-hover align-middle mb-0 text-center w-100">
+            <thead class="table-light">
+                <tr>
+                    <th class="ps-4 text-start py-3">Employé</th>
+                    <th class="py-3">Date</th>
+                    <th class="py-3">Statut</th>
+                    <th class="py-3">Arrivée</th>
+                    <th class="py-3">Départ</th>
+                    <th class="py-3">Pause (min)</th>
+                    <th class="py-3">Retard</th>
+                    <th class="py-3">Heures Sup</th>
+                    <th class="pe-4 py-3 text-end">Total Travaillé</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for rec in records %}
+                <tr>
+                    <td class="ps-4 text-start">
+                        <div class="d-flex align-items-center gap-2">
+                            <div class="avatar-circle rounded-circle text-white fw-bold d-flex align-items-center justify-content-center" style="width: 34px; height: 34px; background-color: {{ rec.employee.avatar_color }}; font-size: 0.85rem;">
+                                {{ rec.employee.first_name|slice:":1" }}{{ rec.employee.last_name|slice:":1" }}
+                            </div>
+                            <div>
+                                <div class="fw-bold text-dark small">{{ rec.employee.full_name }}</div>
+                                <div class="text-muted" style="font-size: 0.7rem;">{{ rec.employee.position }}</div>
+                            </div>
+                        </div>
+                    </td>
+                    <td class="text-muted small">{{ rec.date|date:"d/m/Y" }}</td>
+                    <td>
+                        {% if rec.status == 'PRESENT' %}
+                            <span class="badge-status bg-badge-present">Présent</span>
+                        {% elif rec.status == 'PAUSE' %}
+                            <span class="badge-status bg-badge-pause">En Pause</span>
+                        {% elif rec.status == 'REPOS' %}
+                            <span class="badge-status bg-badge-repos">En Repos</span>
+                        {% else %}
+                            <span class="badge-status bg-badge-absent">Absent</span>
+                        {% endif %}
+                    </td>
+                    <td class="fw-medium text-dark">{{ rec.check_in|time:"H:i"|default:"--" }}</td>
+                    <td class="fw-medium text-dark">{{ rec.check_out|time:"H:i"|default:"--" }}</td>
+                    <td class="text-muted small">{{ rec.pause_duration_minutes }} min</td>
+                    <td class="py-3">
+                        {% if rec.is_late %}
+                            <span class="badge bg-danger bg-opacity-10 text-danger rounded-pill px-2" title="Pointé à {{ rec.check_in|time:'H:i' }}">Oui (+{{ rec.lateness_minutes }} min)</span>
+                        {% else %}
+                            <span class="text-muted small">Non</span>
+                        {% endif %}
+                    </td>
+                    <td>
+                        {% if rec.overtime_hours > 0 %}
+                            <span class="badge bg-success bg-opacity-10 text-success rounded-pill px-2">+{{ rec.overtime_hours }}h</span>
+                        {% else %}
+                            <span class="text-muted small">-</span>
+                        {% endif %}
+                    </td>
+                    <td class="pe-4 text-end fw-bold text-primary fs-6">{{ rec.hours_worked_formatted }}</td>
+                </tr>
+                {% empty %}
+                <tr>
+                    <td colspan="9" class="text-center py-5 text-muted">Aucun registre de pointage ne correspond aux critères.</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% endblock %}

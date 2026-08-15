@@ -1,0 +1,184 @@
+{% extends "core/base.html" %}
+{% load i18n %}
+
+{% block title %}Connexion & Inscription | British Style{% endblock %}
+
+{% block header %}{% endblock %}
+{% block footer %}{% endblock %}
+
+{% block content %}
+<div class="auth-wrapper">
+    <!-- Back to Home Link -->
+    <a href="{% url 'frontpage' %}" class="auth-back-brand">
+        <i class="bi bi-arrow-left me-2"></i>British Style
+    </a>
+
+    <div class="auth-container" id="authContainer">
+        
+        <!-- LOGIN FORM BOX -->
+        <div class="auth-form-box login">
+            <form class="luxury-form" method="POST" action="{% url 'account_login' %}">
+                {% csrf_token %}
+                <h2 class="auth-title">Connexion</h2>
+                <p class="auth-subtitle">Accédez à votre espace personnel British Style</p>
+
+
+
+                {% include "core/_flash_messages.html" %}
+
+                {% if form.errors and form.login %}
+                <div class="alert alert-danger rounded-3 small py-2 mb-3">
+                    {% if form.non_field_errors %}
+                        {% for error in form.non_field_errors %}
+                        <div><i class="bi bi-exclamation-circle-fill me-1"></i>{{ error }}</div>
+                        {% endfor %}
+                    {% else %}
+                        <div><i class="bi bi-exclamation-circle-fill me-1"></i>Identifiants incorrects. Veuillez réessayer.</div>
+                    {% endif %}
+                </div>
+                {% endif %}
+
+                <div class="input-box mb-3">
+                    <label for="id_login" class="form-label">Adresse Email</label>
+                    <div class="input-field-wrap">
+                        <i class="bi bi-envelope icon"></i>
+                        <input type="email" name="login" placeholder="votre@email.com" class="form-control rounded-3 {% if form.login.errors %}is-invalid{% endif %}" required id="id_login" value="{{ form.login.value|default:'' }}">
+                    </div>
+                    {% if form.login.errors %}
+                    <div class="text-danger small mt-1">
+                        {% for error in form.login.errors %}
+                        <div><i class="bi bi-x-circle me-1"></i>{{ error }}</div>
+                        {% endfor %}
+                    </div>
+                    {% endif %}
+                </div>
+
+                <div class="input-box mb-3">
+                    <div class="d-flex justify-content-between align-items-center mb-1">
+                        <label for="id_password" class="form-label mb-0">Mot de passe</label>
+                        <a href="{% url 'account_reset_password' %}" onclick="var e = document.getElementById('id_login')?.value?.trim(); if(e) { this.search = '?email=' + encodeURIComponent(e); }" class="small text-gold text-decoration-none">Mot de passe oublié ?</a>
+                    </div>
+                    <div class="input-field-wrap">
+                        <i class="bi bi-lock icon"></i>
+                        <input type="password" name="password" placeholder="••••••••" class="form-control rounded-3 {% if form.password.errors %}is-invalid{% endif %}" required id="id_password">
+                    </div>
+                    {% if form.password.errors %}
+                    <div class="text-danger small mt-1">
+                        {% for error in form.password.errors %}
+                        <div><i class="bi bi-x-circle me-1"></i>{{ error }}</div>
+                        {% endfor %}
+                    </div>
+                    {% endif %}
+                </div>
+
+                <button type="submit" class="luxury-btn-danger w-100 mt-2 border-0">Se connecter</button>
+
+                <div class="mobile-switch text-center mt-3 d-md-none">
+                    <p class="small text-muted mb-0">Vous n'avez pas encore de compte ? 
+                        <a href="#" class="text-gold fw-bold register-link">S'inscrire</a>
+                    </p>
+                </div>
+            </form>
+        </div>
+
+        <!-- REGISTER FORM BOX -->
+        <div class="auth-form-box register">
+            <form class="signup luxury-form" id="signup_form" method="post" action="{% url 'account_signup' %}">
+                {% csrf_token %}
+                <h2 class="auth-title">Créer un compte</h2>
+                <p class="auth-subtitle">Profitez d'une expérience beauté personnalisée</p>
+
+                {% include "account/_google_button.html" with label="S'inscrire avec Google" %}
+
+                <div class="divider mt-4 mb-4">
+                    <span class="divider-text">ou</span>
+                </div>
+
+                {% if form.errors and not form.login %}
+                <div class="alert alert-danger rounded-3 small py-2 mb-3">
+                    {% if form.non_field_errors %}
+                        {% for error in form.non_field_errors %}
+                        <div><i class="bi bi-exclamation-circle-fill me-1"></i>{{ error }}</div>
+                        {% endfor %}
+                    {% else %}
+                        <div><i class="bi bi-exclamation-circle-fill me-1"></i>Veuillez corriger les erreurs ci-dessous.</div>
+                    {% endif %}
+                </div>
+                {% endif %}
+
+                <div class="input-box mb-2">
+                    <label for="id_username" class="form-label">Nom d'utilisateur</label>
+                    <div class="input-field-wrap">
+                        <i class="bi bi-person icon"></i>
+                        <input type="text" name="username" placeholder="votre nom d'utilisateur" class="form-control rounded-3 {% if form.username.errors %}is-invalid{% endif %}" required id="id_username" value="{{ form.username.value|default:'' }}">
+                    </div>
+                    {% if form.username.errors %}
+                    <div class="text-danger small mt-1">
+                        {% for error in form.username.errors %}
+                        <div><i class="bi bi-x-circle me-1"></i>{{ error }}</div>
+                        {% endfor %}
+                    </div>
+                    {% endif %}
+                </div>
+
+                <div class="input-box mb-2">
+                    <label for="id_email" class="form-label">Adresse Email</label>
+                    <div class="input-field-wrap">
+                        <i class="bi bi-envelope icon"></i>
+                        <input type="email" name="email" placeholder="votre@email.com" class="form-control rounded-3 {% if form.email.errors %}is-invalid{% endif %}" required id="id_email" value="{{ form.email.value|default:'' }}">
+                    </div>
+                    {% if form.email.errors %}
+                    <div class="text-danger small mt-1">
+                        {% for error in form.email.errors %}
+                        <div><i class="bi bi-x-circle me-1"></i>{{ error }}</div>
+                        {% endfor %}
+                    </div>
+                    {% endif %}
+                </div>
+
+                <div class="input-box mb-2">
+                    <label for="id_password1" class="form-label">Mot de passe</label>
+                    <div class="input-field-wrap">
+                        <i class="bi bi-lock icon"></i>
+                        <input type="password" name="password1" placeholder="••••••••" class="form-control rounded-3 {% if form.password1.errors %}is-invalid{% endif %}" required id="id_password1" oninput="if(document.getElementById('id_password2')) document.getElementById('id_password2').value = this.value">
+                    </div>
+                    {% if form.password1.errors %}
+                    <div class="text-danger small mt-1">
+                        {% for error in form.password1.errors %}
+                        <div><i class="bi bi-x-circle me-1"></i>{{ error }}</div>
+                        {% endfor %}
+                    </div>
+                    {% endif %}
+                </div>
+
+                <input type="hidden" name="password2" id="id_password2">
+
+                <button type="submit" class="luxury-btn-danger w-100 mt-2 border-0" onclick="if(document.getElementById('id_password1') && document.getElementById('id_password2')) document.getElementById('id_password2').value = document.getElementById('id_password1').value;">Créer mon compte</button>
+
+                <div class="mobile-switch text-center mt-3 d-md-none">
+                    <p class="small text-muted mb-0">Déjà inscrit(e) ? 
+                        <a href="#" class="text-gold fw-bold login-link">Se connecter</a>
+                    </p>
+                </div>
+            </form>
+        </div>
+
+        <!-- TOGGLE BOX -->
+        <div class="toggle-box">
+            <div class="toggle-panel toggle-left">
+                <span class="badge-tag-auth">Bienvenue</span>
+                <h2>Bienvenue chez British Style</h2>
+                <p>Rejoignez-nous et profitez d'une expérience beauté personnalisée et d'offres exclusives.</p>
+                <button class="btn-toggle register-btn" id="registerBtn">S'inscrire</button>
+            </div>
+            <div class="toggle-panel toggle-right">
+                <span class="badge-tag-auth">Espace Membre</span>
+                <h2>Ravi de vous revoir !</h2>
+                <p>Pour rester connecté avec nous, veuillez vous connecter avec vos identifiants personnels.</p>
+                <button class="btn-toggle login-btn" id="loginBtn">Se connecter</button>
+            </div>
+        </div>
+
+    </div>
+</div>
+{% endblock %}

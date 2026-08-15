@@ -1,0 +1,35 @@
+{% extends "core/base.html" %}
+{% load i18n %}
+
+{% block title %}Déconnexion | British Style{% endblock %}
+
+{% block content %}
+<div class="container py-5" style="padding-top: 140px !important; min-height: 80vh;">
+    <div class="row justify-content-center">
+        <div class="col-md-6 col-lg-5">
+            <div class="luxury-card p-4 p-md-5 text-center">
+                <div class="mb-4">
+                    <span class="badge-tag-auth">Déconnexion</span>
+                    <h2 class="page-title mt-2">Se Déconnecter</h2>
+                    <p class="text-muted small">Êtes-vous sûr(e) de vouloir vous déconnecter de votre espace personnel ?</p>
+                </div>
+
+                <form method="post" action="{% url 'account_logout' %}">
+                    {% csrf_token %}
+                    {% if redirect_field_value %}
+                    <input type="hidden" name="{{ redirect_field_name }}" value="{{ redirect_field_value }}" />
+                    {% endif %}
+                    
+                    <button type="submit" class="luxury-btn-danger w-100 py-3 border-0 rounded-pill fs-6 mb-3">
+                        <i class="bi bi-box-arrow-right me-2"></i>Oui, se déconnecter
+                    </button>
+                </form>
+
+                <a href="{% url 'frontpage' %}" class="text-gold fw-semibold text-decoration-none small">
+                    <i class="bi bi-arrow-left me-1"></i>Retourner à l'accueil
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

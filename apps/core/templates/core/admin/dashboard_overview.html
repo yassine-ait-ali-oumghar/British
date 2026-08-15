@@ -1,0 +1,418 @@
+{% extends 'core/admin/admin_base.html' %}
+
+{% block title %}Dashboard Overview - ERP | British Style{% endblock %}
+
+{% block content %}
+<!-- Top Row: 4 Dynamic KPI Cards -->
+<div class="row g-3 mb-4">
+    <!-- Card 1: Présences Équipe -->
+    <div class="col-md-3">
+        <div class="erp-card mb-0">
+            <div class="d-flex justify-content-between align-items-center mb-2">
+                <span class="text-uppercase small text-muted fw-bold">Présences Équipe</span>
+                <i class="bi bi-people-fill text-success fs-5"></i>
+            </div>
+            <div class="fs-2 fw-bold text-dark" id="kpiPresentCount">{{ present_count }}</div>
+            <div class="text-muted small">sur <span id="kpiTotalTeam">{{ total_team }}</span> membres de l'équipe</div>
+            <div class="progress mt-2" style="height: 6px;">
+                <div class="progress-bar bg-success" id="kpiPresentBar" style="width: {% if total_team %}{% widthratio present_count total_team 100 %}{% else %}0{% endif %}%;"></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Card 2: En Pause / Repos -->
+    <div class="col-md-3">
+        <div class="erp-card mb-0">
+            <div class="d-flex justify-content-between align-items-center mb-2">
+                <span class="text-uppercase small text-muted fw-bold">En Pause / Repos</span>
+                <i class="bi bi-cup-hot-fill text-warning fs-5"></i>
+            </div>
+            <div class="fs-2 fw-bold text-dark" id="kpiPauseReposCount">{{ pause_count|add:repos_count }}</div>
+            <div class="text-muted small"><span id="kpiPauseCount">{{ pause_count }}</span> en pause, <span id="kpiReposCount">{{ repos_count }}</span> en repos</div>
+            <div class="progress mt-2" style="height: 6px;">
+                <div class="progress-bar bg-warning" style="width: 50%;"></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Card 3: Absences du Jour -->
+    <div class="col-md-3">
+        <div class="erp-card mb-0">
+            <div class="d-flex justify-content-between align-items-center mb-2">
+                <span class="text-uppercase small text-muted fw-bold">Absences Aujourd'hui</span>
+                <i class="bi bi-x-circle-fill text-danger fs-5"></i>
+            </div>
+            <div class="fs-2 fw-bold text-danger" id="kpiAbsentCount">{{ absent_count }}</div>
+            <div class="text-muted small">Employés non émargés</div>
+            <div class="progress mt-2" style="height: 6px;">
+                <div class="progress-bar bg-danger" style="width: 20%;"></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Card 4: Cumul Heures Aujourd'hui -->
+    <div class="col-md-3">
+        <div class="erp-card mb-0">
+            <div class="d-flex justify-content-between align-items-center mb-2">
+                <span class="text-uppercase small text-muted fw-bold">Heures Travaillées</span>
+                <i class="bi bi-clock-history text-primary fs-5"></i>
+            </div>
+            <div class="fs-2 fw-bold text-primary" id="kpiHoursToday">{{ hours_today_fmt }}</div>
+            <div class="text-muted small">Semaine : {{ hours_week_fmt }} | Mois : {{ hours_month_fmt }}</div>
+            <div class="progress mt-2" style="height: 6px;">
+                <div class="progress-bar bg-primary" style="width: 80%;"></div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Middle Row: 3 Analytics Charts (Chart.js) -->
+<div class="row g-3 mb-4">
+    <!-- Donut Chart: Statuts d'Aujourd'hui -->
+    <div class="col-md-4">
+        <div class="erp-card h-100 mb-0">
+            <h6 class="fw-bold mb-3 text-dark"><i class="bi bi-pie-chart-fill me-2 text-primary"></i>Répartition des Statuts</h6>
+            <div class="d-flex justify-content-center py-2">
+                <canvas id="statusDonutChart" style="max-height: 200px; max-width: 200px;"></canvas>
+            </div>
+            <div class="d-flex justify-content-center gap-3 mt-3 text-center small">
+                <div><span class="d-inline-block rounded-circle me-1" style="width:10px; height:10px; background:#10b981;"></span>Présents</div>
+                <div><span class="d-inline-block rounded-circle me-1" style="width:10px; height:10px; background:#f59e0b;"></span>Pause</div>
+                <div><span class="d-inline-block rounded-circle me-1" style="width:10px; height:10px; background:#3b82f6;"></span>Repos</div>
+                <div><span class="d-inline-block rounded-circle me-1" style="width:10px; height:10px; background:#ef4444;"></span>Absents</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Bar Chart: Entrées Utilisateurs de la Semaine -->
+    <div class="col-md-5">
+        <div class="erp-card h-100 mb-0">
+            <div class="d-flex align-items-center justify-content-between mb-3">
+                <h6 class="fw-bold text-dark m-0"><i class="bi bi-person-check-fill me-2 text-success"></i>Entrées & Fréquentation (Utilisateurs / Jour)</h6>
+                <span class="badge bg-success bg-opacity-10 text-success fw-semibold px-2.5 py-1" style="font-size: 0.78rem;">Aujourd'hui: {{ present_count }} entrées</span>
+            </div>
+            <div class="py-2">
+                <canvas id="weeklyBarChart" style="max-height: 220px;"></canvas>
+            </div>
+        </div>
+    </div>
+
+    <!-- Module Summary Cards -->
+    <div class="col-md-3">
+        <div class="erp-card h-100 mb-0 d-flex flex-column justify-content-between">
+            <div>
+                <h6 class="fw-bold mb-3 text-dark"><i class="bi bi-layers-fill me-2 text-warning"></i>Résumé des Modules</h6>
+                <div class="d-flex justify-content-between align-items-center mb-3 p-2 bg-light rounded-3">
+                    <span class="small fw-semibold"><i class="bi bi-people me-1"></i> Total Employés</span>
+                    <span class="badge bg-dark fs-6">{{ total_all_employees }}</span>
+                </div>
+                <div class="d-flex justify-content-between align-items-center mb-3 p-2 bg-light rounded-3">
+                    <span class="small fw-semibold"><i class="bi bi-box-seam me-1"></i> Produits</span>
+                    <span class="badge bg-success fs-6">{{ total_products }}</span>
+                </div>
+                <div class="d-flex justify-content-between align-items-center mb-3 p-2 bg-light rounded-3">
+                    <span class="small fw-semibold"><i class="bi bi-scissors me-1"></i> Services</span>
+                    <span class="badge bg-danger fs-6">{{ total_services }}</span>
+                </div>
+                <div class="d-flex justify-content-between align-items-center mb-3 p-2 bg-light rounded-3">
+                    <span class="small fw-semibold"><i class="bi bi-envelope me-1"></i> Messages</span>
+                    <span class="badge bg-danger fs-6">{{ new_messages_count }}</span>
+                </div>
+                <div class="d-flex justify-content-between align-items-center p-2 bg-light rounded-3">
+                    <span class="small fw-semibold"><i class="bi bi-bell me-1"></i> Notifications</span>
+                    <a href="{% url 'dashboard_notifications' %}" class="btn btn-xs btn-outline-warning text-dark fw-bold py-0 px-2 rounded-pill" style="font-size: 0.75rem;"><i class="bi bi-plus-circle me-1"></i>Publier</a>
+                </div>
+            </div>
+            <div class="mt-3 text-center">
+                <a href="{% url 'dashboard_attendance_log' %}" class="btn btn-sm btn-outline-primary w-100 fw-semibold">Voir Journal Complet</a>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Team Members Grid & Dynamic Pointage Sheet -->
+<div class="d-flex align-items-center justify-content-between mb-3">
+    <h5 class="fw-bold text-dark m-0"><i class="bi bi-person-workspace me-2 text-primary"></i>Équipe Active & Pointage</h5>
+    <span class="text-muted small">Cliquer sur un employé pour afficher sa fiche dynamique</span>
+</div>
+
+<div class="row g-3">
+    {% for emp in team_employees %}
+    <div class="col-6 col-md-4 col-lg-3 col-xl-2">
+        <div class="erp-card text-center mb-0 p-3 hover-shadow cursor-pointer" onclick="openEmployeeModal({{ emp.id }})" style="cursor: pointer; transition: transform 0.2s;">
+            <div class="avatar-circle rounded-circle mx-auto mb-2 text-white fw-bold d-flex align-items-center justify-content-center" style="width: 56px; height: 56px; background-color: {{ emp.avatar_color }}; font-size: 1.2rem;">
+                {{ emp.first_name|slice:":1" }}{{ emp.last_name|slice:":1" }}
+            </div>
+            <div class="fw-bold text-dark small text-truncate">{{ emp.full_name }}</div>
+            <div class="text-muted mb-2" style="font-size: 0.72rem;">{{ emp.position }}</div>
+            
+            {% with st=emp.get_current_status %}
+                {% if st == 'PRESENT' %}
+                    <span class="badge-status bg-badge-present">Présent</span>
+                {% elif st == 'PAUSE' %}
+                    <span class="badge-status bg-badge-pause">En Pause</span>
+                {% elif st == 'REPOS' %}
+                    <span class="badge-status bg-badge-repos">En Repos</span>
+                {% else %}
+                    <span class="badge-status bg-badge-absent">Absent</span>
+                {% endif %}
+            {% endwith %}
+        </div>
+    </div>
+    {% empty %}
+    <div class="col-12 text-center py-4 text-muted">Aucun membre dans l'équipe active.</div>
+    {% endfor %}
+</div>
+
+<!-- Employee Detail Modal -->
+<div class="modal fade" id="employeeDetailModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-lg modal-dialog-centered">
+        <div class="modal-content border-0 shadow-lg rounded-4">
+            <div class="modal-header border-bottom-0 pb-0">
+                <h5 class="modal-title fw-bold">Fiche de Pointage ERP</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body p-4">
+                <div class="d-flex align-items-center justify-content-between p-3 bg-light rounded-4 mb-4">
+                    <div class="d-flex align-items-center gap-3">
+                        <div class="avatar-circle rounded-circle text-white fw-bold d-flex align-items-center justify-content-center" id="modalAvatar" style="width: 54px; height: 54px; font-size: 1.2rem;">--</div>
+                        <div>
+                            <h4 class="fw-bold text-dark mb-0" id="modalFullName">--</h4>
+                            <span class="text-muted small" id="modalPosition"><i class="bi bi-briefcase me-1"></i>--</span>
+                        </div>
+                    </div>
+                    <div id="modalStatusBadge">
+                        <span class="badge-status bg-badge-present fs-6">Présent</span>
+                    </div>
+                </div>
+
+                <div class="row g-3 mb-4">
+                    <div class="col-md-4">
+                        <div class="p-3 bg-light rounded-3 border">
+                            <div class="small text-muted fw-bold">Statut Actuel</div>
+                            <div class="fs-4 fw-bold text-dark" id="modalMetricStatus">--</div>
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="p-3 bg-light rounded-3 border">
+                            <div class="small text-muted fw-bold">Heure d'Arrivée</div>
+                            <div class="fs-4 fw-bold text-success" id="modalMetricCheckIn">--:--</div>
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="p-3 bg-light rounded-3 border">
+                            <div class="small text-muted fw-bold">Heure de Départ</div>
+                            <div class="fs-4 fw-bold text-info" id="modalMetricCheckOut">--:--</div>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="p-3 bg-light rounded-3 border">
+                            <div class="small text-muted fw-bold">Heures Aujourd'hui</div>
+                            <div class="fs-4 fw-bold text-primary" id="modalMetricHoursToday">0h 00m</div>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="p-3 bg-light rounded-3 border">
+                            <div class="small text-muted fw-bold">Heures Cette Semaine</div>
+                            <div class="fs-4 fw-bold text-dark" id="modalMetricHoursWeek">0h 00m</div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Admin Action Buttons -->
+                <div class="d-flex flex-wrap gap-2 mb-4">
+                    <form method="post" action="{% url 'update_employee_status' %}" class="d-inline">
+                        {% csrf_token %}
+                        <input type="hidden" name="employee_id" class="modalFormEmpId" value="">
+                        <input type="hidden" name="status" value="PRESENT">
+                        <button type="submit" class="btn btn-sm btn-outline-success fw-semibold"><i class="bi bi-play-circle-fill me-1"></i> Marquer Présent</button>
+                    </form>
+                    <form method="post" action="{% url 'update_employee_status' %}" class="d-inline">
+                        {% csrf_token %}
+                        <input type="hidden" name="employee_id" class="modalFormEmpId" value="">
+                        <input type="hidden" name="status" value="PAUSE">
+                        <button type="submit" class="btn btn-sm btn-outline-warning text-dark fw-semibold"><i class="bi bi-pause-circle-fill me-1"></i> Mettre en Pause</button>
+                    </form>
+                    <form method="post" action="{% url 'update_employee_status' %}" class="d-inline">
+                        {% csrf_token %}
+                        <input type="hidden" name="employee_id" class="modalFormEmpId" value="">
+                        <input type="hidden" name="status" value="CHECK_OUT">
+                        <button type="submit" class="btn btn-sm btn-outline-primary fw-semibold"><i class="bi bi-stop-circle-fill me-1"></i> Marquer Départ</button>
+                    </form>
+                    <form method="post" action="{% url 'update_employee_status' %}" class="d-inline">
+                        {% csrf_token %}
+                        <input type="hidden" name="employee_id" class="modalFormEmpId" value="">
+                        <input type="hidden" name="status" value="ABSENT">
+                        <button type="submit" class="btn btn-sm btn-outline-danger fw-semibold"><i class="bi bi-x-circle-fill me-1"></i> Marquer Absent</button>
+                    </form>
+                </div>
+
+                <h6 class="fw-bold mb-2">Historique Hebdomadaire</h6>
+                <div class="w-100 overflow-hidden rounded-3 border">
+                    <table class="table table-hover align-middle mb-0 text-center small w-100">
+                        <thead class="table-light">
+                            <tr>
+                                <th>Jour</th>
+                                <th>Date</th>
+                                <th>Statut</th>
+                                <th>Arrivée</th>
+                                <th>Départ</th>
+                                <th>Heures</th>
+                            </tr>
+                        </thead>
+                        <tbody id="modalWeeklyTable">
+                            <!-- Populated via JS -->
+                        </tbody>
+                    </table>
+                </div>
+
+            </div>
+        </div>
+    </div>
+</div>
+
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    let donutChartInstance = null;
+    let barChartInstance = null;
+
+    // AJAX Polling for Live Stats updates without page reload
+    function pollLiveStats() {
+        fetch("{% url 'api_live_stats' %}")
+            .then(res => res.json())
+            .then(data => {
+                document.getElementById('kpiPresentCount').textContent = data.present_count;
+                document.getElementById('kpiTotalTeam').textContent = data.total_team;
+                document.getElementById('kpiPauseReposCount').textContent = data.pause_count + data.repos_count;
+                document.getElementById('kpiPauseCount').textContent = data.pause_count;
+                document.getElementById('kpiReposCount').textContent = data.repos_count;
+                document.getElementById('kpiAbsentCount').textContent = data.absent_count;
+                document.getElementById('kpiHoursToday').textContent = data.hours_today_fmt;
+
+                if (data.total_team > 0) {
+                    const pct = Math.round((data.present_count / data.total_team) * 100);
+                    document.getElementById('kpiPresentBar').style.width = pct + '%';
+                }
+
+                // Update Donut Chart
+                if (donutChartInstance) {
+                    donutChartInstance.data.datasets[0].data = [
+                        data.present_count, data.pause_count, data.repos_count, data.absent_count
+                    ];
+                    donutChartInstance.update();
+                }
+            })
+            .catch(err => console.error("Error polling live stats:", err));
+    }
+
+    // Modal employee detail handler
+    let modalObj = null;
+    document.addEventListener('DOMContentLoaded', () => {
+        modalObj = new bootstrap.Modal(document.getElementById('employeeDetailModal'));
+
+        // Donut Chart
+        const ctxDonut = document.getElementById('statusDonutChart').getContext('2d');
+        donutChartInstance = new Chart(ctxDonut, {
+            type: 'doughnut',
+            data: {
+                labels: ['Présents', 'En Pause', 'En Repos', 'Absents'],
+                datasets: [{
+                    data: [{{ present_count }}, {{ pause_count }}, {{ repos_count }}, {{ absent_count }}],
+                    backgroundColor: ['#10b981', '#f59e0b', '#3b82f6', '#ef4444'],
+                    borderWidth: 0
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: { legend: { display: false } },
+                cutout: '72%'
+            }
+        });
+
+        // Weekly Bar Chart (User Entries / Day)
+        const ctxBar = document.getElementById('weeklyBarChart').getContext('2d');
+        barChartInstance = new Chart(ctxBar, {
+            type: 'bar',
+            data: {
+                labels: ['Lun', 'Mar', 'Mer', 'Jeu', 'Ven', 'Sam', 'Dim'],
+                datasets: [{
+                    label: 'Utilisateurs ayant accédé',
+                    data: {{ daily_user_entries|safe }},
+                    backgroundColor: '#10b981',
+                    borderRadius: 4
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: { legend: { display: false } },
+                scales: {
+                    x: { grid: { display: false } },
+                    y: { 
+                        grid: { borderDash: [4, 4] },
+                        ticks: { stepSize: 1, precision: 0 }
+                    }
+                }
+            }
+        });
+
+        // Start Live Stats Polling every 6 seconds
+        setInterval(pollLiveStats, 6000);
+    });
+
+    function openEmployeeModal(employeeId) {
+        fetch(`/dashboard/api/employee/${employeeId}/`)
+            .then(res => res.json())
+            .then(data => {
+                document.getElementById('modalFullName').textContent = data.full_name;
+                document.getElementById('modalPosition').innerHTML = `<i class="bi bi-briefcase me-1"></i> ${data.position} (${data.role_display})`;
+                
+                const avatar = document.getElementById('modalAvatar');
+                avatar.textContent = data.first_name.charAt(0) + data.last_name.charAt(0);
+                avatar.style.backgroundColor = data.avatar_color;
+
+                let stBadge = '';
+                if (data.current_status === 'PRESENT') stBadge = '<span class="badge-status bg-badge-present fs-6">Présent</span>';
+                else if (data.current_status === 'PAUSE') stBadge = '<span class="badge-status bg-badge-pause fs-6">En Pause</span>';
+                else if (data.current_status === 'REPOS') stBadge = '<span class="badge-status bg-badge-repos fs-6">En Repos</span>';
+                else stBadge = '<span class="badge-status bg-badge-absent fs-6">Absent</span>';
+                document.getElementById('modalStatusBadge').innerHTML = stBadge;
+
+                document.querySelectorAll('.modalFormEmpId').forEach(inp => inp.value = data.id);
+
+                document.getElementById('modalMetricStatus').textContent = data.current_status_display;
+                document.getElementById('modalMetricCheckIn').textContent = data.check_in;
+                document.getElementById('modalMetricCheckOut').textContent = data.check_out;
+                document.getElementById('modalMetricHoursToday').textContent = data.hours_worked_today;
+                document.getElementById('modalMetricHoursWeek').textContent = data.hours_worked_this_week;
+
+                let tableHTML = '';
+                data.weekly_history.forEach(day => {
+                    let badge = '';
+                    if (day.status === 'PRESENT') badge = '<span class="badge-status bg-badge-present">Présent</span>';
+                    else if (day.status === 'PAUSE') badge = '<span class="badge-status bg-badge-pause">En Pause</span>';
+                    else if (day.status === 'REPOS') badge = '<span class="badge-status bg-badge-repos">En Repos</span>';
+                    else if (day.status === 'ABSENT') badge = '<span class="badge-status bg-badge-absent">Absent</span>';
+                    else badge = '<span class="text-muted">-</span>';
+
+                    tableHTML += `
+                        <tr class="${day.is_today ? 'table-warning fw-bold' : ''}">
+                            <td>${day.day_name} ${day.is_today ? '<span class="badge bg-dark ms-1" style="font-size:0.6rem;">AUJ</span>' : ''}</td>
+                            <td>${day.date}</td>
+                            <td>${badge}</td>
+                            <td>${day.check_in}</td>
+                            <td>${day.check_out}</td>
+                            <td class="fw-bold">${day.hours_worked}</td>
+                        </tr>
+                    `;
+                });
+                document.getElementById('modalWeeklyTable').innerHTML = tableHTML;
+
+                modalObj.show();
+            });
+    }
+</script>
+{% endblock %}

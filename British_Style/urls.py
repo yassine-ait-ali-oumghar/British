@@ -14,11 +14,24 @@ Including another URLconf
     1. Import the include() function: from django.urls import include, path
     2. Add a URL to urlpatterns:  path('blog/', include('blog.urls'))
 """
+# pyrefly: ignore [missing-import]
 from django.contrib import admin
 from django.urls import include, path
+from django.conf import settings
+from django.conf.urls.static import static
+from django.shortcuts import redirect
+from apps.core import views as core_views
+
+def redirect_email_page(request):
+    return redirect('/')
 
 urlpatterns = [
     path('admin/', admin.site.urls),
-    path('vendor/', include('apps.vendor.urls')),
+    path('accounts/password/reset/', core_views.password_reset_code, name='account_reset_password'),
+    path('accounts/email/', redirect_email_page, name='account_email'),
+    path('accounts/', include('allauth.urls')),
     path('', include('apps.core.urls')),
 ]
+
+if settings.DEBUG or True:
+    urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)

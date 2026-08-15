@@ -1,0 +1,89 @@
+{% extends base_template|default:'core/employee/employee_base.html' %}
+
+{% block title %}Mes Notifications | Espace Employé{% endblock %}
+
+{% block content %}
+<div class="row g-4">
+    <div class="col-12">
+        <div class="card border-0 shadow-sm rounded-4 p-4">
+            <div class="d-flex align-items-center justify-content-between">
+                <h4 class="fw-bold text-dark mb-0"><i class="bi bi-bell-fill text-warning me-2"></i>Mes Notifications</h4>
+                <span class="badge bg-gold px-3 py-2 text-white">{{ notifications.count }} notification(s)</span>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-12">
+        <div class="card border-0 shadow-sm rounded-4 p-4">
+            <div class="list-group list-group-flush gap-3">
+                {% for notif in notifications %}
+                <div class="list-group-item p-4 border rounded-4 shadow-sm position-relative {% if not notif.is_read %}bg-warning-subtle border-warning{% else %}bg-white{% endif %}" id="notif-card-{{ notif.id }}">
+                    <div class="d-flex flex-wrap align-items-center justify-content-between gap-2 mb-2">
+                        <div class="d-flex align-items-center gap-2">
+                            {% if notif.type == 'ANNOUNCEMENT' %}
+                                <span class="badge bg-primary px-3 py-1"><i class="bi bi-megaphone me-1"></i>Annonce</span>
+                            {% elif notif.type == 'ADMIN' %}
+                                <span class="badge bg-danger px-3 py-1"><i class="bi bi-shield-lock me-1"></i>Administration</span>
+                            {% else %}
+                                <span class="badge bg-success px-3 py-1"><i class="bi bi-calendar-event me-1"></i>Planning</span>
+                            {% endif %}
+
+                            {% if not notif.is_read %}
+                                <span class="badge bg-warning text-dark px-2 py-1">Nouveau</span>
+                            {% endif %}
+                        </div>
+
+                        <small class="text-muted"><i class="bi bi-clock me-1"></i>{{ notif.created_at|date:"d/m/Y H:i" }}</small>
+                    </div>
+
+                    <h5 class="fw-bold text-dark mb-2">{{ notif.title }}</h5>
+                    <p class="text-secondary mb-3">{{ notif.message }}</p>
+
+                    {% if not notif.is_read %}
+                    <div class="text-end">
+                        <button class="btn btn-sm btn-outline-dark rounded-pill px-3" onclick="markAsRead({{ notif.id }})">
+                            <i class="bi bi-check2-circle me-1"></i> Marquer comme lu
+                        </button>
+                    </div>
+                    {% endif %}
+                </div>
+                {% empty %}
+                <div class="text-center py-5 text-muted">
+                    <i class="bi bi-bell-slash display-3 d-block mb-3 text-secondary"></i>
+                    Aucune notification pour le moment. Vous êtes à jour !
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    function markAsRead(notifId) {
+        const formData = new FormData();
+        formData.append('notification_id', notifId);
+
+        fetch("{% url 'employee_notifications' %}", {
+            method: 'POST',
+            headers: {
+                'X-CSRFToken': getCookie('csrftoken'),
+                'X-Requested-With': 'XMLHttpRequest'
+            },
+            body: formData
+        })
+        .then(res => res.json())
+        .then(data => {
+            if (data.status === 'success') {
+                const card = document.getElementById(`notif-card-${notifId}`);
+                if (card) {
+                    card.classList.remove('bg-warning-subtle', 'border-warning');
+                    card.classList.add('bg-white');
+                    location.reload();
+                }
+            }
+        });
+    }
+</script>
+{% endblock %}

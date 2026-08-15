@@ -1,0 +1,50 @@
+{% extends "core/base.html" %}
+{% load i18n %}
+
+{% block title %}Connexions de Compte | British Style{% endblock %}
+
+{% block content %}
+<div class="container py-5" style="padding-top: 140px !important; min-height: 80vh;">
+    <div class="row justify-content-center">
+        <div class="col-md-6 col-lg-5">
+            <div class="luxury-card p-4 p-md-5">
+                <div class="text-center mb-4">
+                    <span class="badge-tag-auth">Comptes Liés</span>
+                    <h2 class="page-title mt-2">Connexions</h2>
+                    <p class="text-muted small">Gérez vos réseaux sociaux et services tiers connectés</p>
+                </div>
+
+                {% if form.accounts %}
+                <p class="fw-bold mb-2 text-dark small">Vous pouvez vous connecter à votre compte avec :</p>
+                <form method="post" action="{% url 'socialaccount_connections' %}">
+                    {% csrf_token %}
+                    <div class="list-group mb-3">
+                        {% for base_account in form.accounts %}
+                        {% with account=base_account.get_provider_account %}
+                        <label for="id_account_{{ base_account.id }}" class="list-group-item d-flex align-items-center justify-content-between p-3 rounded-3 mb-2 border border-secondary-subtle">
+                            <div class="form-check m-0">
+                                <input id="id_account_{{ base_account.id }}" type="radio" name="account" value="{{ base_account.id }}" class="form-check-input me-2"/>
+                                <span class="fw-semibold text-dark">{{ account.get_brand.name }} ({{ account }})</span>
+                            </div>
+                        </label>
+                        {% endwith %}
+                        {% endfor %}
+                    </div>
+                    <button class="btn btn-outline-danger rounded-pill btn-sm px-4" type="submit">Déconnecter ce compte social</button>
+                </form>
+                {% else %}
+                <p class="text-muted text-center my-4">Vous n'avez aucun compte tiers connecté actuellement.</p>
+                {% endif %}
+
+                <hr class="my-4">
+
+                <div class="text-center">
+                    <a href="{% url 'frontpage' %}" class="text-gold fw-semibold text-decoration-none small">
+                        <i class="bi bi-arrow-left me-1"></i>Retourner à l'accueil
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

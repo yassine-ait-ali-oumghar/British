@@ -1,0 +1,716 @@
+{% extends 'core/base.html' %}
+
+{% block title %}Mes Rendez-vous | British Style{% endblock %}
+
+{% block extra_css %}
+<style>
+    .reservations-header {
+        padding-top: 140px !important;
+        background-color: var(--bg-cream, #fbf8f3);
+        padding-bottom: 2.5rem;
+    }
+    .reservations-header .page-title {
+        font-family: var(--font-serif, 'Playfair Display', serif);
+        font-size: clamp(2.2rem, 3.8vw, 3.2rem);
+        font-weight: 700;
+        color: var(--dark-charcoal, #121212);
+    }
+    .reservations-header .page-subtitle {
+        color: var(--text-muted, #64748b);
+        font-size: 1.05rem;
+        line-height: 1.7;
+    }
+    .res-card {
+        background: #ffffff;
+        border-radius: 16px;
+        border: 1px solid #e2e8f0;
+        box-shadow: 0 4px 15px rgba(0,0,0,0.03);
+        transition: transform 0.2s ease;
+    }
+    .res-card:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 8px 25px rgba(0,0,0,0.06);
+    }
+    .badge-status-pending { background-color: #fef3c7; color: #b45309; border: 1px solid #fde68a; }
+    .badge-status-confirmed { background-color: #dbeafe; color: #1e40af; border: 1px solid #bfdbfe; }
+    .badge-status-arrived { background-color: #f3e8ff; color: #6b21a8; border: 1px solid #e9d5ff; }
+    .badge-status-in_progress { background-color: #ffedd5; color: #c2410c; border: 1px solid #fed7aa; }
+    .badge-status-completed { background-color: #d1fae5; color: #047857; border: 1px solid #a7f3d0; }
+    .badge-status-cancelled { background-color: #fee2e2; color: #b91c1c; border: 1px solid #fca5a5; }
+    .badge-status-no_show { background-color: #f1f5f9; color: #334155; border: 1px solid #cbd5e1; }
+    .star-rating i { cursor: pointer; color: #cbd5e1; transition: color 0.2s ease; }
+    .star-rating i.active, .star-rating i:hover { color: #f59e0b; }
+
+    /* Order Stepper Tracker */
+    .order-stepper {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        position: relative;
+        margin: 0.75rem 0 0.25rem 0;
+        padding: 0 0.5rem;
+    }
+    .order-stepper-track {
+        position: absolute;
+        top: 13px;
+        left: 20px;
+        right: 20px;
+        height: 3px;
+        background: #e2e8f0;
+        z-index: 1;
+    }
+    .order-stepper-progress {
+        position: absolute;
+        top: 13px;
+        left: 20px;
+        height: 3px;
+        background: linear-gradient(90deg, #c5a059, #121212);
+        z-index: 1;
+        transition: width 0.4s ease;
+    }
+    .stepper-step {
+        position: relative;
+        z-index: 2;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        text-align: center;
+        flex: 1;
+    }
+    .stepper-circle {
+        width: 28px;
+        height: 28px;
+        border-radius: 50%;
+        background: #ffffff;
+        border: 2px solid #cbd5e1;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 0.75rem;
+        font-weight: 700;
+        color: #64748b;
+        transition: all 0.3s ease;
+    }
+    .stepper-label {
+        font-size: 0.7rem;
+        color: #64748b;
+        margin-top: 4px;
+        font-weight: 500;
+        line-height: 1.1;
+    }
+    .stepper-step.completed .stepper-circle {
+        background: #c5a059;
+        border-color: #c5a059;
+        color: #ffffff;
+    }
+    .stepper-step.completed .stepper-label {
+        color: #121212;
+        font-weight: 600;
+    }
+    .stepper-step.active .stepper-circle {
+        background: #121212;
+        border-color: #c5a059;
+        color: #c5a059;
+        box-shadow: 0 0 0 3px rgba(197, 160, 89, 0.25);
+    }
+    .stepper-step.active .stepper-label {
+        color: #c5a059;
+        font-weight: 700;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<section class="reservations-header text-center mb-5">
+    <div class="container py-3">
+        <span class="badge-tag"><i class="bi bi-calendar-check me-2"></i>Espace Client</span>
+        <h1 class="page-title mt-3 mb-2">Mes Rendez-vous & Suivi du Soin</h1>
+        <p class="page-subtitle mx-auto mb-0" style="max-width: 650px;">
+            Suivez le statut de votre rendez-vous en temps réel, modifiez votre créneau ou évaluez votre expérience.
+        </p>
+    </div>
+</section>
+
+<div class="container mb-5">
+    {% if msg %}
+    <div class="alert alert-{{ msg_type }} alert-dismissible fade show rounded-4 mb-4 shadow-sm" role="alert">
+        <i class="bi {% if msg_type == 'danger' %}bi-exclamation-triangle-fill{% else %}bi-check-circle-fill{% endif %} me-2"></i>{{ msg }}
+        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+    </div>
+    {% endif %}
+
+    <!-- Nav Tabs 3 Catégories (À venir, Terminés, Annulés) -->
+    <ul class="nav nav-pills nav-fill bg-white p-2 rounded-4 shadow-xs border mb-4" id="resTab" role="tablist">
+        <li class="nav-item" role="presentation">
+            <button class="nav-link active fw-bold py-2.5 rounded-3 d-flex align-items-center justify-content-center gap-2" id="upcoming-tab" data-bs-toggle="tab" data-bs-target="#upcoming" type="button" role="tab">
+                <i class="bi bi-clock-history"></i> À Venir ({{ upcoming_reservations|length }})
+            </button>
+        </li>
+        <li class="nav-item" role="presentation">
+            <button class="nav-link fw-bold py-2.5 rounded-3 d-flex align-items-center justify-content-center gap-2" id="completed-tab" data-bs-toggle="tab" data-bs-target="#completed" type="button" role="tab">
+                <i class="bi bi-check-circle"></i> Terminés ({{ completed_reservations|length }})
+            </button>
+        </li>
+        <li class="nav-item" role="presentation">
+            <button class="nav-link fw-bold py-2.5 rounded-3 d-flex align-items-center justify-content-center gap-2" id="cancelled-tab" data-bs-toggle="tab" data-bs-target="#cancelled" type="button" role="tab">
+                <i class="bi bi-x-circle"></i> Annulés / Absences ({{ cancelled_reservations|length }})
+            </button>
+        </li>
+        <li class="nav-item" role="presentation">
+            <button class="nav-link fw-bold py-2.5 rounded-3 d-flex align-items-center justify-content-center gap-2" id="orders-tab" data-bs-toggle="tab" data-bs-target="#orders" type="button" role="tab">
+                <i class="bi bi-bag-check-fill text-warning"></i> Mes Commandes ({{ user_orders|length }})
+            </button>
+        </li>
+    </ul>
+
+    <!-- Tab Content -->
+    <div class="tab-content" id="resTabContent">
+        <!-- 1. À VENIR -->
+        <div class="tab-pane fade show active" id="upcoming" role="tabpanel">
+            <div class="row g-4">
+                {% for res in upcoming_reservations %}
+                <div class="col-md-6 col-lg-4">
+                    <div class="res-card p-4 h-100 d-flex flex-column justify-content-between">
+                        <div>
+                            <div class="d-flex justify-content-between align-items-start mb-3">
+                                <span class="badge px-3 py-2 rounded-pill fw-semibold badge-status-{{ res.status|lower }}">
+                                    {% if res.status == 'PENDING' %}🟡 En attente
+                                    {% elif res.status == 'CONFIRMED' %}🔵 Confirmé
+                                    {% elif res.status == 'ARRIVED' %}🟣 Cliente arrivée
+                                    {% elif res.status == 'IN_PROGRESS' %}🟠 Soin en cours
+                                    {% else %}{{ res.get_status_display }}{% endif %}
+                                </span>
+                                <small class="text-muted fw-mono">#{{ res.id }}</small>
+                            </div>
+
+                            <h5 class="fw-bold text-dark mb-1">{{ res.service.name }}</h5>
+                            <div class="text-muted small mb-3"><i class="bi bi-clock me-1 text-gold"></i>{{ res.duration_minutes }} min | {{ res.service.price }} DH</div>
+
+                            <div class="p-3 bg-light rounded-3 mb-3">
+                                <div class="d-flex align-items-center gap-2 mb-2">
+                                    <i class="bi bi-calendar3 text-primary"></i>
+                                    <span class="fw-bold text-dark">{{ res.date|date:"d/m/Y" }}</span>
+                                    <span class="text-dark fw-semibold ms-auto">{{ res.start_time|time:"H:i" }} - {{ res.end_time|time:"H:i" }}</span>
+                                </div>
+                                {% if res.multi_services_breakdown_with_times %}
+                                    <div class="mt-2 pt-2 border-top">
+                                        <span class="small fw-bold text-dark d-block mb-1.5"><i class="bi bi-people-fill text-warning me-1"></i>Experts & Horaires de votre formule :</span>
+                                        <div class="d-flex flex-column gap-1">
+                                            {% for item in res.multi_services_breakdown_with_times %}
+                                            <div class="d-flex justify-content-between align-items-center small bg-white p-2 rounded border shadow-xs">
+                                                <div>
+                                                    <span class="text-dark fw-semibold" style="font-size:0.8rem;">{{ item.service_name }}</span>
+                                                    <small class="text-muted ms-1">({{ item.start_time }} → {{ item.end_time }})</small>
+                                                </div>
+                                                <div class="d-flex align-items-center gap-1">
+                                                    <span class="badge bg-warning-subtle text-dark border border-warning fw-bold px-2 py-1"><i class="bi bi-person-check me-1 text-gold"></i>{{ item.expert_name }}</span>
+                                                    <span class="badge 
+                                                        {% if item.status == 'COMPLETED' %}bg-success text-white
+                                                        {% elif item.status == 'NO_SHOW' %}bg-secondary text-white
+                                                        {% elif item.status == 'CANCELLED' %}bg-danger text-white
+                                                        {% elif item.status == 'CONFIRMED' %}bg-primary text-white
+                                                        {% elif item.status == 'IN_PROGRESS' %}bg-warning bg-opacity-75 text-dark
+                                                        {% else %}bg-light text-dark border{% endif %} px-2 py-1 small">
+                                                        {{ item.status_display }}
+                                                    </span>
+                                                </div>
+                                            </div>
+                                            {% endfor %}
+                                        </div>
+                                    </div>
+                                {% else %}
+                                    <div class="d-flex align-items-center gap-2">
+                                        <i class="bi bi-person-badge text-warning"></i>
+                                        <span class="small text-muted">Expert : <strong class="text-dark">{{ res.employee.full_name }}</strong></span>
+                                    </div>
+                                {% endif %}
+                            </div>
+
+                            {% if res.user_custom_notes %}
+                            <p class="text-muted small italic mb-3">"<i class="bi bi-chat-text me-1"></i>{{ res.user_custom_notes }}"</p>
+                            {% endif %}
+                        </div>
+
+                        <div class="d-flex gap-2 pt-2 border-top">
+                            {% if res.status == 'PENDING' or res.status == 'CONFIRMED' %}
+                            <button type="button" class="btn btn-outline-dark btn-sm rounded-3 flex-grow-1" 
+                                    onclick="openRescheduleModal({{ res.id }}, '{{ res.date|date:'Y-m-d' }}', '{{ res.start_time|time:'H:i' }}', {{ res.employee.id }})">
+                                <i class="bi bi-pencil me-1"></i>Modifier
+                            </button>
+                            <form method="post" class="flex-grow-1" onsubmit="return confirm('Êtes-vous sûr de vouloir annuler ce rendez-vous ?');">
+                                {% csrf_token %}
+                                <input type="hidden" name="action" value="cancel">
+                                <input type="hidden" name="reservation_id" value="{{ res.id }}">
+                                <button type="submit" class="btn btn-outline-danger btn-sm rounded-3 w-100">
+                                    <i class="bi bi-x-circle me-1"></i>Annuler
+                                </button>
+                            </form>
+                            {% else %}
+                            <div class="alert alert-info py-1.5 px-3 small w-100 mb-0 text-center rounded-3">
+                                <i class="bi bi-arrow-repeat spin me-1"></i> Soin en cours de réalisation
+                            </div>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+                {% empty %}
+                <div class="col-12 text-center py-5">
+                    <div class="rounded-circle bg-light d-inline-flex p-4 mb-3">
+                        <i class="bi bi-calendar-x fs-1 text-muted"></i>
+                    </div>
+                    <h5 class="fw-bold text-dark">Aucun rendez-vous à venir</h5>
+                    <p class="text-muted small mb-4">Réservez dès maintenant votre prochain soin cosmétique ou capillaire.</p>
+                    <a href="{% url 'services' %}" class="btn btn-dark rounded-3 px-4 py-2">
+                        <i class="bi bi-scissors me-2"></i>Réserver un Service
+                    </a>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+
+        <!-- 2. TERMINÉS -->
+        <div class="tab-pane fade" id="completed" role="tabpanel">
+            <div class="row g-4">
+                {% for res in completed_reservations %}
+                <div class="col-md-6 col-lg-4">
+                    <div class="res-card p-4 h-100 d-flex flex-column justify-content-between border-success border-opacity-25">
+                        <div>
+                            <div class="d-flex justify-content-between align-items-start mb-3">
+                                <span class="badge px-3 py-2 rounded-pill fw-semibold badge-status-completed">
+                                    🟢 Terminé
+                                </span>
+                                <small class="text-muted fw-mono">#{{ res.id }}</small>
+                            </div>
+
+                            <h5 class="fw-bold text-dark mb-1">{{ res.service.name }}</h5>
+                            <div class="text-muted small mb-3"><i class="bi bi-clock me-1 text-gold"></i>Réalisé le {{ res.date|date:"d/m/Y" }}</div>
+
+                            <div class="p-3 bg-light rounded-3 mb-3">
+                                {% if res.multi_services_breakdown_with_times %}
+                                    <span class="small fw-bold text-dark d-block mb-1.5"><i class="bi bi-people-fill text-warning me-1"></i>Détails de votre formule :</span>
+                                    <div class="d-flex flex-column gap-1">
+                                        {% for item in res.multi_services_breakdown_with_times %}
+                                        <div class="d-flex justify-content-between align-items-center small bg-white p-2 rounded border shadow-xs">
+                                            <div>
+                                                <span class="text-dark fw-semibold" style="font-size:0.8rem;">{{ item.service_name }}</span>
+                                                <small class="text-muted ms-1">({{ item.start_time }} → {{ item.end_time }})</small>
+                                            </div>
+                                            <div class="d-flex align-items-center gap-1">
+                                                <span class="badge bg-warning-subtle text-dark border border-warning fw-bold px-2 py-1"><i class="bi bi-person-check me-1 text-gold"></i>{{ item.expert_name }}</span>
+                                                <span class="badge 
+                                                    {% if item.status == 'COMPLETED' %}bg-success text-white
+                                                    {% elif item.status == 'NO_SHOW' %}bg-secondary text-white
+                                                    {% elif item.status == 'CANCELLED' %}bg-danger text-white
+                                                    {% elif item.status == 'CONFIRMED' %}bg-primary text-white
+                                                    {% elif item.status == 'IN_PROGRESS' %}bg-warning bg-opacity-75 text-dark
+                                                    {% else %}bg-light text-dark border{% endif %} px-2 py-1 small">
+                                                    {{ item.status_display }}
+                                                </span>
+                                            </div>
+                                        </div>
+                                        {% endfor %}
+                                    </div>
+                                {% else %}
+                                    <div class="small text-muted mb-1"><i class="bi bi-person-badge me-1"></i>Réalisé par : <strong class="text-dark">{{ res.employee.full_name }}</strong></div>
+                                    <div class="small text-muted"><i class="bi bi-cash me-1"></i>Montant : <strong class="text-dark">{{ res.service.price }} DH</strong></div>
+                                {% endif %}
+                            </div>
+
+                            {% if res.rating %}
+                            <div class="p-3 bg-warning bg-opacity-10 rounded-3 border border-warning border-opacity-25 mb-3">
+                                <div class="small fw-bold text-dark mb-1">Votre évaluation :</div>
+                                <div class="text-warning">
+                                    {% for i in "12345"|make_list %}
+                                        {% if forloop.counter <= res.rating %}★{% else %}☆{% endif %}
+                                    {% endfor %}
+                                    <span class="text-dark fw-bold ms-1">({{ res.rating }}/5)</span>
+                                </div>
+                                {% if res.review_comment %}<p class="small text-muted italic mb-0 mt-1">"{{ res.review_comment }}"</p>{% endif %}
+                            </div>
+                            {% endif %}
+                        </div>
+
+                        <div>
+                            {% if not res.rating %}
+                            <button type="button" class="btn btn-outline-warning text-dark w-100 btn-sm rounded-3 fw-semibold" 
+                                    onclick="openRatingModal({{ res.id }}, '{{ res.service.name|escapejs }}')">
+                                <i class="bi bi-star me-1 text-warning"></i> Laisser un avis ⭐
+                            </button>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+                {% empty %}
+                <div class="col-12 text-center py-5 text-muted">
+                    <i class="bi bi-journal-check fs-1 d-block mb-2 text-muted"></i>
+                    <p>Aucun rendez-vous terminé pour le moment.</p>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+
+        <!-- 3. ANNULÉS / ABSENCES -->
+        <div class="tab-pane fade" id="cancelled" role="tabpanel">
+            <div class="row g-4">
+                {% for res in cancelled_reservations %}
+                <div class="col-md-6 col-lg-4">
+                    <div class="res-card p-4 h-100 d-flex flex-column justify-content-between bg-light">
+                        <div>
+                            <div class="d-flex justify-content-between align-items-start mb-3">
+                                <span class="badge px-3 py-2 rounded-pill fw-semibold {% if res.status == 'NO_SHOW' %}badge-status-no_show{% else %}badge-status-cancelled{% endif %}">
+                                    {% if res.status == 'NO_SHOW' %}⚫ Cliente absente{% else %}🔴 Annulé{% endif %}
+                                </span>
+                                <small class="text-muted">#{{ res.id }}</small>
+                            </div>
+                            <h5 class="fw-bold text-dark mb-1">{{ res.service.name }}</h5>
+                            <div class="text-muted small mb-2"><i class="bi bi-calendar-x me-1"></i>Prévu le {{ res.date|date:"d/m/Y" }} à {{ res.start_time|time:"H:i" }}</div>
+
+                            {% if res.multi_services_breakdown_with_times %}
+                                <div class="mt-2 pt-2 border-top">
+                                    <span class="small fw-bold text-dark d-block mb-1.5"><i class="bi bi-people-fill text-warning me-1"></i>Détails de votre formule :</span>
+                                    <div class="d-flex flex-column gap-1">
+                                        {% for item in res.multi_services_breakdown_with_times %}
+                                        <div class="d-flex justify-content-between align-items-center small bg-white p-2 rounded border shadow-xs">
+                                            <div>
+                                                <span class="text-dark fw-semibold" style="font-size:0.8rem;">{{ item.service_name }}</span>
+                                                <small class="text-muted ms-1">({{ item.start_time }} → {{ item.end_time }})</small>
+                                            </div>
+                                            <div class="d-flex align-items-center gap-1">
+                                                <span class="badge bg-warning-subtle text-dark border border-warning fw-bold px-2 py-1"><i class="bi bi-person-check me-1 text-gold"></i>{{ item.expert_name }}</span>
+                                                <span class="badge 
+                                                    {% if item.status == 'COMPLETED' %}bg-success text-white
+                                                    {% elif item.status == 'NO_SHOW' %}bg-secondary text-white
+                                                    {% elif item.status == 'CANCELLED' %}bg-danger text-white
+                                                    {% elif item.status == 'CONFIRMED' %}bg-primary text-white
+                                                    {% elif item.status == 'IN_PROGRESS' %}bg-warning bg-opacity-75 text-dark
+                                                    {% else %}bg-light text-dark border{% endif %} px-2 py-1 small">
+                                                    {{ item.status_display }}
+                                                </span>
+                                            </div>
+                                        </div>
+                                        {% endfor %}
+                                    </div>
+                                </div>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+                {% empty %}
+                <div class="col-12 text-center py-5 text-muted">
+                    <i class="bi bi-shield-check fs-1 d-block mb-2 text-muted"></i>
+                    <p>Aucune réservation annulée.</p>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+
+        <!-- 4. MES COMMANDES BOUTIQUE -->
+        <div class="tab-pane fade" id="orders" role="tabpanel">
+            <div class="row g-4">
+                {% for order in user_orders %}
+                <div class="col-md-6">
+                    <div class="res-card p-4 h-100 d-flex flex-column justify-content-between">
+                        <div>
+                            <div class="d-flex justify-content-between align-items-start mb-3">
+                                <div>
+                                    <h5 class="fw-bold text-dark mb-0">Commande #{{ order.id }}</h5>
+                                    <small class="text-muted"><i class="bi bi-clock me-1 text-gold"></i>{{ order.created_at|date:"d/m/Y H:i" }}</small>
+                                </div>
+                                <div class="text-end">
+                                    <span class="fs-5 fw-bold" style="color: #c5a059 !important;">{{ order.total|floatformat:"-2" }} DH</span>
+                                </div>
+                            </div>
+
+                            <!-- Badges Grid -->
+                            <div class="d-flex flex-wrap gap-2 mb-3">
+                                <!-- Order Status -->
+                                {% if order.order_status == 'NEW' %}
+                                <span class="badge bg-warning-subtle text-dark border border-warning px-3 py-1.5 rounded-pill fw-bold">🟡 Nouvelle</span>
+                                {% elif order.order_status == 'CONFIRMED' %}
+                                <span class="badge bg-info-subtle text-info border border-info px-3 py-1.5 rounded-pill fw-bold">🔵 Confirmée</span>
+                                {% elif order.order_status == 'PREPARING' %}
+                                <span class="badge bg-primary-subtle text-primary border border-primary px-3 py-1.5 rounded-pill fw-bold">🟣 En préparation</span>
+                                {% elif order.order_status == 'READY_FOR_PICKUP' %}
+                                <span class="badge bg-warning-subtle text-dark border border-warning px-3 py-1.5 rounded-pill fw-bold" style="background-color:#fff3cd; color:#856404; border-color:#ffeeba !important;">🛍️ Prête au retrait</span>
+                                {% elif order.order_status == 'RETRIEVED' %}
+                                <span class="badge bg-success-subtle text-success border border-success px-3 py-1.5 rounded-pill fw-bold">✅ Retirée</span>
+                                {% elif order.order_status == 'SHIPPED' or order.order_status == 'DELIVERING' %}
+                                <span class="badge bg-purple-subtle text-purple border border-purple px-3 py-1.5 rounded-pill fw-bold" style="color:#8e44ad;">📦 En livraison</span>
+                                {% elif order.order_status == 'DELIVERED' %}
+                                <span class="badge bg-success-subtle text-success border border-success px-3 py-1.5 rounded-pill fw-bold">🟢 Livrée</span>
+                                {% else %}
+                                <span class="badge bg-danger-subtle text-danger border border-danger px-3 py-1.5 rounded-pill fw-bold">🔴 {{ order.get_order_status_display }}</span>
+                                {% endif %}
+
+                                <!-- Payment Status -->
+                                {% if order.order_status == 'CANCELLED' or order.payment_status == 'CANCELLED' %}
+                                    {% if order.payment_status == 'PAID' %}
+                                    <span class="badge bg-secondary text-white px-3 py-1.5 rounded-pill fw-semibold"><i class="bi bi-arrow-return-left me-1"></i>Remboursé</span>
+                                    {% endif %}
+                                {% else %}
+                                    {% if order.payment_status == 'PAID' %}
+                                    <span class="badge bg-success text-white px-3 py-1.5 rounded-pill fw-semibold"><i class="bi bi-check-circle me-1"></i>Payé</span>
+                                    {% elif order.payment_status == 'PENDING' %}
+                                    <span class="badge bg-warning text-dark px-3 py-1.5 rounded-pill fw-semibold"><i class="bi bi-clock me-1"></i>Paiement en attente</span>
+                                    {% elif order.payment_status == 'FAILED' %}
+                                    <span class="badge bg-danger text-white px-3 py-1.5 rounded-pill fw-semibold"><i class="bi bi-x-circle me-1"></i>Paiement échoué</span>
+                                    {% else %}
+                                    <span class="badge bg-secondary text-white px-3 py-1.5 rounded-pill">{{ order.get_payment_status_display }}</span>
+                                    {% endif %}
+                                {% endif %}
+                            </div>
+
+                            <!-- Click & Collect vs Delivery Progress Stepper -->
+                            {% if order.order_status != 'CANCELLED' %}
+                            <div class="bg-light rounded-3 p-3 mb-3 border">
+                                <div class="small fw-bold text-dark mb-2 d-flex align-items-center justify-content-between">
+                                    <span>
+                                        {% if order.delivery_mode == 'CLICK_COLLECT' %}
+                                        <i class="bi bi-shop text-gold me-1"></i>Suivi Click & Collect
+                                        {% else %}
+                                        <i class="bi bi-truck text-gold me-1"></i>Suivi Livraison
+                                        {% endif %}
+                                    </span>
+                                    <span class="text-muted font-monospace" style="font-size:0.75rem;">
+                                        {% if order.delivery_mode == 'CLICK_COLLECT' %}
+                                            {% if order.order_status == 'NEW' %}Étape 1/5
+                                            {% elif order.order_status == 'CONFIRMED' %}Étape 2/5
+                                            {% elif order.order_status == 'PREPARING' %}Étape 3/5
+                                            {% elif order.order_status == 'READY_FOR_PICKUP' %}Étape 4/5
+                                            {% elif order.order_status == 'RETRIEVED' %}Étape 5/5
+                                            {% endif %}
+                                        {% else %}
+                                            {% if order.order_status == 'NEW' %}Étape 1/5
+                                            {% elif order.order_status == 'CONFIRMED' %}Étape 2/5
+                                            {% elif order.order_status == 'PREPARING' %}Étape 3/5
+                                            {% elif order.order_status == 'SHIPPED' or order.order_status == 'DELIVERING' %}Étape 4/5
+                                            {% elif order.order_status == 'DELIVERED' %}Étape 5/5
+                                            {% endif %}
+                                        {% endif %}
+                                    </span>
+                                </div>
+                                <div class="order-stepper">
+                                    <div class="order-stepper-track"></div>
+                                    <div class="order-stepper-progress" style="width: {% if order.delivery_mode == 'CLICK_COLLECT' %}{% if order.order_status == 'NEW' %}0%{% elif order.order_status == 'CONFIRMED' %}25%{% elif order.order_status == 'PREPARING' %}50%{% elif order.order_status == 'READY_FOR_PICKUP' %}75%{% elif order.order_status == 'RETRIEVED' %}100%{% else %}0%{% endif %}{% else %}{% if order.order_status == 'NEW' %}0%{% elif order.order_status == 'CONFIRMED' %}25%{% elif order.order_status == 'PREPARING' %}50%{% elif order.order_status == 'SHIPPED' or order.order_status == 'DELIVERING' %}75%{% elif order.order_status == 'DELIVERED' %}100%{% else %}0%{% endif %}{% endif %};"></div>
+
+                                    {% if order.delivery_mode == 'CLICK_COLLECT' %}
+                                        <!-- Click & Collect steps: Nouvelle -> Confirmée -> En préparation -> Prête au retrait -> Retirée -->
+                                        <div class="stepper-step {% if order.order_status in 'NEW CONFIRMED PREPARING READY_FOR_PICKUP RETRIEVED' %}completed{% endif %} {% if order.order_status == 'NEW' %}active{% endif %}">
+                                            <div class="stepper-circle">1</div>
+                                            <span class="stepper-label">Nouvelle</span>
+                                        </div>
+                                        <div class="stepper-step {% if order.order_status in 'CONFIRMED PREPARING READY_FOR_PICKUP RETRIEVED' %}completed{% endif %} {% if order.order_status == 'CONFIRMED' %}active{% endif %}">
+                                            <div class="stepper-circle">2</div>
+                                            <span class="stepper-label">Confirmée</span>
+                                        </div>
+                                        <div class="stepper-step {% if order.order_status in 'PREPARING READY_FOR_PICKUP RETRIEVED' %}completed{% endif %} {% if order.order_status == 'PREPARING' %}active{% endif %}">
+                                            <div class="stepper-circle">3</div>
+                                            <span class="stepper-label">En préparation</span>
+                                        </div>
+                                        <div class="stepper-step {% if order.order_status in 'READY_FOR_PICKUP RETRIEVED' %}completed{% endif %} {% if order.order_status == 'READY_FOR_PICKUP' %}active{% endif %}">
+                                            <div class="stepper-circle">4</div>
+                                            <span class="stepper-label">Prête au retrait</span>
+                                        </div>
+                                        <div class="stepper-step {% if order.order_status == 'RETRIEVED' %}completed active{% endif %}">
+                                            <div class="stepper-circle">5</div>
+                                            <span class="stepper-label">Retirée</span>
+                                        </div>
+                                    {% else %}
+                                        <!-- Delivery steps: Nouvelle -> Confirmée -> En préparation -> En livraison -> Livrée -->
+                                        <div class="stepper-step {% if order.order_status in 'NEW CONFIRMED PREPARING SHIPPED DELIVERING DELIVERED' %}completed{% endif %} {% if order.order_status == 'NEW' %}active{% endif %}">
+                                            <div class="stepper-circle">1</div>
+                                            <span class="stepper-label">Nouvelle</span>
+                                        </div>
+                                        <div class="stepper-step {% if order.order_status in 'CONFIRMED PREPARING SHIPPED DELIVERING DELIVERED' %}completed{% endif %} {% if order.order_status == 'CONFIRMED' %}active{% endif %}">
+                                            <div class="stepper-circle">2</div>
+                                            <span class="stepper-label">Confirmée</span>
+                                        </div>
+                                        <div class="stepper-step {% if order.order_status in 'PREPARING SHIPPED DELIVERING DELIVERED' %}completed{% endif %} {% if order.order_status == 'PREPARING' %}active{% endif %}">
+                                            <div class="stepper-circle">3</div>
+                                            <span class="stepper-label">En préparation</span>
+                                        </div>
+                                        <div class="stepper-step {% if order.order_status in 'SHIPPED DELIVERING DELIVERED' %}completed{% endif %} {% if order.order_status == 'SHIPPED' or order.order_status == 'DELIVERING' %}active{% endif %}">
+                                            <div class="stepper-circle">4</div>
+                                            <span class="stepper-label">En livraison</span>
+                                        </div>
+                                        <div class="stepper-step {% if order.order_status == 'DELIVERED' %}completed active{% endif %}">
+                                            <div class="stepper-circle">5</div>
+                                            <span class="stepper-label">Livrée</span>
+                                        </div>
+                                    {% endif %}
+                                </div>
+                            </div>
+                            {% endif %}
+
+                            <!-- Delivery & Payment Info -->
+                            <div class="p-3 bg-light rounded-3 mb-3 small">
+                                <div class="d-flex justify-content-between mb-1">
+                                    <span class="text-muted"><i class="bi bi-truck me-1 text-gold"></i>Mode de livraison :</span>
+                                    <strong class="text-dark">{{ order.get_delivery_mode_display }}</strong>
+                                </div>
+                                <div class="d-flex justify-content-between mb-1">
+                                    <span class="text-muted"><i class="bi bi-credit-card me-1 text-gold"></i>Mode de paiement :</span>
+                                    <strong class="text-dark">{{ order.get_payment_mode_display }}</strong>
+                                </div>
+                                {% if order.shipping_address %}
+                                <div class="d-flex justify-content-between">
+                                    <span class="text-muted"><i class="bi bi-geo-alt me-1 text-gold"></i>Adresse :</span>
+                                    <span class="text-dark text-truncate ms-2" style="max-width:180px;">{{ order.shipping_address }}</span>
+                                </div>
+                                {% endif %}
+                            </div>
+
+                            <!-- Items Summary -->
+                            <h6 class="fw-bold text-dark small mb-2"><i class="bi bi-box-seam me-1 text-gold"></i>Articles de la commande :</h6>
+                            <div class="border rounded-3 p-2 bg-white mb-2">
+                                {% for item in order.items.all %}
+                                <div class="d-flex justify-content-between align-items-center py-1 border-bottom last-border-0 text-dark small">
+                                    <div>
+                                        <strong>{{ item.product_name }}</strong> (x{{ item.quantity }})
+                                        {% if item.variant %}
+                                        <span class="badge bg-light text-dark border ms-1 fw-normal" style="font-size:0.7rem;">{{ item.variant }}</span>
+                                        {% endif %}
+                                    </div>
+                                    <span class="fw-semibold">{{ item.subtotal|floatformat:"-2" }} DH</span>
+                                </div>
+                                {% endfor %}
+                            </div>
+
+                        </div>
+
+                        <div class="pt-2 border-top text-end text-muted small">
+                            Frais de port : {% if order.shipping_fee > 0 %}+{{ order.shipping_fee|floatformat:"-2" }} DH{% else %}Gratuit{% endif %}
+                        </div>
+                    </div>
+                </div>
+                {% empty %}
+                <div class="col-12 text-center py-5">
+                    <div class="rounded-circle bg-light d-inline-flex p-4 mb-3">
+                        <i class="bi bi-bag-x fs-1 text-muted"></i>
+                    </div>
+                    <h5 class="fw-bold text-dark">Aucune commande effectuée</h5>
+                    <p class="text-muted small mb-4">Découvrez notre gamme de produits de soins et passez votre première commande.</p>
+                    <a href="{% url 'boutique' %}" class="btn btn-dark rounded-3 px-4 py-2">
+                        <i class="bi bi-bag-plus me-2"></i>Visiter la Boutique
+                    </a>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal ✏️ Modifier le Rendez-vous -->
+<div class="modal fade" id="rescheduleModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content border-0 shadow-lg rounded-4">
+            <div class="modal-header border-bottom-0">
+                <h5 class="modal-title fw-bold text-dark"><i class="bi bi-pencil-square me-2 text-warning"></i>Modifier mon Rendez-vous</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <form method="post">
+                {% csrf_token %}
+                <input type="hidden" name="action" value="reschedule">
+                <input type="hidden" name="reservation_id" id="rescheduleResId">
+                <div class="modal-body p-4">
+                    <div class="mb-3">
+                        <label class="form-label small fw-bold">Nouvelle Date <span class="text-danger">*</span></label>
+                        <input type="date" name="new_date" id="rescheduleDate" class="form-control" required>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label small fw-bold">Nouvelle Heure de début <span class="text-danger">*</span></label>
+                        <input type="time" name="new_start_time" id="rescheduleTime" class="form-control" required>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label small fw-bold">Choisir l'Expert / Employé <span class="text-danger">*</span></label>
+                        <select name="new_employee_id" id="rescheduleEmp" class="form-select" required>
+                            {% for emp in all_employees %}
+                            <option value="{{ emp.id }}">{{ emp.full_name }} ({{ emp.position }})</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <div class="alert alert-info small mb-0 mt-3">
+                        <i class="bi bi-info-circle me-1"></i> La disponibilité du nouvel expert et du créneau sera automatiquement vérifiée.
+                    </div>
+                </div>
+                <div class="modal-footer border-top-0">
+                    <button type="button" class="btn btn-light" data-bs-dismiss="modal">Annuler</button>
+                    <button type="submit" class="btn btn-dark px-4 fw-semibold">Enregistrer le nouveau créneau</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- Modal ⭐ Évaluer le Soin -->
+<div class="modal fade" id="ratingModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content border-0 shadow-lg rounded-4">
+            <div class="modal-header border-bottom-0">
+                <h5 class="modal-title fw-bold text-dark"><i class="bi bi-star-fill me-2 text-warning"></i>Évaluer votre Soin</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <form method="post">
+                {% csrf_token %}
+                <input type="hidden" name="action" value="rate_service">
+                <input type="hidden" name="reservation_id" id="ratingResId">
+                <div class="modal-body p-4 text-center">
+                    <h6 class="fw-bold text-dark mb-3" id="ratingServiceName">Nom du Service</h6>
+                    <div class="mb-3">
+                        <label class="form-label small fw-bold d-block">Attribuez une note :</label>
+                        <div class="rating-stars fs-2 d-inline-flex gap-2">
+                            <input type="hidden" name="rating" id="ratingValue" value="5">
+                            <i class="bi bi-star-fill text-warning star-btn" data-val="1" onclick="setRating(1)"></i>
+                            <i class="bi bi-star-fill text-warning star-btn" data-val="2" onclick="setRating(2)"></i>
+                            <i class="bi bi-star-fill text-warning star-btn" data-val="3" onclick="setRating(3)"></i>
+                            <i class="bi bi-star-fill text-warning star-btn" data-val="4" onclick="setRating(4)"></i>
+                            <i class="bi bi-star-fill text-warning star-btn" data-val="5" onclick="setRating(5)"></i>
+                        </div>
+                    </div>
+                    <div class="text-start mb-3">
+                        <label class="form-label small fw-bold">Votre commentaire (facultatif)</label>
+                        <textarea name="review_comment" class="form-control" rows="3" placeholder="Racontez-nous votre expérience..."></textarea>
+                    </div>
+                </div>
+                <div class="modal-footer border-top-0">
+                    <button type="button" class="btn btn-light" data-bs-dismiss="modal">Fermer</button>
+                    <button type="submit" class="btn btn-warning text-dark px-4 fw-bold">Publier mon avis ⭐</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<script>
+function openRescheduleModal(resId, dateStr, timeStr, empId) {
+    document.getElementById('rescheduleResId').value = resId;
+    document.getElementById('rescheduleDate').value = dateStr;
+    document.getElementById('rescheduleTime').value = timeStr;
+    document.getElementById('rescheduleEmp').value = empId;
+    var modal = new bootstrap.Modal(document.getElementById('rescheduleModal'));
+    modal.show();
+}
+
+function openRatingModal(resId, serviceName) {
+    document.getElementById('ratingResId').value = resId;
+    document.getElementById('ratingServiceName').textContent = serviceName;
+    setRating(5);
+    var modal = new bootstrap.Modal(document.getElementById('ratingModal'));
+    modal.show();
+}
+
+function setRating(val) {
+    document.getElementById('ratingValue').value = val;
+    const stars = document.querySelectorAll('.star-btn');
+    stars.forEach((star, index) => {
+        if (index < val) {
+            star.classList.remove('bi-star');
+            star.classList.add('bi-star-fill', 'text-warning');
+        } else {
+            star.classList.remove('bi-star-fill', 'text-warning');
+            star.classList.add('bi-star');
+        }
+    });
+}
+</script>
+{% endblock %}

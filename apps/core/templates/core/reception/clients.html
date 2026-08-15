@@ -1,0 +1,255 @@
+{% extends 'core/reception/reception_base.html' %}
+
+{% block title %}Gestion des Clientes | Réception British Style{% endblock %}
+
+{% block header_title %}Gestion & Fiches Clientes{% endblock %}
+
+{% block content %}
+<div class="row g-4">
+    <!-- Left Column: Search & Client Directory List -->
+    <div class="col-xl-4 col-lg-5">
+        <div class="luxury-card border-0 shadow-sm mb-4">
+            <h5 class="fw-bold mb-3 pb-2 border-bottom d-flex align-items-center gap-2">
+                <i class="bi bi-search text-gold" style="color: #c5a059;"></i>
+                Rechercher une Cliente
+            </h5>
+
+            <form method="get" action="{% url 'reception_clients' %}" class="mb-3">
+                <div class="input-group">
+                    <input type="text" name="q" class="form-control rounded-start-3" placeholder="Nom, téléphone, email..." value="{{ search_query }}">
+                    <button type="submit" class="btn btn-gold text-white rounded-end-3 px-3">
+                        <i class="bi bi-search"></i>
+                    </button>
+                </div>
+            </form>
+
+            <div class="client-list" style="max-height: 520px; overflow-y: auto;">
+                {% if clients %}
+                <div class="list-group list-group-flush rounded-3 border-0">
+                    {% for c in clients %}
+                    <a href="?client_id={{ c.id }}{% if search_query %}&q={{ search_query }}{% endif %}" class="list-group-item list-group-item-action p-3 rounded-3 mb-2 border {% if selected_client and selected_client.id == c.id %}active bg-gold border-0 text-white{% endif %}">
+                        <div class="d-flex align-items-center justify-content-between">
+                            <div class="fw-bold">{{ c.first_name }} {{ c.last_name|default:c.username }}</div>
+                            <span class="badge {% if selected_client and selected_client.id == c.id %}bg-white text-dark{% else %}bg-light text-muted border{% endif %}">#{{ c.id }}</span>
+                        </div>
+                        <div class="small opacity-75 mt-1">
+                            <i class="bi bi-envelope me-1"></i>{{ c.email|default:"Sans email" }}
+                        </div>
+                        <div class="small opacity-75">
+                            <i class="bi bi-telephone me-1"></i>{{ c.employee_profile.phone|default:"Tel non renseigné" }}
+                        </div>
+                    </a>
+                    {% endfor %}
+                </div>
+                {% else %}
+                <p class="text-center text-muted small py-4">Aucune cliente trouvée.</p>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+
+    <!-- Right Column: Selected Client Detailed Profile -->
+    <div class="col-xl-8 col-lg-7">
+        {% if selected_client %}
+        <!-- Personal Info Header Card -->
+        <div class="luxury-card border-0 shadow-sm mb-4">
+            <div class="d-flex align-items-center justify-content-between flex-wrap gap-3 pb-3 border-bottom">
+                <div class="d-flex align-items-center gap-3">
+                    <div class="rounded-circle text-white d-flex align-items-center justify-content-center fw-bold fs-3 shadow-sm" style="width:64px; height:64px; background: linear-gradient(135deg, #c5a059, #dfb76c);">
+                        {{ selected_client.first_name|first }}{{ selected_client.last_name|first|default:selected_client.username|first }}
+                    </div>
+                    <div>
+                        <h4 class="fw-bold mb-1">{{ selected_client.first_name }} {{ selected_client.last_name|default:selected_client.username }}</h4>
+                        <div class="text-muted small">
+                            <span class="me-3"><i class="bi bi-envelope me-1 text-gold"></i>{{ selected_client.email }}</span>
+                            <span><i class="bi bi-telephone me-1 text-gold"></i>{{ selected_client.employee_profile.phone|default:"Téléphone non disponible" }}</span>
+                        </div>
+                    </div>
+                </div>
+
+                <button class="btn btn-gold text-white rounded-3 shadow-sm" data-bs-toggle="modal" data-bs-target="#createRDVModal">
+                    <i class="bi bi-calendar-plus me-1"></i> Prendre RDV pour cette cliente
+                </button>
+            </div>
+
+            <!-- Client Booked Services Summary -->
+            <div class="mt-3">
+                <small class="text-muted fw-semibold d-block mb-2">Prestations déjà réservées par la cliente :</small>
+                <div class="d-flex flex-wrap gap-2">
+                    {% for s in booked_services_summary %}
+                    <span class="badge bg-light text-dark border rounded-pill px-3 py-2">
+                        {% if 'ongl' in s.category|lower %}💅{% elif 'coiff' in s.category|lower %}💇‍♀️{% else %}✨{% endif %}
+                        {{ s.name }} ({{ s.category }})
+                    </span>
+                    {% empty %}
+                    <span class="text-muted small">Aucun historique de soin.</span>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+
+        <!-- History Tabs -->
+        <div class="luxury-card border-0 shadow-sm">
+            <ul class="nav nav-tabs border-bottom mb-3" id="clientDetailTabs" role="tablist">
+                <li class="nav-item">
+                    <button class="nav-link active fw-semibold" id="upcoming-rdv-tab" data-bs-toggle="tab" data-bs-target="#upcomingRdvPane" type="button">
+                        📅 RDV à Venir ({{ upcoming_reservations|length }})
+                    </button>
+                </li>
+                <li class="nav-item">
+                    <button class="nav-link fw-semibold" id="past-rdv-tab" data-bs-toggle="tab" data-bs-target="#pastRdvPane" type="button">
+                        📜 Historique RDV ({{ past_reservations|length }})
+                    </button>
+                </li>
+                <li class="nav-item">
+                    <button class="nav-link fw-semibold" id="client-orders-tab" data-bs-toggle="tab" data-bs-target="#clientOrdersPane" type="button">
+                        📦 Commandes Shop ({{ client_orders|length }})
+                    </button>
+                </li>
+                <li class="nav-item">
+                    <button class="nav-link fw-semibold" id="client-payments-tab" data-bs-toggle="tab" data-bs-target="#clientPaymentsPane" type="button">
+                        💵 Encaissements ({{ client_payments|length }})
+                    </button>
+                </li>
+            </ul>
+
+            <div class="tab-content" id="clientDetailTabsContent">
+                <!-- Upcoming RDVs Pane -->
+                <div class="tab-pane fade show active" id="upcomingRdvPane" role="tabpanel">
+                    {% if upcoming_reservations %}
+                    <div class="table-responsive">
+                        <table class="table align-middle table-hover border-0">
+                            <thead class="table-light text-muted small text-uppercase">
+                                <tr>
+                                    <th>Date & Heure</th>
+                                    <th>Service</th>
+                                    <th>Employé</th>
+                                    <th>Statut</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for r in upcoming_reservations %}
+                                <tr>
+                                    <td class="fw-bold">{{ r.date|date:"d/m/Y" }} à {{ r.start_time|time:"H:i" }}</td>
+                                    <td>{{ r.service.name }}</td>
+                                    <td>{{ r.employee.full_name }}</td>
+                                    <td>
+                                        <span class="badge-status badge-{{ r.status|lower }}">{{ r.get_status_display }}</span>
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                    {% else %}
+                    <p class="text-muted small text-center py-4">Aucun rendez-vous à venir.</p>
+                    {% endif %}
+                </div>
+
+                <!-- Past RDVs Pane -->
+                <div class="tab-pane fade" id="pastRdvPane" role="tabpanel">
+                    {% if past_reservations %}
+                    <div class="table-responsive">
+                        <table class="table align-middle table-hover border-0">
+                            <thead class="table-light text-muted small text-uppercase">
+                                <tr>
+                                    <th>Date</th>
+                                    <th>Service</th>
+                                    <th>Employé</th>
+                                    <th>Statut</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for r in past_reservations %}
+                                <tr>
+                                    <td>{{ r.date|date:"d/m/Y" }}</td>
+                                    <td>{{ r.service.name }}</td>
+                                    <td>{{ r.employee.full_name }}</td>
+                                    <td>
+                                        <span class="badge-status badge-{{ r.status|lower }}">{{ r.get_status_display }}</span>
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                    {% else %}
+                    <p class="text-muted small text-center py-4">Aucun historique de rendez-vous passé.</p>
+                    {% endif %}
+                </div>
+
+                <!-- Orders Pane -->
+                <div class="tab-pane fade" id="clientOrdersPane" role="tabpanel">
+                    {% if client_orders %}
+                    <div class="table-responsive">
+                        <table class="table align-middle border-0">
+                            <thead class="table-light text-muted small text-uppercase">
+                                <tr>
+                                    <th>Commande #</th>
+                                    <th>Date</th>
+                                    <th>Mode</th>
+                                    <th>Total</th>
+                                    <th>Statut</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for o in client_orders %}
+                                <tr>
+                                    <td class="fw-bold text-gold" style="color: #c5a059;">#{{ o.id }}</td>
+                                    <td class="small">{{ o.created_at|date:"d/m/Y H:i" }}</td>
+                                    <td>{{ o.get_delivery_mode_display }}</td>
+                                    <td class="fw-bold text-success">{{ o.total }} DH</td>
+                                    <td><span class="badge bg-secondary">{{ o.get_order_status_display }}</span></td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                    {% else %}
+                    <p class="text-muted small text-center py-4">Aucune commande enregistrée pour cette cliente.</p>
+                    {% endif %}
+                </div>
+
+                <!-- Payments Pane -->
+                <div class="tab-pane fade" id="clientPaymentsPane" role="tabpanel">
+                    {% if client_payments %}
+                    <div class="table-responsive">
+                        <table class="table align-middle border-0">
+                            <thead class="table-light text-muted small text-uppercase">
+                                <tr>
+                                    <th>Réf #</th>
+                                    <th>Date</th>
+                                    <th>Montant</th>
+                                    <th>Moyen</th>
+                                    <th>Statut</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for p in client_payments %}
+                                <tr>
+                                    <td class="fw-bold">#{{ p.id }}</td>
+                                    <td class="small">{{ p.created_at|date:"d/m/Y H:i" }}</td>
+                                    <td class="fw-bold text-success">{{ p.amount }} DH</td>
+                                    <td>{{ p.get_payment_method_display }}</td>
+                                    <td><span class="badge bg-success">{{ p.get_status_display }}</span></td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                    {% else %}
+                    <p class="text-muted small text-center py-4">Aucun paiement enregistré.</p>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+        {% else %}
+        <div class="luxury-card border-0 shadow-sm text-center py-5 text-muted">
+            <i class="bi bi-person-lines-fill fs-1 text-gold mb-3 d-block" style="color: #c5a059;"></i>
+            <h5>Veuillez sélectionner une cliente dans la liste à gauche.</h5>
+            <p class="small">Vous pourrez consulter toutes ses informations personnelles et son historique complet.</p>
+        </div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}

@@ -1,6 +1,149 @@
-{%extends "core/base.html"%}
+{% extends "core/base.html" %}
+{% load static %}
 
-{% block title %}Contact Us{% endblock %}
+{% block title %}Contact & Horaires | British Style{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'styles/pages/contact.css' %}?v=1">
+{% endblock %}
+
 {% block content %}
-    <h1>Contact Us</h1>
+<div class="contact-page">
+    <div class="container-fluid px-4 px-lg-5">
+        
+        <!-- Header Banner -->
+        <div class="contact-header">
+            <span class="contact-badge"><i class="bi bi-geo-alt-fill me-1"></i> Salon & Localisation</span>
+            <h1 class="contact-title">Contact & Horaires</h1>
+            <p class="contact-subtitle">Retrouvez-nous en salon ou laissez-nous un message pour toute demande d'information ou conseil sur mesure.</p>
+        </div>
+
+        <!-- 1. MAP SECTION WITH OVERLAY CARD  -->
+        <div class="map-hero-wrapper mb-5">
+            
+            <!-- Floating Overlay Card: Horaires & Téléphone -->
+            <div class="schedule-overlay-card">
+                <div>
+                    <h3 class="schedule-title">Horaires</h3>
+                    <ul class="schedule-list">
+                        <li class="schedule-item">
+                            <span class="schedule-day">Lundi </span>
+                            <span class="schedule-hours">09h00 - 20h00</span>
+                        </li>
+                        <li class="schedule-item">
+                            <span class="schedule-day">Mardi </span>
+                            <span class="schedule-hours">09h00 - 20h00</span>
+                        </li>
+                        <li class="schedule-item">
+                            <span class="schedule-day">Mercredi </span>
+                            <span class="schedule-hours">09h00 - 20h00</span>
+                        </li>
+                        <li class="schedule-item">
+                            <span class="schedule-day">Jeudi </span>
+                            <span class="schedule-hours">09h00 - 20h00</span>
+                        </li>
+                        <li class="schedule-item">
+                            <span class="schedule-day">Vendredi </span>
+                            <span class="schedule-hours">09h00 - 20h00</span>
+                        </li>
+                        <li class="schedule-item">
+                            <span class="schedule-day">Samedi </span>
+                            <span class="schedule-hours">09h00 - 20h00</span>
+                        </li>
+                        <li class="schedule-item">
+                            <span class="schedule-day">Dimanche </span>
+                            <span class="schedule-hours">10h00 - 18h00</span>
+                        </li>
+                    </ul>
+                </div>
+
+                <div class="phone-section">
+                    <h4 class="phone-title">Téléphone</h4>
+                    <a href="tel:0638634370" class="phone-number">
+                        <i class="bi bi-telephone-fill me-2"></i>06 38 63 43 70
+                    </a>
+                </div>
+            </div>
+
+            <!-- Interactive Google Map Frame (Single official pin) -->
+            <div class="map-iframe-container w-100 h-100">
+                <iframe 
+                    class="map-iframe"
+                    src="https://maps.google.com/maps?q=G9Q2%2B6PJ%2C%20Casablanca&t=&z=17&ie=UTF8&iwloc=A&output=embed"
+                    allowfullscreen="" 
+                    loading="lazy" 
+                    referrerpolicy="no-referrer-when-downgrade">
+                </iframe>
+            </div>
+
+        </div>
+
+        <!-- 2. SECTION LAISSER UN MESSAGE (CONTACT FORM) -->
+        <section class="leave-message-section">
+            <div class="row justify-content-center">
+                <div class="col-lg-10 col-xl-8">
+                    <div class="message-card">
+                        <div class="text-center mb-4">
+                            <span class="contact-badge"><i class="bi bi-envelope-heart me-1"></i> Formulaire de Contact</span>
+                            <h2 class="message-card-title mt-2">Laisser un message</h2>
+                            <p class="message-card-subtitle">
+                                Des questions sur nos prestations, nos conseils beauté ou une demande particulière ? Remplissez le formulaire ci-dessous, notre équipe vous répondra avec grand plaisir.
+                            </p>
+                        </div>
+
+                        {% if success_msg %}
+                        <div class="alert alert-success alert-auto-dismiss alert-dismissible fade show rounded-4 shadow-sm border-0 mb-4 p-3" role="alert" data-dismiss-delay="5000">
+                            <div class="d-flex align-items-center">
+                                <i class="bi bi-check-circle-fill fs-4 me-3 text-success"></i>
+                                <div>
+                                    <h6 class="fw-bold mb-1">Message envoyé avec succès !</h6>
+                                    <p class="mb-0 small text-secondary">{{ success_msg }}</p>
+                                </div>
+                            </div>
+                            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                        </div>
+                        {% endif %}
+
+                        <form class="luxury-contact-form" action="{% url 'contact' %}" method="post">
+                            {% csrf_token %}
+                            <div class="row g-3">
+                                <div class="col-md-6 mb-3">
+                                    <label class="form-label">Nom complet <span class="text-danger">*</span></label>
+                                    <input type="text" name="name" class="form-control" placeholder="Votre nom et prénom" required>
+                                </div>
+                                <div class="col-md-6 mb-3">
+                                    <label class="form-label">Adresse Email <span class="text-danger">*</span></label>
+                                    <input type="email" name="email" class="form-control" placeholder="votre.email@exemple.com" required>
+                                </div>
+                            </div>
+
+                            <div class="row g-3">
+                                <div class="col-md-6 mb-3">
+                                    <label class="form-label">Numéro de téléphone</label>
+                                    <input type="tel" name="phone" class="form-control" placeholder="Ex: 06 12 34 56 78">
+                                </div>
+                                <div class="col-md-6 mb-3">
+                                    <label class="form-label">Sujet de votre message</label>
+                                    <input type="text" name="subject" class="form-control" placeholder="Ex: Prise de RDV, Soin spécifique...">
+                                </div>
+                            </div>
+
+                            <div class="mb-4">
+                                <label class="form-label">Votre message <span class="text-danger">*</span></label>
+                                <textarea name="message" class="form-control" rows="5" placeholder="Rédigez votre message ici..." required></textarea>
+                            </div>
+
+                            <div class="text-center mt-4">
+                                <button type="submit" class="btn-send-message w-100 w-md-auto px-5">
+                                    <i class="bi bi-send-fill me-2"></i>Envoyer le message
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+    </div>
+</div>
 {% endblock %}

@@ -1,0 +1,528 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}{{ page_title }} | British Style ERP Admin{% endblock %}</title>
+
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <!-- Bootstrap 5 CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <!-- Bootstrap Icons -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+    <!-- Chart.js -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+    <style>
+        :root {
+            --sidebar-width: 250px;
+            --topbar-height: 70px;
+            --bg-body: #f4f5f8;
+            --sidebar-bg: #ffffff;
+            --card-bg: #ffffff;
+            --gold-accent: #c5a059;
+            --text-dark: #334155;
+            --text-muted: #94a3b8;
+            --border-color: #e2e8f0;
+        }
+
+        body {
+            font-family: 'Poppins', sans-serif;
+            background-color: var(--bg-body);
+            color: var(--text-dark);
+            margin: 0;
+            padding: 0;
+            overflow-x: hidden;
+        }
+
+        /* Sidebar Styling */
+        .admin-sidebar {
+            width: var(--sidebar-width);
+            height: 100vh;
+            position: fixed;
+            top: 0;
+            left: 0;
+            background-color: var(--sidebar-bg);
+            border-right: 1px solid var(--border-color);
+            z-index: 1000;
+            display: flex;
+            flex-direction: column;
+            overflow-y: auto;
+        }
+
+        .sidebar-brand {
+            height: var(--topbar-height);
+            display: flex;
+            align-items: center;
+            padding: 0 1.5rem;
+            font-size: 1.35rem;
+            font-weight: 700;
+            color: #1e293b;
+            text-decoration: none;
+            gap: 0.6rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .sidebar-brand-icon {
+            width: 24px;
+            height: 24px;
+            background-color: #c5a059;
+            border-radius: 50%;
+            display: inline-block;
+        }
+
+        .sidebar-user {
+            text-align: center;
+            padding: 1.25rem 1rem;
+            border-bottom: 1px solid #f1f5f9;
+        }
+
+        .sidebar-user-avatar {
+            width: 64px;
+            height: 64px;
+            border-radius: 50%;
+            margin: 0 auto 0.5rem auto;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.6rem;
+            font-weight: 700;
+            color: white;
+            background: linear-gradient(135deg, #1e293b, #334155);
+            box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+        }
+
+        .sidebar-user-name {
+            font-size: 0.95rem;
+            font-weight: 600;
+            color: #1e293b;
+            margin-bottom: 0.1rem;
+        }
+
+        .sidebar-user-role {
+            font-size: 0.75rem;
+            color: var(--text-muted);
+            margin-bottom: 0.5rem;
+        }
+
+        .sidebar-section-title {
+            font-size: 0.7rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.8px;
+            color: #cbd5e1;
+            padding: 1rem 1.5rem 0.4rem 1.5rem;
+        }
+
+        .sidebar-menu {
+            list-style: none;
+            padding: 0;
+            margin: 0;
+        }
+
+        .sidebar-menu-item a {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0.7rem 1.5rem;
+            color: #64748b;
+            font-weight: 500;
+            font-size: 0.88rem;
+            text-decoration: none;
+            transition: all 0.2s;
+        }
+
+        .sidebar-menu-item a:hover, .sidebar-menu-item.active a {
+            color: #3b82f6;
+            background-color: #f1f5f9;
+            border-left: 4px solid #3b82f6;
+        }
+
+        .sidebar-menu-item.active a {
+            font-weight: 600;
+        }
+
+        .sidebar-menu-item a i.menu-icon {
+            font-size: 1.1rem;
+            margin-right: 0.75rem;
+        }
+
+        /* Wrapper & Topbar */
+        .admin-wrapper {
+            margin-left: var(--sidebar-width);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .admin-topbar {
+            height: var(--topbar-height);
+            background-color: #ffffff;
+            border-bottom: 1px solid var(--border-color);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0 2rem;
+            position: sticky;
+            top: 0;
+            z-index: 999;
+        }
+
+        .topbar-title {
+            font-size: 1.25rem;
+            font-weight: 700;
+            color: #1e293b;
+            margin: 0;
+        }
+
+        .topbar-right {
+            display: flex;
+            align-items: center;
+            gap: 1.25rem;
+            position: relative;
+        }
+
+        .search-pill-container {
+            position: relative;
+        }
+
+        .search-pill {
+            background-color: #f1f5f9;
+            border-radius: 20px;
+            padding: 0.35rem 1rem;
+            display: flex;
+            align-items: center;
+            width: 260px;
+        }
+
+        .search-pill input {
+            border: none;
+            background: transparent;
+            outline: none;
+            font-size: 0.85rem;
+            width: 100%;
+        }
+
+        .global-search-results {
+            position: absolute;
+            top: 110%;
+            left: 0;
+            width: 320px;
+            background: #ffffff;
+            border-radius: 12px;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.15);
+            border: 1px solid #e2e8f0;
+            z-index: 1050;
+            display: none;
+            max-height: 350px;
+            overflow-y: auto;
+        }
+
+        .admin-content {
+            padding: 1.75rem 2rem;
+            flex: 1;
+        }
+
+        .erp-card {
+            background-color: var(--card-bg);
+            border-radius: 14px;
+            padding: 1.5rem;
+            border: 1px solid var(--border-color);
+            box-shadow: 0 2px 10px rgba(0,0,0,0.02);
+            margin-bottom: 1.5rem;
+        }
+
+        .admin-sidebar {
+            width: var(--sidebar-width);
+            height: 100vh;
+            position: fixed;
+            top: 0;
+            left: 0;
+            background-color: var(--sidebar-bg);
+            border-right: 1px solid var(--border-color);
+            z-index: 1000;
+            display: flex;
+            flex-direction: column;
+            overflow-y: auto;
+            transition: transform 0.3s ease;
+        }
+
+        .sidebar-backdrop {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            background: rgba(0, 0, 0, 0.4);
+            z-index: 999;
+            backdrop-filter: blur(4px);
+        }
+
+        .sidebar-backdrop.show {
+            display: block;
+        }
+
+        @media (max-width: 1199.98px) {
+            .admin-sidebar {
+                transform: translateX(-100%);
+            }
+            .admin-sidebar.show {
+                transform: translateX(0);
+            }
+            .admin-wrapper {
+                margin-left: 0 !important;
+            }
+            .admin-topbar {
+                padding: 0 1rem;
+            }
+            .admin-content {
+                padding: 1rem;
+            }
+            .search-pill {
+                width: 180px;
+            }
+        }
+
+        @media (max-width: 575.98px) {
+            .search-pill {
+                width: 130px;
+            }
+            .topbar-title {
+                font-size: 1rem;
+            }
+        }
+
+        .bg-badge-present { background-color: #d1fae5; color: #047857; }
+        .bg-badge-pause { background-color: #fef3c7; color: #b45309; }
+        .bg-badge-repos { background-color: #e0f2fe; color: #0369a1; }
+        .bg-badge-absent { background-color: #fee2e2; color: #b91c1c; }
+    </style>
+    {% block extra_css %}{% endblock %}
+</head>
+<body>
+
+    <!-- Sidebar Left -->
+    <div class="admin-sidebar" id="adminSidebar">
+        <a href="{% url 'dashboard_overview' %}" class="sidebar-brand">
+            <span class="sidebar-brand-icon"></span>
+            <span>British ERP</span>
+        </a>
+
+        <!-- Admin Profile -->
+        <div class="sidebar-user">
+            <div class="sidebar-user-avatar">
+                <i class="bi bi-shield-check"></i>
+            </div>
+            <div class="sidebar-user-name">{{ user.username|default:"Administrateur" }}</div>
+            <div class="sidebar-user-role">Responsable ERP</div>
+            <div class="d-flex justify-content-center gap-2 mt-2">
+                <a href="{% url 'dashboard_settings' %}" class="text-muted" title="Paramètres"><i class="bi bi-gear"></i></a>
+                <a href="{% url 'frontpage' %}" class="text-muted" title="Voir le site client"><i class="bi bi-box-arrow-up-right"></i></a>
+                <form method="post" action="{% url 'account_logout' %}" class="d-inline">
+                    {% csrf_token %}
+                    <button type="submit" class="border-0 bg-transparent text-danger p-0 ms-1" title="Déconnexion"><i class="bi bi-box-arrow-right"></i></button>
+                </form>
+            </div>
+        </div>
+
+        <!-- Navigation Menu -->
+        <div class="sidebar-section-title">TABLEAU DE BORD</div>
+        <ul class="sidebar-menu">
+            <li class="sidebar-menu-item {% if active_menu == 'dashboard' %}active{% endif %}">
+                <a href="{% url 'dashboard_overview' %}">
+                    <div><i class="bi bi-grid-1x2-fill menu-icon text-primary"></i> Dashboard</div>
+                </a>
+            </li>
+            <li class="sidebar-menu-item {% if active_menu == 'attendance' %}active{% endif %}">
+                <a href="{% url 'dashboard_attendance_log' %}">
+                    <div><i class="bi bi-clock-history menu-icon text-warning"></i> Pointage</div>
+                </a>
+            </li>
+        </ul>
+
+        <div class="sidebar-section-title">GESTION ERP</div>
+        <ul class="sidebar-menu">
+            <li class="sidebar-menu-item {% if active_menu == 'reservations' %}active{% endif %}">
+                <a href="{% url 'dashboard_reservations' %}">
+                    <div><i class="bi bi-calendar-check-fill menu-icon text-info"></i> Réservations Soins</div>
+                </a>
+            </li>
+            <li class="sidebar-menu-item {% if active_menu == 'orders' %}active{% endif %}">
+                <a href="{% url 'dashboard_orders' %}">
+                    <div><i class="bi bi-bag-check-fill menu-icon text-gold" style="color:#c5a059;"></i> Commandes</div>
+                    {% if new_orders_count %}
+                    <span class="badge bg-warning text-dark rounded-pill">{{ new_orders_count }}</span>
+                    {% endif %}
+                </a>
+            </li>
+
+
+            <li class="sidebar-menu-item {% if active_menu == 'users' %}active{% endif %}">
+                <a href="{% url 'dashboard_users' %}">
+                    <div><i class="bi bi-people-fill menu-icon text-primary"></i> Gestion des Utilisateurs</div>
+                </a>
+            </li>
+            <li class="sidebar-menu-item {% if active_menu == 'employees' %}active{% endif %}">
+                <a href="{% url 'dashboard_employees' %}">
+                    <div><i class="bi bi-person-badge-fill menu-icon text-info"></i> Gestion des Employés</div>
+                </a>
+            </li>
+            <li class="sidebar-menu-item {% if active_menu == 'products' %}active{% endif %}">
+                <a href="{% url 'dashboard_products' %}">
+                    <div><i class="bi bi-box-seam-fill menu-icon text-success"></i> Produits</div>
+                </a>
+            </li>
+            <li class="sidebar-menu-item {% if active_menu == 'services' %}active{% endif %}">
+                <a href="{% url 'dashboard_services' %}">
+                    <div><i class="bi bi-scissors menu-icon text-danger"></i> Services</div>
+                </a>
+            </li>
+            <li class="sidebar-menu-item {% if active_menu == 'messages' %}active{% endif %}">
+                <a href="{% url 'dashboard_messages' %}">
+                    <div><i class="bi bi-envelope-fill menu-icon text-purple" style="color:#8e44ad;"></i> Messages</div>
+                    {% if new_messages_count %}
+                    <span class="badge bg-danger rounded-pill">{{ new_messages_count }}</span>
+                    {% endif %}
+                </a>
+            </li>
+            <li class="sidebar-menu-item {% if active_menu == 'notifications' %}active{% endif %}">
+                <a href="{% url 'dashboard_notifications' %}">
+                    <div><i class="bi bi-bell-fill menu-icon text-warning"></i> Notifications</div>
+                </a>
+            </li>
+            <li class="sidebar-menu-item {% if active_menu == 'performance' %}active{% endif %}">
+                <a href="{% url 'dashboard_performance' %}">
+                    <div><i class="bi bi-star-fill menu-icon text-warning"></i> Performance</div>
+                </a>
+            </li>
+            <li class="sidebar-menu-item {% if active_menu == 'settings' %}active{% endif %}">
+                <a href="{% url 'dashboard_settings' %}">
+                    <div><i class="bi bi-gear-fill menu-icon text-secondary"></i> Paramètres</div>
+                </a>
+            </li>
+        </ul>
+    </div>
+
+    <!-- Backdrop Overlay for Mobile -->
+    <div class="sidebar-backdrop" id="adminSidebarBackdrop"></div>
+
+    <!-- Main Content Wrapper -->
+    <div class="admin-wrapper">
+        <!-- Topbar -->
+        <div class="admin-topbar">
+            <div class="d-flex align-items-center gap-2">
+                <button class="btn btn-light d-xl-none border-0 p-1" id="toggleAdminSidebar" type="button" aria-label="Menu">
+                    <i class="bi bi-list fs-3"></i>
+                </button>
+                <h1 class="topbar-title">{{ page_title }}</h1>
+            </div>
+
+            <div class="topbar-right">
+                <!-- Global Live Search -->
+                <div class="search-pill-container">
+                    <div class="search-pill">
+                        <input type="text" id="globalSearchInput" placeholder="Recherche globale..." onkeyup="handleGlobalSearch()">
+                        <i class="bi bi-search text-muted"></i>
+                    </div>
+                    <div class="global-search-results p-2" id="globalSearchResults">
+                        <!-- Populated dynamically via JS -->
+                    </div>
+                </div>
+
+                <!-- Admin Dropdown -->
+                <div class="dropdown">
+                    <button class="btn btn-light border-0 dropdown-toggle d-flex align-items-center gap-2 fw-semibold" type="button" data-bs-toggle="dropdown">
+                        <i class="bi bi-person-circle fs-5"></i> <span class="d-none d-sm-inline">{{ user.username|default:"Admin" }}</span>
+                    </button>
+                    <ul class="dropdown-menu dropdown-menu-end shadow-sm border-0 mt-2 p-2">
+                        <li><a class="dropdown-item rounded-2" href="{% url 'dashboard_settings' %}"><i class="bi bi-gear me-2"></i> Paramètres</a></li>
+                        <li><hr class="dropdown-divider"></li>
+                        <li>
+                            <form method="post" action="{% url 'account_logout' %}" class="m-0">
+                                {% csrf_token %}
+                                <button type="submit" class="dropdown-item text-danger rounded-2 fw-semibold"><i class="bi bi-box-arrow-right me-2"></i> Se Déconnecter</button>
+                            </form>
+                        </li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+
+        <!-- Dynamic Content Body -->
+        <div class="admin-content">
+            {% block content %}{% endblock %}
+        </div>
+    </div>
+
+    <!-- Bootstrap JS Bundle -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="{% static 'scripts/flash-messages.js' %}?v=1"></script>
+
+    <script>
+        // Admin Sidebar Toggle Logic
+        const toggleBtn = document.getElementById('toggleAdminSidebar');
+        const sidebar = document.getElementById('adminSidebar');
+        const backdrop = document.getElementById('adminSidebarBackdrop');
+
+        function toggleSidebar() {
+            sidebar?.classList.toggle('show');
+            backdrop?.classList.toggle('show');
+        }
+
+        toggleBtn?.addEventListener('click', toggleSidebar);
+        backdrop?.addEventListener('click', toggleSidebar);
+
+        // Global Search API Call
+        let searchTimeout = null;
+        function handleGlobalSearch() {
+            clearTimeout(searchTimeout);
+            const query = document.getElementById('globalSearchInput').value.trim();
+            const resultsBox = document.getElementById('globalSearchResults');
+
+            if (query.length < 2) {
+                resultsBox.style.display = 'none';
+                return;
+            }
+
+            searchTimeout = setTimeout(() => {
+                fetch(`/dashboard/api/search/?q=${encodeURIComponent(query)}`)
+                    .then(res => res.json())
+                    .then(data => {
+                        if (data.results && data.results.length > 0) {
+                            let html = '';
+                            data.results.forEach(res => {
+                                html += `
+                                    <a href="${res.url}" class="d-block p-2 text-decoration-none border-bottom rounded hover-bg-light">
+                                        <div class="d-flex align-items-center justify-content-between">
+                                            <span class="fw-bold text-dark fs-6">${res.title}</span>
+                                            <span class="badge bg-secondary" style="font-size:0.65rem;">${res.type}</span>
+                                        </div>
+                                        <small class="text-muted">${res.subtitle}</small>
+                                    </a>
+                                `;
+                            });
+                            resultsBox.innerHTML = html;
+                            resultsBox.style.display = 'block';
+                        } else {
+                            resultsBox.innerHTML = '<div class="p-3 text-muted text-center small">Aucun résultat trouvé</div>';
+                            resultsBox.style.display = 'block';
+                        }
+                    });
+            }, 300);
+        }
+
+        // Close search on click outside
+        document.addEventListener('click', (e) => {
+            if (!e.target.closest('.search-pill-container')) {
+                const resultsBox = document.getElementById('globalSearchResults');
+                if (resultsBox) resultsBox.style.display = 'none';
+            }
+        });
+    </script>
+
+    {% block extra_js %}{% endblock %}
+</body>
+</html>

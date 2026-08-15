@@ -1,113 +1,394 @@
-{% load static %}
 <!DOCTYPE html>
-<html lang="en">
+<html lang="fr">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>{% block title %}British Style{% endblock %}</title>
-    <!-- Bootstrap CSS (CDN) -->
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
-    <link rel="stylesheet" href="{% static 'styles/main.css' %}">
+    <meta name="description"
+        content="British Style - L'élégance britannique à portée de main. Gamme cosmétique haut de gamme et soins d'exception.">
+    {% load static %}
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+    <link rel="stylesheet" href="{% static 'styles/main.css' %}?v=20260806_spacing">
+    {% block extra_css %}{% endblock %}
+
+    <title>{% block title %}British Style | L'élégance britannique à portée de main{% endblock %}</title>
+</head>
+
 <body>
-        
-          <nav class="navbar navbar-expand-lg bg-body-tertiary">
-            <div classb="container-fluid">
-                <a class="navbar-brand" href="#">Navbar</a>
-                <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarSupportedContent" aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
-                    <span class="navbar-toggler-icon"></span>
+    {% block header %}
+    <header id="main-header">
+        <nav class="navbar navbar-expand-lg">
+            <div class="container-fluid px-2 px-md-3 px-xl-4">
+                <a class="nav-logo" href="{% url 'frontpage' %}">British Style</a>
+                <button class="navbar-toggler border-0 text-white" type="button" data-bs-toggle="collapse"
+                    data-bs-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false"
+                    aria-label="Toggle navigation">
+                    <i class="bi bi-list fs-1 text-white"></i>
                 </button>
-                <div class="collapse navbar-collapse" id="navbarSupportedContent">
-                    <ul class="navbar-nav me-auto mb-2 mb-lg-0">
-                        <li class="nav-item">
-                            <a class="nav-link active" aria-current="page" href="#">Home</a>
-                        </li>
-                        <li class="nav-item">
-                            {% if request.user.is_authenticated %}
-                                <a class="nav-link" href="{% url 'vendor_admin' %}">Vendor Admin</a>
-                            {% else %}
-                                <a class="nav-link" href="{% url 'become_vendor' %}">Become a Vendor</a>
-                            {% endif %}
-                        </li>
-                        <li class="nav-item dropdown">
-                            <a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false">
-                                Dropdown
-                            </a>
-                            <ul class="dropdown-menu">
-                                <li><a class="dropdown-item" href="#">Action</a></li>
-                                <li><a class="dropdown-item" href="#">Another action</a></li>
-                                <li><hr class="dropdown-divider"></li>
-                                <li><a class="dropdown-item" href="#">Something else here</a></li>
-                            </ul>
-                        </li>
-                        <li class="nav-item">  
-                            <a class="nav-link active"  aria-current="page"href="{% url 'contact' %}" class="navbar-item">contact</a>
-                        </li>
+                <div class="collapse navbar-collapse" id="navbarNav">
+                    <ul class="nav-menu mx-auto">
+                        <li class="nav-item"><a href="{% url 'frontpage' %}#accueil" class="nav-link">ACCUEIL</a></li>
+                        <li class="nav-item"><a href="{% url 'services' %}" class="nav-link">SERVICES</a></li>
+                        <li class="nav-item"><a href="{% url 'boutique' %}" class="nav-link">BOUTIQUE</a></li>
+                        <li class="nav-item"><a href="{% url 'contact' %}" class="nav-link">CONTACT</a></li>
+                        <li class="nav-item"><a href="{% url 'equipe' %}#equipe" class="nav-link">ÉQUIPE</a></li>
                     </ul>
-                    <form class="d-flex" role="search">
-                        <input class="form-control me-2" type="search" placeholder="Search" aria-label="Search"/>
-                        <button class="btn btn-outline-success" type="submit">Search</button>
-                    </form>
+                    <div class="header-actions">
+                        <button class="nav-cart-btn position-relative d-inline-flex align-items-center gap-2 border-0" type="button" data-bs-toggle="offcanvas" data-bs-target="#cartOffcanvas" aria-controls="cartOffcanvas">
+                            <i class="bi bi-bag-check fs-5"></i>
+                            <span class="d-none d-sm-inline fw-semibold">Panier</span>
+                            <span class="cart-count-badge badge rounded-pill bg-gold text-white border d-none" style="font-size: 0.75rem; background-color: #c5a059 !important;">0</span>
+                        </button>
+                        {% if user.is_authenticated %}
+                        <div class="dropdown d-inline-block">
+                            <button class="nav-btn-dark dropdown-toggle border-0 d-flex align-items-center gap-2" type="button" id="userMenuDropdown" data-bs-toggle="dropdown" aria-expanded="false">
+                                <i class="bi bi-person-check fs-6"></i>{{ user.employee_profile.full_name|default:user.username }}
+                            </button>
+                            <ul class="dropdown-menu dropdown-menu-end luxury-dropdown shadow-lg border-0 mt-2 rounded-4 p-2" aria-labelledby="userMenuDropdown">
+                                <li class="dropdown-header text-uppercase small text-muted px-3 py-1 fw-bold">Mes Soins</li>
+                                <li>
+                                    <a class="dropdown-item rounded-3 py-2 px-3 d-flex align-items-center gap-2" href="{% url 'client_reservations' %}">
+                                        <i class="bi bi-bag-check-fill text-gold" style="color: #c5a059;"></i> Mes Réservations & Commandes
+                                    </a>
+                                </li>
+                                <li><hr class="dropdown-divider my-2"></li>
+
+                                {% if user.is_staff or user.is_superuser or user.employee_profile.role == 'ADMINISTRATEUR' or user.employee_profile.role == 'RECEPTION' %}
+                                <li class="dropdown-header text-uppercase small text-muted px-3 py-1 fw-bold">Accueil Salon</li>
+                                {% if user.is_staff or user.is_superuser or user.employee_profile.role == 'ADMINISTRATEUR' %}
+                                <li>
+                                    <a class="dropdown-item rounded-3 py-2 px-3 d-flex align-items-center gap-2 fw-semibold text-gold" href="{% url 'dashboard_overview' %}">
+                                        <i class="bi bi-speedometer2 text-gold"></i> Dashboard ERP Admin
+                                    </a>
+                                </li>
+                                {% endif %}
+                                <li>
+                                    <a class="dropdown-item rounded-3 py-2 px-3 d-flex align-items-center gap-2 fw-semibold text-gold" href="{% url 'reception_dashboard' %}">
+                                        <i class="bi bi-bell-fill text-gold"></i> Espace Réceptionniste
+                                    </a>
+                                </li>
+                                <li><hr class="dropdown-divider my-2"></li>
+                                {% endif %}
+
+
+                                {% if user.employee_profile.is_team_member and user.employee_profile.role != 'USER' %}
+                                <li class="dropdown-header text-uppercase small text-muted px-3 py-1 fw-bold">Espace Employé</li>
+                                <li>
+                                    <a class="dropdown-item rounded-3 py-2 px-3 d-flex align-items-center gap-2 fw-semibold text-gold" href="{% url 'employee_dashboard' %}">
+                                        <i class="bi bi-grid-1x2-fill text-gold"></i> Mon Tableau de Bord
+                                    </a>
+                                </li>
+                                <li>
+                                    <a class="dropdown-item rounded-3 py-2 px-3 d-flex align-items-center gap-2" href="{% url 'employee_pointage' %}">
+                                        <i class="bi bi-clock-history text-gold"></i> Mon Pointage
+                                    </a>
+                                </li>
+                                <li>
+                                    <a class="dropdown-item rounded-3 py-2 px-3 d-flex align-items-center gap-2" href="{% url 'employee_profil' %}">
+                                        <i class="bi bi-person-badge text-gold"></i> Mon Profil Employé
+                                    </a>
+                                </li>
+                                <li><hr class="dropdown-divider my-2"></li>
+                                {% endif %}
+                                <li class="dropdown-header text-uppercase small text-muted px-3 py-1 fw-bold">Paramètres Compte</li>
+                                <li>
+                                    <a class="dropdown-item rounded-3 py-2 px-3 d-flex align-items-center gap-2" href="{% url 'account_change_password' %}">
+                                        <i class="bi bi-key text-gold"></i> Changer le Mot de Passe
+                                    </a>
+                                </li>
+                                <li><hr class="dropdown-divider my-2"></li>
+                                <li>
+                                    <form method="post" action="{% url 'account_logout' %}" class="m-0 p-0">
+                                        {% csrf_token %}
+                                        <button type="submit" class="dropdown-item rounded-3 py-2 px-3 d-flex align-items-center gap-2 text-danger fw-semibold">
+                                            <i class="bi bi-box-arrow-right"></i> Se Déconnecter
+                                        </button>
+                                    </form>
+                                </li>
+                            </ul>
+                        </div>
+                        {% else %}
+                        <a href="{% url 'account_login' %}" class="nav-btn-dark">
+                            <i class="bi bi-person fs-6 me-2"></i>Mon compte
+                        </a>
+                        {% endif %}
+                    </div>
                 </div>
             </div>
         </nav>
+    </header>
+    {% endblock header %}
 
-        <main>
-        <div class="container main-content">
+    <main>
         {% block content %}
         {% endblock %}
-        </div>
     </main>
 
-    <footer class="footer-dark" role="contentinfo">
+    {% block footer %}
+    <footer class="site-footer">
         <div class="container">
-            <div class="footer-dark__main-grid">
-                <div class="footer-dark__brand">
-                    <a href="#" aria-label="Homepage">
-                        <svg class="logo" viewBox="0 0 100 25" xmlns="http://www.w3.org/2000/svg"><title>Your Brand</title><path d="M0 0 H25 V25 H0 Z M30 0 H55 V25 H30 Z M60 0 H100 V10 H60Z M60 15 H100 V25 H60Z"/></svg>
-                    </a>
-                    <p>A sleek and modern footer for businesses that want to make a bold statement.</p>
+            <div class="row g-4 py-5">
+                <div class="col-lg-5 col-md-12 mb-4 mb-lg-0">
+                    <div class="footer-brand mb-3">
+                        <span class="fs-4 fw-bold text-uppercase tracking-wider" style="font-family: var(--font-serif); color: #c5a059;">BRITISH STYLE</span>
+                    </div>
+                    <p class="footer-desc mb-0" style="color: #e0e0e0; font-size: 0.95rem; line-height: 1.7;">Découvrez l'élégance et le raffinement d'un salon de coiffure d'exception. Prenez soin de votre style avec notre gamme cosmétique haut de gamme.</p>
                 </div>
-                <div class="footer-dark__links">
-                    <h3 class="footer-dark__heading">Product</h3>
-                    <ul>
-                        <li><a href="#">Features</a></li>
-                        <li><a href="#">Pricing</a></li>
-                        <li><a href="#">Case Studies</a></li>
-                        <li><a href="#">Reviews</a></li>
+                <div class="col-lg-3 col-md-6 mb-4 mb-lg-0">
+                    <h5 class="footer-heading" style="color: #ffffff; font-weight: 600;">Navigation</h5>
+                    <ul class="footer-links">
+                        <li><a href="{% url 'frontpage' %}" style="color: #d0d0d0;">Accueil</a></li>
+                        <li><a href="{% url 'services' %}" style="color: #d0d0d0;">Services</a></li>
+                        <li><a href="{% url 'contact' %}" style="color: #d0d0d0;">Contact</a></li>
+                        <li><a href="{% url 'boutique' %}" style="color: #d0d0d0;">Boutique</a></li>
+                        <li><a href="{% url 'equipe' %}" style="color: #d0d0d0;">Équipe</a></li>
                     </ul>
                 </div>
-                <div class="footer-dark__links">
-                    <h3 class="footer-dark__heading">Resources</h3>
-                    <ul>
-                        <li><a href="#">Blog</a></li>
-                        <li><a href="#">Help Center</a></li>
-                        <li><a href="#">Contact Us</a></li>
-                        <li><a href="#">Status</a></li>
-                    </ul>
-                </div>
-                <div class="footer-dark__links">
-                    <h3 class="footer-dark__heading">Company</h3>
-                    <ul>
-                        <li><a href="#">About Us</a></li>
-                        <li><a href="#">Careers</a></li>
-                        <li><a href="#">Press</a></li>
-                    </ul>
+                <div class="col-lg-4 col-md-6">
+                    <h5 class="footer-heading" style="color: #ffffff; font-weight: 600;">Contact</h5>
+                    <p class="footer-contact-info mb-2" style="color: #e0e0e0;"><i class="bi bi-geo-alt me-2" style="color: #c5a059;"></i> G9Q2+6PJ, Casablanca, Maroc</p>
+                    <p class="footer-contact-info mb-2" style="color: #e0e0e0;"><i class="bi bi-envelope me-2" style="color: #c5a059;"></i> contact@britishstyle.com</p>
+                    <p class="footer-contact-info" style="color: #e0e0e0;"><i class="bi bi-telephone me-2" style="color: #c5a059;"></i> 063636366363</p>
                 </div>
             </div>
-            <div class="footer-dark__bottom">
-                <p class="footer-dark__copyright">&copy; 2025 Your Brand. All Rights Reserved.</p>
-                <nav class="footer-dark__social" aria-label="Social media">
-                    <ul>
-                        <li><a href="#" aria-label="Our Twitter Profile"><svg role="img" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><title>Twitter</title><path d="M23.953 4.57a10 10 0 01-2.825.775 4.958 4.958 0 002.163-2.723c-.951.555-2.005.959-3.127 1.184a4.92 4.92 0 00-8.384 4.482C7.69 8.095 4.067 6.13 1.64 3.162a4.822 4.822 0 00-.666 2.475c0 1.71.87 3.213 2.188 4.096a4.904 4.904 0 01-2.228-.616v.06a4.923 4.923 0 003.946 4.827 4.996 4.996 0 01-2.223.085 4.93 4.93 0 004.604 3.417 9.867 9.867 0 01-6.102 2.105c-.39 0-.779-.023-1.17-.067a13.995 13.995 0 007.557 2.209c9.053 0 13.998-7.496 13.998-13.985 0-.21 0-.42-.015-.63A9.935 9.935 0 0024 4.59z"/></svg></a></li>
-                        <li><a href="#" aria-label="Our GitHub Profile"><svg role="img" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><title>GitHub</title><path d="M12 .297c-6.63 0-12 5.373-12 12 0 5.303 3.438 9.8 8.205 11.385.6.113.82-.258.82-.577 0-.285-.01-1.04-.015-2.04-3.338.724-4.042-1.61-4.042-1.61C4.422 18.07 3.633 17.7 3.633 17.7c-1.087-.744.084-.729.084-.729 1.205.084 1.838 1.236 1.838 1.236 1.07 1.835 2.809 1.305 3.495.998.108-.776.417-1.305.76-1.605-2.665-.3-5.466-1.332-5.466-5.93 0-1.31.465-2.38 1.235-3.22-.135-.303-.54-1.523.105-3.176 0 0 1.005-.322 3.3 1.23.96-.267 1.98-.399 3-.405 1.02.006 2.04.138 3 .405 2.28-1.552 3.285-1.23 3.285-1.23.645 1.653.24 2.873.12 3.176.765.84 1.23 1.91 1.23 3.22 0 4.61-2.805 5.625-5.475 5.92.42.36.81 1.096.81 2.22 0 1.606-.015 2.896-.015 3.286 0 .315.21.69.825.57C20.565 22.092 24 17.592 24 12.297c0-6.627-5.373-12-12-12"/></svg></a></li>
-                        <li><a href="#" aria-label="Our LinkedIn Profile"><svg role="img" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><title>LinkedIn</title><path d="M20.447 20.452h-3.554v-5.569c0-1.328-.027-3.037-1.852-3.037-1.853 0-2.136 1.445-2.136 2.939v5.667H9.351V9h3.414v1.561h.046c.477-.9 1.637-1.85 3.37-1.85 3.601 0 4.267 2.37 4.267 5.455v6.286zM5.337 7.433c-1.144 0-2.063-.926-2.063-2.065 0-1.138.92-2.063 2.063-2.063 1.14 0 2.064.925 2.064 2.063 0 1.139-.925 2.065-2.064 2.065zm1.782 13.019H3.555V9h3.564v11.452zM22.225 0H1.771C.792 0 0 .774 0 1.729v20.542C0 23.227.792 24 1.771 24h20.451C23.2 24 24 23.227 24 22.271V1.729C24 .774 23.2 0 22.225 0z"/></svg></a></li>
-                    </ul>
-                </nav>
+            <div class="footer-bottom border-top border-secondary pt-4 text-center">
+                <p class="mb-0" style="color: #b0b0b0;">&copy; 2026 British Style. Tous droits réservés.</p>
             </div>
         </div>
     </footer>
+    {% endblock footer %}
 
-    <!-- Bootstrap JS bundle (includes Popper) -->
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <!-- Offcanvas Shopping Cart Drawer -->
+    <div class="offcanvas offcanvas-end luxury-cart-drawer border-0 shadow-lg" tabindex="-1" id="cartOffcanvas" aria-labelledby="cartOffcanvasLabel" style="width: 420px; max-width: 90vw;">
+        <div class="offcanvas-header border-bottom p-4" style="background-color: #121212; color: #ffffff; flex-shrink: 0;">
+            <h5 class="offcanvas-title fw-bold d-flex align-items-center gap-2" id="cartOffcanvasLabel" style="font-family: var(--font-serif, 'Playfair Display', serif);">
+                <i class="bi bi-bag-check" style="color: #c5a059;"></i> Votre Panier
+            </h5>
+            <button type="button" class="btn-close btn-close-white" data-bs-dismiss="offcanvas" aria-label="Fermer"></button>
+        </div>
+
+        <div class="offcanvas-body p-4" style="background-color: #f7f1e8; overflow-y: auto;">
+            <!-- Empty State -->
+            <div id="cartEmptyState" class="text-center py-5">
+                <div class="rounded-circle bg-white shadow-sm p-4 d-inline-flex align-items-center justify-content-center mb-3" style="width: 80px; height: 80px;">
+                    <i class="bi bi-bag-x fs-1 text-muted"></i>
+                </div>
+                <h6 class="fw-bold text-dark mb-1">Votre panier est actuellement vide</h6>
+                <p class="text-muted small mb-4">Découvrez nos soins d'exception et produits cosmétiques dans la boutique.</p>
+                <a href="{% url 'boutique' %}" class="btn btn-dark rounded-3 px-4 py-2" data-bs-dismiss="offcanvas">
+                    <i class="bi bi-shop me-2"></i>Découvrir la Boutique
+                </a>
+            </div>
+
+            <!-- Cart Items Container -->
+            <div id="cartOffcanvasItems"></div>
+
+            <!-- Delivery Options Selector (Inside scrollable body) -->
+            <div id="cartShippingSection" class="mt-4 mb-4 d-none">
+                <label class="form-label text-uppercase small text-muted fw-bold mb-2" style="letter-spacing: 0.05em; font-size: 0.78rem;">Mode de Livraison</label>
+                <div class="d-flex flex-column gap-2">
+                    
+                    <!-- Option 1: Livraison -->
+                    <div id="shippingOptionDelivery" class="shipping-option-card active p-3 rounded-3 border d-flex align-items-center justify-content-between cursor-pointer" onclick="CartManager.setShippingMethod('delivery')">
+                        <div class="d-flex align-items-center gap-3">
+                            <div class="shipping-radio-circle"></div>
+                            <div>
+                                <div class="fw-semibold text-dark small">Livraison à domicile</div>
+                                <div class="text-muted text-xs" style="font-size: 0.78rem;">Envoyé sous 3 à 5 jours via la poste</div>
+                            </div>
+                        </div>
+                        <span class="badge bg-light text-dark border font-semibold">+10 DH</span>
+                    </div>
+
+                    <!-- Option 2: Click & Collect -->
+                    <div id="shippingOptionCollect" class="shipping-option-card p-3 rounded-3 border d-flex align-items-center justify-content-between cursor-pointer" onclick="CartManager.setShippingMethod('collect')">
+                        <div class="d-flex align-items-center gap-3">
+                            <div class="shipping-radio-circle"></div>
+                            <div>
+                                <div class="fw-semibold text-dark small">Click & Collect</div>
+                                <div class="text-muted text-xs" style="font-size: 0.78rem;">Retrait gratuit aux magasins / salon</div>
+                            </div>
+                        </div>
+                        <span class="badge bg-success-subtle text-success border border-success-subtle font-semibold">Gratuit</span>
+                    </div>
+
+                </div>
+            </div>
+
+            <!-- Mode de Paiement Selector (Inside scrollable body) -->
+            <div id="cartPaymentSection" class="mt-3 mb-4 d-none">
+                <label class="form-label text-uppercase small text-muted fw-bold mb-2" style="letter-spacing: 0.05em; font-size: 0.78rem;">Mode de Paiement</label>
+                <div class="d-flex flex-column gap-2">
+                    
+                    <!-- Option COD: Paiement à la livraison -->
+                    <div id="paymentOptionCod" class="payment-option-card active p-3 rounded-3 border d-flex align-items-center justify-content-between cursor-pointer" onclick="CartManager.setPaymentMethod('cod')">
+                        <div class="d-flex align-items-center gap-3">
+                            <div class="shipping-radio-circle"></div>
+                            <div>
+                                <div class="fw-semibold text-dark small">💵 Paiement à la livraison</div>
+                                <div class="text-muted text-xs" style="font-size: 0.78rem;">Payez lorsque vous recevez votre commande</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Option Card: Carte bancaire -->
+                    <div id="paymentOptionCard" class="payment-option-card p-3 rounded-3 border d-flex align-items-center justify-content-between cursor-pointer" onclick="CartManager.setPaymentMethod('card')">
+                        <div class="d-flex align-items-center gap-3">
+                            <div class="shipping-radio-circle"></div>
+                            <div>
+                                <div class="fw-semibold text-dark small">💳 Carte bancaire</div>
+                                <div class="text-muted text-xs" style="font-size: 0.78rem;">Paiement sécurisé en ligne</div>
+                            </div>
+                        </div>
+                        <span class="badge bg-primary-subtle text-primary border border-primary-subtle font-semibold" style="font-size: 0.72rem;">Sécurisé</span>
+                    </div>
+
+                    <!-- Option Store: Paiement au retrait -->
+                    <div id="paymentOptionStore" class="payment-option-card p-3 rounded-3 border d-flex align-items-center justify-content-between cursor-pointer d-none" onclick="CartManager.setPaymentMethod('store')">
+                        <div class="d-flex align-items-center gap-3">
+                            <div class="shipping-radio-circle"></div>
+                            <div>
+                                <div class="fw-semibold text-dark small">🏪 Paiement au retrait</div>
+                                <div class="text-muted text-xs" style="font-size: 0.78rem;">Payez lorsque vous récupérez votre commande</div>
+                            </div>
+                        </div>
+                    </div>
+
+                </div>
+            </div>
+
+            <!-- Price Breakdown Summary (Inside scrollable body) -->
+            <div id="cartPriceBreakdown" class="price-breakdown-box bg-white p-3 rounded-3 mb-2 border shadow-sm d-none">
+                <div class="d-flex align-items-center justify-content-between small text-muted mb-2">
+                    <span>Sous-total articles</span>
+                    <span class="fw-semibold text-dark cart-subtotal-display">0 DH</span>
+                </div>
+                <div class="d-flex align-items-center justify-content-between small text-muted mb-2">
+                    <span>Frais de livraison</span>
+                    <span class="fw-semibold text-dark cart-shipping-display">+10 DH</span>
+                </div>
+                <div class="border-top pt-2 mt-2 d-flex align-items-center justify-content-between">
+                    <span class="fw-bold text-dark">Total</span>
+                    <span class="fs-4 fw-bold text-dark cart-total-display">0 DH</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Sticky Footer ALWAYS Visible at Bottom -->
+        <div id="cartOffcanvasFooter" class="offcanvas-footer p-3 border-top bg-white d-none" style="flex-shrink: 0; position: relative; z-index: 15;">
+            {% if user.is_authenticated %}
+            <button id="cartSubmitBtn" type="button" class="btn btn-dark w-100 py-3 rounded-3 fw-bold d-flex align-items-center justify-content-center gap-2" style="background-color: #121212; border: none; box-shadow: 0 4px 15px rgba(0,0,0,0.15);" onclick="CartManager.openCheckoutModal()">
+                <i id="cartSubmitBtnIcon" class="bi bi-box-seam fs-5"></i>
+                <span id="cartSubmitBtnText">📦 Commander — <span class="cart-total-display">0 DH</span></span>
+            </button>
+            {% else %}
+            <a href="{% url 'account_login' %}?next={{ request.path|urlencode }}" class="btn btn-warning w-100 py-3 rounded-3 fw-bold d-flex align-items-center justify-content-center gap-2 text-decoration-none" style="background-color: #c5a059; border: none; color: #ffffff !important; box-shadow: 0 4px 15px rgba(197, 160, 89, 0.3); font-size: 0.92rem;">
+                <i class="bi bi-box-arrow-in-right fs-5"></i>
+                <span>Se connecter pour commander (<span class="cart-total-display">0 DH</span>)</span>
+            </a>
+            {% endif %}
+            <button type="button" class="btn btn-link text-muted w-100 text-decoration-none small mt-1" onclick="CartManager.clearCart()">
+                Vider le panier
+            </button>
+        </div>
+    </div>
+
+    <!-- Checkout / Order Confirmation Modal -->
+    <div class="modal fade" id="checkoutModal" tabindex="-1" aria-labelledby="checkoutModalLabel" aria-hidden="true" style="z-index: 1065;">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content rounded-4 border-0 shadow-lg" style="background-color: #ffffff;">
+                <div class="modal-header border-bottom p-4" style="background-color: #121212; color: #ffffff;">
+                    <h5 class="modal-title fw-bold m-0 d-flex align-items-center gap-2" id="checkoutModalLabel" style="font-family: var(--font-serif, 'Playfair Display', serif);">
+                        <i class="bi bi-bag-check-fill" style="color: #c5a059;"></i> Validation de la Commande
+                    </h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Fermer"></button>
+                </div>
+                <div class="modal-body p-4" style="background-color: #fcfbfa;">
+                    <!-- Order Summary Header -->
+                    <div class="checkout-summary-box bg-white p-3 rounded-3 mb-4 border shadow-sm">
+                        <div id="modalOrderItemsList" class="border-bottom pb-2 mb-2 text-start"></div>
+                        <div class="d-flex justify-content-between text-muted small mb-1">
+                            <span>Nombre d'articles</span>
+                            <strong class="text-dark"><span id="modalItemCount">0</span> article(s)</strong>
+                        </div>
+                        <div class="d-flex justify-content-between text-muted small mb-1">
+                            <span>Sous-total produits</span>
+                            <strong class="text-dark" id="modalSubtotal">0 DH</strong>
+                        </div>
+                        <div class="d-flex justify-content-between text-muted small mb-1">
+                            <span>Livraison (<span id="modalShippingLabel">Livraison à domicile</span>)</span>
+                            <strong class="text-dark" id="modalShippingFee">+10 DH</strong>
+                        </div>
+                        <div class="d-flex justify-content-between text-muted small mb-2">
+                            <span>Paiement</span>
+                            <strong class="text-dark" id="modalPaymentLabel">💵 Paiement à la livraison</strong>
+                        </div>
+                        <div class="border-top pt-2 mt-1 d-flex justify-content-between align-items-center">
+                            <span class="fw-bold text-dark">Total Général</span>
+                            <span class="fs-4 fw-bold" style="color: #c5a059 !important;" id="modalGrandTotal">0 DH</span>
+                        </div>
+                    </div>
+
+                    <!-- Customer Contact & Address Form -->
+                    <form id="checkoutForm" onsubmit="CartManager.processOrder(event)">
+                        {% csrf_token %}
+                        <div class="mb-3">
+                            <label class="form-label fw-semibold small">Nom et Prénom <span class="text-danger">*</span></label>
+                            <input type="text" id="checkoutName" class="form-control rounded-3" placeholder="Ex: Mohamed Alami" value="{% if user.is_authenticated %}{{ user.employee_profile.full_name|default:user.username }}{% endif %}" required>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label fw-semibold small">Numéro de Téléphone <span class="text-danger">*</span></label>
+                            <input type="tel" id="checkoutPhone" class="form-control rounded-3" placeholder="Ex: 06 12 34 56 78" value="{% if user.is_authenticated %}{{ user.employee_profile.phone|default:'' }}{% endif %}" pattern="^(\s*\d\s*){10}$" title="Veuillez saisir un numéro de téléphone valide à 10 chiffres." required>
+                        </div>
+                        <div class="mb-3" id="addressInputGroup">
+                            <label class="form-label fw-semibold small">Adresse de Livraison <span class="text-danger">*</span></label>
+                            <textarea id="checkoutAddress" class="form-control rounded-3" rows="2" placeholder="Adresse complète à Casablanca, ville..."></textarea>
+                        </div>
+                        <div class="d-flex gap-2 mt-4">
+                            <button type="button" class="btn btn-outline-secondary py-3 px-3 rounded-3 fw-semibold w-50" data-bs-dismiss="modal">
+                                Annuler
+                            </button>
+                            <button id="modalSubmitBtn" type="submit" class="btn btn-dark py-3 rounded-3 fw-bold w-50 d-flex align-items-center justify-content-center gap-2" style="background-color: #121212; border: none; box-shadow: 0 4px 15px rgba(0,0,0,0.2);">
+                                <i id="modalSubmitBtnIcon" class="bi bi-check-circle-fill text-gold fs-5" style="color: #c5a059;"></i>
+                                <span id="modalSubmitBtnText">Confirmer</span>
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Custom Luxury Alert Modal with Annuler and OK buttons -->
+    <div class="modal fade" id="customAlertModal" tabindex="-1" aria-labelledby="customAlertModalLabel" aria-hidden="true" style="z-index: 1085;">
+        <div class="modal-dialog modal-dialog-centered modal-sm">
+            <div class="modal-content rounded-4 border-0 shadow-lg text-center p-4" style="background-color: #ffffff;">
+                <div class="rounded-circle bg-light p-3 mx-auto mb-3 d-inline-flex align-items-center justify-content-center" style="width: 64px; height: 64px; background-color: rgba(197, 160, 89, 0.15) !important;">
+                    <i id="customAlertIcon" class="bi bi-check-circle-fill fs-2" style="color: #c5a059;"></i>
+                </div>
+                <h5 class="fw-bold text-dark mb-2" id="customAlertTitle" style="font-family: var(--font-serif, 'Playfair Display', serif);">Notification</h5>
+                <p class="text-muted small mb-4" id="customAlertMessage">Message de confirmation.</p>
+                <div class="d-flex gap-2">
+                    <button type="button" class="btn btn-outline-secondary py-2 rounded-3 fw-semibold w-50" data-bs-dismiss="modal">
+                        Annuler
+                    </button>
+                    <button type="button" class="btn btn-dark py-2 rounded-3 fw-bold w-50" data-bs-dismiss="modal" style="background-color: #121212; border: none;">
+                        OK
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        window.IS_USER_AUTHENTICATED = "{{ user.is_authenticated }}" === "True";
+        window.LOGIN_URL = "{% url 'account_login' %}?next={{ request.path|urlencode }}";
+    </script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="{% static 'scripts/flash-messages.js' %}?v=1"></script>
+    <script src="{% static 'scripts/main.js' %}?v=20"></script>
+    {% block extra_js %}{% endblock %}
 </body>
+
 </html>

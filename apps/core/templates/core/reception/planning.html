@@ -1,0 +1,235 @@
+{% extends 'core/reception/reception_base.html' %}
+
+{% block title %}Planning du Jour | Réception British Style{% endblock %}
+
+{% block header_title %}Planning Interactif du Jour{% endblock %}
+
+{% block content %}
+<!-- Filters Toolbar -->
+<div class="luxury-card border-0 shadow-sm mb-4">
+    <form method="get" action="{% url 'reception_planning' %}" class="row g-3 align-items-end">
+        <div class="col-lg-3 col-md-4">
+            <label class="form-label fw-semibold small text-muted">📅 Date du Planning</label>
+            <input type="date" name="date" class="form-control rounded-3" value="{{ query_date_str }}" onchange="this.form.submit()">
+        </div>
+
+        <div class="col-lg-3 col-md-4">
+            <label class="form-label fw-semibold small text-muted">👩‍🎨 Employé(e)</label>
+            <select name="employee_id" class="form-select rounded-3" onchange="this.form.submit()">
+                <option value="">-- Tous les employés --</option>
+                {% for emp in all_employees %}
+                <option value="{{ emp.id }}" {% if employee_id == emp.id|stringformat:"s" %}selected{% endif %}>{{ emp.full_name }}</option>
+                {% endfor %}
+            </select>
+        </div>
+
+        <div class="col-lg-3 col-md-4">
+            <label class="form-label fw-semibold small text-muted">✨ Catégorie de Service</label>
+            <select name="category" class="form-select rounded-3" onchange="this.form.submit()">
+                <option value="">-- Toutes les catégories --</option>
+                <option value="Onglerie" {% if category_filter == 'Onglerie' %}selected{% endif %}>💅 Onglerie</option>
+                <option value="Coiffure" {% if category_filter == 'Coiffure' %}selected{% endif %}>💇‍♀️ Coiffure</option>
+                <option value="Esthétique" {% if category_filter == 'Esthétique' %}selected{% endif %}>✨ Esthétique</option>
+            </select>
+        </div>
+
+        <div class="col-lg-3 col-md-4">
+            <label class="form-label fw-semibold small text-muted">📌 Statut du RDV</label>
+            <select name="status" class="form-select rounded-3" onchange="this.form.submit()">
+                <option value="">-- Tous les statuts --</option>
+                {% for code, label in status_choices %}
+                <option value="{{ code }}" {% if status_filter == code %}selected{% endif %}>
+                    {% if code == 'PENDING' %}🟡 En attente
+                    {% elif code == 'CONFIRMED' %}🔵 Confirmé
+                    {% elif code == 'ARRIVED' %}🟣 Cliente arrivée
+                    {% elif code == 'IN_PROGRESS' %}🟠 En cours
+                    {% elif code == 'COMPLETED' %}🟢 Terminé
+                    {% elif code == 'CANCELLED' %}🔴 Annulé
+                    {% elif code == 'NO_SHOW' %}⚫ Cliente absente
+                    {% else %}{{ label }}
+                    {% endif %}
+                </option>
+                {% endfor %}
+            </select>
+        </div>
+    </form>
+</div>
+
+<!-- Planning Table Card -->
+<div class="luxury-card border-0 shadow-sm">
+    <div class="d-flex align-items-center justify-content-between mb-4 pb-3 border-bottom">
+        <div>
+            <h5 class="fw-bold mb-1 d-flex align-items-center gap-2">
+                <i class="bi bi-calendar-event text-gold" style="color: #c5a059;"></i>
+                Planning du {{ query_date|date:"l d F Y" }}
+            </h5>
+            <span class="badge bg-gold text-white rounded-pill" style="background-color: #c5a059;">{{ reservations|length }} rendez-vous répertorié(s)</span>
+        </div>
+        <button class="btn btn-gold text-white shadow-sm rounded-3" data-bs-toggle="modal" data-bs-target="#createRDVModal">
+            <i class="bi bi-plus-lg me-1"></i> Ajouter un Rendez-vous
+        </button>
+    </div>
+
+    {% if reservations %}
+    <div class="table-responsive">
+        <table class="table align-middle table-hover border-0">
+            <thead class="table-light text-muted small text-uppercase">
+                <tr>
+                    <th>Heure</th>
+                    <th>Cliente</th>
+                    <th>Prestation</th>
+                    <th>Employé Assigné</th>
+                    <th>Durée</th>
+                    <th>Statut</th>
+                    <th class="text-end">Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for r in reservations %}
+                {% for win in r.get_service_windows_breakdown %}
+                <tr class="{% if win.status == 'ARRIVED' %}table-purple{% elif win.status == 'CANCELLED' %}table-danger bg-opacity-10 opacity-50{% endif %}">
+                    <td class="fw-bold text-nowrap">
+                        <i class="bi bi-clock me-1 text-gold"></i>{{ win.start_time|time:"H:i" }} - {{ win.end_time|time:"H:i" }}
+                    </td>
+                    <td>
+                        <div class="fw-semibold">{{ r.client.first_name }} {{ r.client.last_name }}</div>
+                        <div class="small text-muted">{{ r.client.email }}</div>
+                    </td>
+                    <td>
+                        <span class="category-pill {% if 'ongl' in win.service_category|lower %}cat-onglerie{% elif 'coiff' in win.service_category|lower %}cat-coiffure{% else %}cat-esthetique{% endif %} mb-1 d-inline-block">
+                            {% if 'ongl' in win.service_category|lower %}💅 Onglerie{% elif 'coiff' in win.service_category|lower %}💇‍♀️ Coiffure{% else %}✨ Esthétique{% endif %}
+                        </span>
+                        <div class="fw-medium small">{{ win.service_name }}</div>
+                    </td>
+                    <td>
+                        <div class="d-flex align-items-center gap-2">
+                            <div class="rounded-circle text-white d-flex align-items-center justify-content-center fw-bold" style="width:28px; height:28px; background-color: {{ win.employee.avatar_color|default:'#c5a059' }}; font-size: 0.75rem;">
+                                {{ win.employee.first_name|first }}{{ win.employee.last_name|first }}
+                            </div>
+                            <span class="small fw-semibold">{{ win.employee.full_name }}</span>
+                        </div>
+                    </td>
+                    <td class="fw-medium small">{{ win.duration_minutes }} min</td>
+                    <td>
+                        <span class="badge-status badge-{{ win.status|lower }}">
+                            {% if win.status == 'PENDING' %}🟡 En attente
+                            {% elif win.status == 'CONFIRMED' %}🔵 Confirmé
+                            {% elif win.status == 'ARRIVED' %}🟣 Cliente arrivée
+                            {% elif win.status == 'IN_PROGRESS' %}🟠 En cours
+                            {% elif win.status == 'COMPLETED' %}🟢 Terminé
+                            {% elif win.status == 'CANCELLED' %}🔴 Annulé
+                            {% elif win.status == 'NO_SHOW' %}⚫ Cliente absente
+                            {% else %}{{ win.status_display }}
+                            {% endif %}
+                        </span>
+                        {% if r.arrival_time %}
+                        <div class="small text-success font-monospace mt-1">Arrivée {{ r.arrival_time|date:"H:i" }}</div>
+                        {% endif %}
+                    </td>
+                    <td class="text-end text-nowrap">
+                        {% if win.status == 'CANCELLED' or win.status == 'NO_SHOW' or r.status == 'CANCELLED' or r.status == 'NO_SHOW' %}
+                            <span class="text-muted small me-2">-</span>
+                        {% elif r.is_paid %}
+                            <span class="badge bg-success bg-opacity-10 text-success rounded-pill px-3 py-1 fw-bold border border-success">
+                                🟢 Payé
+                            </span>
+                        {% else %}
+                            <span class="badge bg-warning bg-opacity-10 text-warning rounded-pill px-3 py-1 fw-bold border border-warning" style="color: #b45309 !important;">
+                                🟡 Non Payé
+                            </span>
+                        {% endif %}
+                    </td>
+                </tr>
+                {% endfor %}
+
+                <!-- Modal Modification RDV -->
+                <div class="modal fade" id="editRDVModal{{ r.id }}" tabindex="-1" aria-hidden="true">
+                    <div class="modal-dialog modal-dialog-centered modal-lg">
+                        <div class="modal-content border-0 shadow-lg rounded-4">
+                            <div class="modal-header border-0 bg-dark text-white p-4">
+                                <h5 class="modal-title fw-bold">Modifier Rendez-vous #{{ r.id }}</h5>
+                                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+                            </div>
+                            <form method="post" action="{% url 'reception_reservation_edit' r.id %}">
+                                {% csrf_token %}
+                                <div class="modal-body p-4">
+                                    <div class="row g-3">
+                                        <div class="col-md-6">
+                                            <label class="form-label fw-semibold">Service</label>
+                                            <select name="service_id" class="form-select rounded-3">
+                                                {% for s in all_services %}
+                                                <option value="{{ s.id }}" {% if s.id == r.service.id %}selected{% endif %}>{{ s.name }} ({{ s.duration_minutes }} min - {{ s.price }} DH)</option>
+                                                {% endfor %}
+                                            </select>
+                                        </div>
+                                        <div class="col-md-6">
+                                            <label class="form-label fw-semibold">Employé(e)</label>
+                                            <select name="employee_id" class="form-select rounded-3">
+                                                {% for emp in all_employees %}
+                                                <option value="{{ emp.id }}" {% if emp.id == r.employee.id %}selected{% endif %}>{{ emp.full_name }}</option>
+                                                {% endfor %}
+                                            </select>
+                                        </div>
+                                        <div class="col-md-4">
+                                            <label class="form-label fw-semibold">Date</label>
+                                            <input type="date" name="date" class="form-control rounded-3" value="{{ r.date|date:'Y-m-d' }}">
+                                        </div>
+                                        <div class="col-md-4">
+                                            <label class="form-label fw-semibold">Heure Début</label>
+                                            <input type="time" name="start_time" class="form-control rounded-3" value="{{ r.start_time|time:'H:i' }}">
+                                        </div>
+                                        <div class="col-md-4">
+                                            <label class="form-label fw-semibold">Statut</label>
+                                            <select name="status" class="form-select rounded-3">
+                                                {% for code, label in status_choices %}
+                                                <option value="{{ code }}" {% if code == r.status %}selected{% endif %}>{{ label }}</option>
+                                                {% endfor %}
+                                            </select>
+                                        </div>
+                                        <div class="col-12">
+                                            <label class="form-label fw-semibold">Notes</label>
+                                            <textarea name="notes" class="form-control rounded-3" rows="2">{{ r.notes }}</textarea>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="modal-footer border-0 p-4 pt-0">
+                                    <button type="button" class="btn btn-light rounded-3" data-bs-dismiss="modal">Annuler</button>
+                                    <button type="submit" class="btn btn-gold rounded-3 px-4">Enregistrer Modifications</button>
+                                </div>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+    {% else %}
+    <div class="text-center py-5 text-muted">
+        <i class="bi bi-calendar-x fs-1 text-gold mb-3 d-block" style="color: #c5a059;"></i>
+        <h5>Aucun rendez-vous trouvé pour ces critères.</h5>
+    </div>
+    {% endif %}
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+function markArrived(resId, clientName) {
+    fetch(`/reception/reservations/${resId}/arrived/`, {
+        method: 'POST',
+        headers: {
+            'X-CSRFToken': '{{ csrf_token }}',
+            'X-Requested-With': 'XMLHttpRequest'
+        }
+    })
+    .then(res => res.json())
+    .then(data => {
+        if (data.success) {
+            location.reload();
+        }
+    });
+}
+</script>
+{% endblock %}

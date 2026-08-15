@@ -1,0 +1,442 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}{{ page_title }} | Espace Employé British Style{% endblock %}</title>
+
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <!-- Bootstrap 5 CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <!-- Bootstrap Icons -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+    <!-- Chart.js -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+    <style>
+        :root {
+            --sidebar-width: 260px;
+            --topbar-height: 70px;
+            --bg-body: #f4f6f9;
+            --sidebar-bg: #1e293b;
+            --card-bg: #ffffff;
+            --gold-accent: #c5a059;
+            --gold-hover: #b38e46;
+            --text-dark: #0f172a;
+            --text-muted: #64748b;
+            --border-color: #e2e8f0;
+        }
+
+        body {
+            font-family: 'Poppins', sans-serif;
+            background-color: var(--bg-body);
+            color: var(--text-dark);
+            margin: 0;
+            padding: 0;
+            overflow-x: hidden;
+        }
+
+        /* Sidebar Styling */
+        .emp-sidebar {
+            width: var(--sidebar-width);
+            height: 100vh;
+            position: fixed;
+            top: 0;
+            left: 0;
+            background-color: var(--sidebar-bg);
+            z-index: 1000;
+            display: flex;
+            flex-direction: column;
+            overflow-y: auto;
+            transition: all 0.3s ease;
+        }
+
+        .sidebar-brand {
+            height: var(--topbar-height);
+            display: flex;
+            align-items: center;
+            padding: 0 1.5rem;
+            font-size: 1.25rem;
+            font-weight: 700;
+            color: #ffffff;
+            text-decoration: none;
+            gap: 0.6rem;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .sidebar-brand-icon {
+            width: 28px;
+            height: 28px;
+            background: linear-gradient(135deg, var(--gold-accent), #dfb76c);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #1e293b;
+            font-weight: bold;
+        }
+
+        .sidebar-user {
+            text-align: center;
+            padding: 1.5rem 1rem;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+            background: rgba(255, 255, 255, 0.02);
+        }
+
+        .sidebar-user-avatar {
+            width: 68px;
+            height: 68px;
+            border-radius: 50%;
+            margin: 0 auto 0.75rem auto;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.6rem;
+            font-weight: 700;
+            color: white;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.25);
+            border: 2px solid var(--gold-accent);
+            object-fit: cover;
+        }
+
+        .sidebar-user-name {
+            font-size: 0.95rem;
+            font-weight: 600;
+            color: #f8fafc;
+            margin-bottom: 0.15rem;
+        }
+
+        .sidebar-user-role {
+            font-size: 0.78rem;
+            color: var(--gold-accent);
+            font-weight: 500;
+        }
+
+        .sidebar-menu {
+            list-style: none;
+            padding: 1rem 0;
+            margin: 0;
+            flex-grow: 1;
+        }
+
+        .sidebar-menu-item {
+            margin-bottom: 0.3rem;
+        }
+
+        .sidebar-menu-link {
+            display: flex;
+            align-items: center;
+            padding: 0.8rem 1.5rem;
+            color: #94a3b8;
+            text-decoration: none;
+            font-size: 0.9rem;
+            font-weight: 500;
+            gap: 0.8rem;
+            transition: all 0.2s ease;
+            border-left: 4px solid transparent;
+        }
+
+        .sidebar-menu-link:hover {
+            color: #f8fafc;
+            background-color: rgba(255, 255, 255, 0.05);
+        }
+
+        .sidebar-menu-link.active {
+            color: #ffffff;
+            background: linear-gradient(90deg, rgba(197, 160, 89, 0.2), transparent);
+            border-left-color: var(--gold-accent);
+            font-weight: 600;
+        }
+
+        .sidebar-menu-link i {
+            font-size: 1.15rem;
+            width: 22px;
+            text-align: center;
+        }
+
+        /* Main Content Styling */
+        .emp-wrapper {
+            margin-left: var(--sidebar-width);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            transition: all 0.3s ease;
+        }
+
+        .emp-topbar {
+            height: var(--topbar-height);
+            background-color: #ffffff;
+            border-bottom: 1px solid var(--border-color);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0 2rem;
+            position: sticky;
+            top: 0;
+            z-index: 999;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.03);
+        }
+
+        .topbar-title {
+            font-size: 1.25rem;
+            font-weight: 700;
+            color: var(--text-dark);
+            margin: 0;
+        }
+
+        .emp-content {
+            padding: 2rem;
+            flex-grow: 1;
+        }
+
+        /* Cards & Components */
+        .stat-card {
+            background-color: var(--card-bg);
+            border-radius: 14px;
+            padding: 1.5rem;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.03);
+            border: 1px solid var(--border-color);
+            transition: transform 0.2s ease, box-shadow 0.2s ease;
+        }
+
+        .stat-card:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 8px 25px rgba(0,0,0,0.06);
+        }
+
+        .btn-gold {
+            background-color: var(--gold-accent);
+            color: #ffffff;
+            border: none;
+            font-weight: 600;
+            padding: 0.6rem 1.4rem;
+            border-radius: 10px;
+            transition: all 0.2s ease;
+        }
+
+        .btn-gold:hover {
+            background-color: var(--gold-hover);
+            color: #ffffff;
+            box-shadow: 0 4px 12px rgba(197, 160, 89, 0.4);
+        }
+
+        .status-badge {
+            padding: 0.4rem 0.9rem;
+            border-radius: 50rem;
+            font-size: 0.82rem;
+            font-weight: 600;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.4rem;
+        }
+
+        .status-PRESENT { background-color: #e8f8f0; color: #1e7e46; }
+        .status-PAUSE { background-color: #fef9e7; color: #b7950b; }
+        .status-REPOS { background-color: #ebf5fb; color: #2471a3; }
+        .emp-sidebar-backdrop {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            background: rgba(0, 0, 0, 0.4);
+            z-index: 999;
+            backdrop-filter: blur(4px);
+        }
+
+        .emp-sidebar-backdrop.show {
+            display: block;
+        }
+
+        @media (max-width: 991.98px) {
+            .emp-sidebar {
+                margin-left: calc(-1 * var(--sidebar-width));
+            }
+            .emp-sidebar.show {
+                margin-left: 0;
+            }
+            .emp-wrapper {
+                margin-left: 0;
+            }
+            .emp-topbar {
+                padding: 0 1rem;
+            }
+            .emp-content {
+                padding: 1rem;
+            }
+        }
+
+        @media (max-width: 575.98px) {
+            .topbar-title {
+                font-size: 1.05rem;
+            }
+            .status-badge {
+                font-size: 0.75rem;
+                padding: 0.3rem 0.6rem;
+            }
+        }
+    </style>
+    {% block extra_css %}{% endblock %}
+</head>
+<body>
+
+    <!-- Sidebar -->
+    <aside class="emp-sidebar" id="empSidebar">
+        <a href="{% url 'employee_dashboard' %}" class="sidebar-brand">
+            <span class="sidebar-brand-icon">BS</span>
+            <span>British Style</span>
+        </a>
+
+        <div class="sidebar-user">
+            {% if request.user.employee_profile.photo %}
+                <img src="{{ request.user.employee_profile.photo }}" alt="Avatar" class="sidebar-user-avatar">
+            {% else %}
+                <div class="sidebar-user-avatar" style="background-color: {{ request.user.employee_profile.avatar_color|default:'#c5a059' }};">
+                    {{ request.user.employee_profile.first_name|slice:":1" }}{{ request.user.employee_profile.last_name|slice:":1" }}
+                </div>
+            {% endif %}
+            <div class="sidebar-user-name">{{ request.user.employee_profile.full_name|default:request.user.username }}</div>
+            <div class="sidebar-user-role">{{ request.user.employee_profile.position|default:"Employé" }}</div>
+        </div>
+
+        <ul class="sidebar-menu">
+            <li class="sidebar-menu-item">
+                <a href="{% url 'employee_dashboard' %}" class="sidebar-menu-link {% if active_menu == 'dashboard' %}active{% endif %}">
+                    <i class="bi bi-grid-1x2-fill"></i>
+                    <span>Dashboard</span>
+                </a>
+            </li>
+            <li class="sidebar-menu-item">
+                <a href="{% url 'employee_pointage' %}" class="sidebar-menu-link {% if active_menu == 'pointage' %}active{% endif %}">
+                    <i class="bi bi-clock-history"></i>
+                    <span>Mon Pointage</span>
+                </a>
+            </li>
+            <li class="sidebar-menu-item">
+                <a href="{% url 'employee_historique' %}" class="sidebar-menu-link {% if active_menu == 'historique' %}active{% endif %}">
+                    <i class="bi bi-journal-text"></i>
+                    <span>Historique</span>
+                </a>
+            </li>
+            <li class="sidebar-menu-item">
+                <a href="{% url 'employee_calendrier' %}" class="sidebar-menu-link {% if active_menu == 'calendrier' %}active{% endif %}">
+                    <i class="bi bi-calendar3"></i>
+                    <span>Calendrier</span>
+                </a>
+            </li>
+            <li class="sidebar-menu-item">
+                <a href="{% url 'employee_profil' %}" class="sidebar-menu-link {% if active_menu == 'profil' %}active{% endif %}">
+                    <i class="bi bi-person-badge"></i>
+                    <span>Mon Profil</span>
+                </a>
+            </li>
+            <li class="sidebar-menu-item">
+                <a href="{% url 'employee_notifications' %}" class="sidebar-menu-link {% if active_menu == 'notifications' %}active{% endif %}">
+                    <i class="bi bi-bell-fill"></i>
+                    <span>Notifications</span>
+                    {% if unread_notifications_count %}
+                        <span class="badge bg-danger rounded-pill ms-auto">{{ unread_notifications_count }}</span>
+                    {% endif %}
+                </a>
+            </li>
+
+            {% if request.user.employee_profile.role == 'RECEPTION' or 'réception' in request.user.employee_profile.position.lower or 'reception' in request.user.employee_profile.position.lower or request.user.is_superuser %}
+            <li class="sidebar-menu-item mt-3 pt-2 border-top border-secondary">
+                <a href="{% url 'reception_dashboard' %}" class="sidebar-menu-link text-warning fw-bold">
+                    <i class="bi bi-bell-fill text-warning"></i>
+                    <span>Espace Réceptionniste</span>
+                </a>
+            </li>
+            <li class="sidebar-menu-item">
+                <a href="{% url 'dashboard_orders' %}" class="sidebar-menu-link {% if active_menu == 'orders' %}active{% endif %}">
+                    <i class="bi bi-bag-check-fill text-warning"></i>
+                    <span>Commandes Boutique</span>
+                </a>
+            </li>
+            {% endif %}
+
+            <li class="sidebar-menu-item mt-4">
+                <a href="{% url 'account_logout' %}" class="sidebar-menu-link text-danger">
+                    <i class="bi bi-box-arrow-right"></i>
+                    <span>Déconnexion</span>
+                </a>
+            </li>
+        </ul>
+    </aside>
+
+    <!-- Backdrop Overlay for Mobile -->
+    <div class="emp-sidebar-backdrop" id="empSidebarBackdrop"></div>
+
+    <!-- Wrapper -->
+    <div class="emp-wrapper">
+        <!-- Topbar -->
+        <header class="emp-topbar">
+            <div class="d-flex align-items-center gap-3">
+                <button class="btn btn-light d-lg-none" id="toggleSidebar" type="button" aria-label="Menu">
+                    <i class="bi bi-list fs-4"></i>
+                </button>
+                <h1 class="topbar-title">{{ page_title }}</h1>
+            </div>
+
+            <div class="d-flex align-items-center gap-2">
+                <!-- Status indicator -->
+                <div id="liveStatusBadge" class="status-badge status-{{ request.user.employee_profile.get_current_status }}">
+                    <i class="bi bi-circle-fill fs-6"></i>
+                    <span id="liveStatusText">{{ request.user.employee_profile.get_current_status_display }}</span>
+                </div>
+
+                <a href="{% url 'frontpage' %}" class="btn btn-outline-secondary btn-sm rounded-pill px-3 d-inline-flex align-items-center gap-1" title="Voir le site web">
+                    <i class="bi bi-house-door-fill"></i>
+                    <span class="d-none d-sm-inline">Site Web</span>
+                </a>
+
+                <a href="{% url 'employee_pointage' %}" class="btn btn-gold btn-sm d-none d-md-inline-flex align-items-center gap-2">
+                    <i class="bi bi-stopwatch"></i>
+                    <span>Pointer</span>
+                </a>
+            </div>
+        </header>
+
+        <!-- Content -->
+        <main class="emp-content">
+            {% block content %}{% endblock %}
+        </main>
+    </div>
+
+    <!-- Bootstrap 5 JS Bundle -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="{% static 'scripts/flash-messages.js' %}?v=1"></script>
+    <script>
+        const toggleEmpSidebarBtn = document.getElementById('toggleSidebar');
+        const empSidebar = document.getElementById('empSidebar');
+        const empBackdrop = document.getElementById('empSidebarBackdrop');
+
+        function toggleEmpSidebar() {
+            empSidebar?.classList.toggle('show');
+            empBackdrop?.classList.toggle('show');
+        }
+
+        toggleEmpSidebarBtn?.addEventListener('click', toggleEmpSidebar);
+        empBackdrop?.addEventListener('click', toggleEmpSidebar);
+
+        function getCookie(name) {
+            let cookieValue = null;
+            if (document.cookie && document.cookie !== '') {
+                const cookies = document.cookie.split(';');
+                for (let i = 0; i < cookies.length; i++) {
+                    const cookie = cookies[i].trim();
+                    if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                        cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                        break;
+                    }
+                }
+            }
+            return cookieValue;
+        }
+    </script>
+    {% block extra_js %}{% endblock %}
+</body>
+</html>

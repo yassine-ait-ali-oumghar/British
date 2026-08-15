@@ -1,0 +1,299 @@
+{% extends 'core/admin/admin_base.html' %}
+
+{% block title %}Gestion des Utilisateurs - ERP | British Style{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <div>
+        <h4 class="fw-bold text-dark mb-1">Gestion des Utilisateurs</h4>
+        <p class="text-muted small mb-0">Consultez tous les comptes utilisateurs inscrits et gérez leur rôle et intégration au sein de l'équipe.</p>
+    </div>
+</div>
+
+<!-- KPI Summary Cards -->
+<div class="row g-3 mb-4">
+    <div class="col-md-4">
+        <div class="erp-card d-flex align-items-center justify-content-between p-3 mb-0">
+            <div>
+                <div class="text-muted small fw-semibold uppercase">Total Utilisateurs</div>
+                <div class="fs-3 fw-bold text-dark mt-1">{{ total_users_count }}</div>
+            </div>
+            <div class="rounded-circle bg-primary bg-opacity-10 text-primary p-3 d-flex align-items-center justify-content-center" style="width: 50px; height: 50px;">
+                <i class="bi bi-people-fill fs-4"></i>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="erp-card d-flex align-items-center justify-content-between p-3 mb-0">
+            <div>
+                <div class="text-muted small fw-semibold uppercase">Utilisateurs Simples</div>
+                <div class="fs-3 fw-bold text-secondary mt-1">{{ simple_users_count }}</div>
+            </div>
+            <div class="rounded-circle bg-secondary bg-opacity-10 text-secondary p-3 d-flex align-items-center justify-content-center" style="width: 50px; height: 50px;">
+                <i class="bi bi-person fs-4"></i>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="erp-card d-flex align-items-center justify-content-between p-3 mb-0">
+            <div>
+                <div class="text-muted small fw-semibold uppercase">Membres de l'Équipe</div>
+                <div class="fs-3 fw-bold text-success mt-1">{{ team_members_count }}</div>
+            </div>
+            <div class="rounded-circle bg-success bg-opacity-10 text-success p-3 d-flex align-items-center justify-content-center" style="width: 50px; height: 50px;">
+                <i class="bi bi-shield-check fs-4"></i>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Search & Filter Bar -->
+<div class="erp-card p-3 mb-4">
+    <form method="get" class="row g-2 align-items-center">
+        <div class="col-md-6">
+            <div class="input-group">
+                <span class="input-group-text bg-light border-end-0"><i class="bi bi-search text-muted"></i></span>
+                <input type="text" name="q" class="form-control bg-light border-start-0" placeholder="Rechercher par nom, email, pseudo..." value="{{ query }}">
+            </div>
+        </div>
+        <div class="col-md-4">
+            <select name="status" class="form-select bg-light" onchange="this.form.submit()">
+                <option value="all" {% if status_filter == 'all' %}selected{% endif %}>Tous les comptes</option>
+                <option value="users" {% if status_filter == 'users' %}selected{% endif %}>Utilisateurs simples uniquement</option>
+                <option value="team" {% if status_filter == 'team' %}selected{% endif %}>Membres d'équipe uniquement</option>
+            </select>
+        </div>
+        <div class="col-md-2 d-flex gap-2">
+            <button type="submit" class="btn btn-dark fw-semibold w-100">Filtrer</button>
+            {% if query or status_filter != 'all' %}
+            <a href="{% url 'dashboard_users' %}" class="btn btn-outline-secondary" title="Réinitialiser"><i class="bi bi-x-circle"></i></a>
+            {% endif %}
+        </div>
+    </form>
+</div>
+
+<!-- Users Table -->
+<div class="erp-card p-0 overflow-hidden">
+    <div class="w-100 overflow-hidden">
+        <table class="table table-hover align-middle mb-0 w-100">
+            <thead class="table-light">
+                <tr>
+                    <th class="ps-3 py-3">Utilisateur</th>
+                    <th class="py-3">Nom d'utilisateur</th>
+                    <th class="py-3">Email</th>
+                    <th class="py-3 text-center">Statut d'équipe</th>
+                    <th class="py-3">Poste & Département</th>
+                    <th class="pe-3 py-3 text-end text-nowrap">Actions</th>
+                </tr>
+            </thead>
+                           {% for emp in employees_list %}
+                <tr>
+                    <td class="ps-3">
+                        <div class="d-flex align-items-center gap-2">
+                            {% if emp.photo %}
+                                <img src="{{ emp.photo }}" alt="{{ emp.full_name }}" class="rounded-circle border flex-shrink-0" style="width: 38px; height: 38px; object-fit: cover;">
+                            {% else %}
+                                <div class="avatar-circle rounded-circle text-white fw-bold d-flex align-items-center justify-content-center flex-shrink-0" style="width: 38px; height: 38px; background-color: {{ emp.avatar_color|default:'#c5a059' }}; font-size: 0.9rem;">
+                                    {{ emp.first_name|slice:":1" }}{{ emp.last_name|slice:":1" }}
+                                </div>
+                            {% endif %}
+                            <div>
+                                <div class="fw-bold text-dark">{{ emp.full_name }}</div>
+                                <small class="text-muted" style="font-size: 0.78rem;">Inscrit le {{ emp.created_at|date:"d/m/Y" }}</small>
+                            </div>
+                        </div>
+                    </td>
+                    <td class="text-nowrap">
+                        <span class="badge bg-light text-dark border px-2 py-1 font-monospace">@{{ emp.user.username|default:"N/A" }}</span>
+                    </td>
+                    <td>
+                        <span class="text-muted small text-break">{{ emp.email|default:"Pas d'email" }}</span>
+                    </td>
+                    <td class="text-center text-nowrap">
+                        {% if emp.is_team_member %}
+                            <span class="badge bg-success bg-opacity-10 text-success border border-success border-opacity-25 px-2.5 py-1.5 rounded-pill fw-medium" style="font-size: 0.8rem;">
+                                <i class="bi bi-check-circle-fill me-1"></i> Membre d'Équipe ({{ emp.get_role_display }})
+                            </span>
+                        {% else %}
+                            <span class="badge bg-secondary bg-opacity-10 text-secondary border border-secondary border-opacity-25 px-2.5 py-1.5 rounded-pill fw-medium" style="font-size: 0.8rem;">
+                                <i class="bi bi-person me-1"></i> Utilisateur Simple
+                            </span>
+                        {% endif %}
+                    </td>
+                    <td>
+                        {% if emp.is_team_member %}
+                            <div class="fw-semibold text-dark small">{{ emp.position }}</div>
+                            <div class="text-muted text-xs" style="font-size: 0.75rem;">Dépt: {{ emp.department }}</div>
+                        {% else %}
+                            <span class="text-muted italic small">- non assigné -</span>
+                        {% endif %}
+                    </td>
+                    <td class="pe-3 text-end text-nowrap">
+                        <div class="d-inline-flex align-items-center justify-content-end gap-1">
+                            {% if not emp.is_team_member %}
+                                <button class="btn btn-sm btn-primary fw-semibold rounded-3 px-2.5 py-1 d-inline-flex align-items-center gap-1"
+                                        onclick="openAddToTeamModal(this)"
+                                        data-id="{{ emp.id }}"
+                                        data-first-name="{{ emp.first_name|escapejs }}"
+                                        data-last-name="{{ emp.last_name|escapejs }}"
+                                        data-email="{{ emp.email|default:''|escapejs }}"
+                                        data-position="{{ emp.position|default:''|escapejs }}"
+                                        data-department="{{ emp.department|default:''|escapejs }}"
+                                        data-role="{{ emp.role|default:'' }}"
+                                        data-photo="{{ emp.photo|default:''|escapejs }}"
+                                        data-avatar-color="{{ emp.avatar_color|default:'#c5a059' }}"
+                                        data-phone="{{ emp.phone|default:''|escapejs }}"
+                                        data-is-edit="false">
+                                    <i class="bi bi-person-plus-fill"></i> Ajouter à l'équipe
+                                </button>
+                            {% else %}
+                                <button class="btn btn-sm btn-light border text-dark py-1 px-2.5"
+                                        title="Modifier l'employé"
+                                        onclick="openAddToTeamModal(this)"
+                                        data-id="{{ emp.id }}"
+                                        data-first-name="{{ emp.first_name|escapejs }}"
+                                        data-last-name="{{ emp.last_name|escapejs }}"
+                                        data-email="{{ emp.email|default:''|escapejs }}"
+                                        data-position="{{ emp.position|default:''|escapejs }}"
+                                        data-department="{{ emp.department|default:''|escapejs }}"
+                                        data-role="{{ emp.role|default:'' }}"
+                                        data-photo="{{ emp.photo|default:''|escapejs }}"
+                                        data-avatar-color="{{ emp.avatar_color|default:'#c5a059' }}"
+                                        data-phone="{{ emp.phone|default:''|escapejs }}"
+                                        data-is-edit="true">
+                                    <i class="bi bi-pencil-fill me-1"></i> Modifier
+                                </button>
+                                <form method="post" class="d-inline" onsubmit="return confirm('Retirer cet utilisateur de l\'équipe ? Il perdra ses accès à l\'espace Employé.');">
+                                    {% csrf_token %}
+                                    <input type="hidden" name="action" value="remove_from_team">
+                                    <input type="hidden" name="employee_id" value="{{ emp.id }}">
+                                    <button type="submit" class="btn btn-sm btn-outline-warning rounded-3 py-1 px-2" title="Retirer de l'équipe">
+                                        <i class="bi bi-person-x-fill"></i>
+                                    </button>
+                                </form>
+                            {% endif %}
+                            {% if emp.user != user and not emp.user.is_superuser %}
+                            <form method="post" class="d-inline" onsubmit="return confirm('Êtes-vous sûr de vouloir supprimer définitivement cet utilisateur ? Cette action est irréversible.');">
+                                {% csrf_token %}
+                                <input type="hidden" name="action" value="delete_user">
+                                <input type="hidden" name="employee_id" value="{{ emp.id }}">
+                                <button type="submit" class="btn btn-sm btn-light border text-danger rounded-3 py-1 px-2" title="Supprimer définitivement le compte">
+                                    <i class="bi bi-trash-fill"></i>
+                                </button>
+                            </form>
+                            {% endif %}
+                        </div>
+                    </td>
+                </tr>
+                {% empty %}
+                <tr>
+                    <td colspan="6" class="text-center py-5 text-muted">
+                        <i class="bi bi-people display-6 d-block mb-2 text-muted"></i>
+                        Aucun utilisateur trouvé pour ces critères.
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<!-- Modal Modifier l'Employé -->
+<div class="modal fade" id="addToTeamModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content border-0 shadow-lg rounded-4">
+            <div class="modal-header border-bottom-0 pb-0">
+                <h5 class="modal-title fw-bold" id="modalTitleText">Modifier l'Employé</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <form method="post" enctype="multipart/form-data">
+                {% csrf_token %}
+                <input type="hidden" name="action" id="modalAction" value="add_to_team">
+                <input type="hidden" name="employee_id" id="modalEmpId">
+                <div class="modal-body p-4">
+                    <div class="row g-3">
+                        <div class="col-6">
+                            <label class="form-label small fw-bold">Prénom <span class="text-danger">*</span></label>
+                            <input type="text" name="first_name" id="modalFirstName" class="form-control" required>
+                        </div>
+                        <div class="col-6">
+                            <label class="form-label small fw-bold">Nom</label>
+                            <input type="text" name="last_name" id="modalLastName" class="form-control">
+                        </div>
+                        <div class="col-6">
+                            <label class="form-label small fw-bold">Poste / Intitulé <span class="text-danger">*</span></label>
+                            <input type="text" name="position" id="modalPosition" class="form-control" placeholder="ex: Coiffeur Senior, Réceptionniste..." required>
+                        </div>
+                        <div class="col-6">
+                            <label class="form-label small fw-bold">Département <span class="text-danger">*</span></label>
+                            <input type="text" name="department" id="modalDepartment" class="form-control" placeholder="ex: Salon, Barbier..." value="Salon" required>
+                        </div>
+                        <div class="col-6">
+                            <label class="form-label small fw-bold">Rôle Métier <span class="text-danger">*</span></label>
+                            <select name="role" id="modalRole" class="form-select" required>
+                                <option value="EMPLOYEE">Employé</option>
+                                <option value="MANAGER">Manager</option>
+                                <option value="RESPONSABLE">Responsable</option>
+                                <option value="VENDEUR">Vendeur</option>
+                                <option value="LOGISTIQUE">Logistique</option>
+                                <option value="ADMINISTRATEUR">Administrateur</option>
+                            </select>
+                        </div>
+                        <div class="col-6">
+                            <label class="form-label small fw-bold">Couleur Avatar</label>
+                            <input type="color" name="avatar_color" id="modalAvatarColor" class="form-control form-control-color w-100 rounded-3" value="#c5a059" style="height: 42px; padding: 4px 6px; cursor: pointer;">
+                        </div>
+                        <div class="col-12">
+                            <label class="form-label small fw-bold">Photo de Profil (Téléverser une image)</label>
+                            <input type="file" name="photo_file" accept="image/*" class="form-control">
+                        </div>
+                        <div class="col-6">
+                            <label class="form-label small fw-bold">Email</label>
+                            <input type="email" name="email" id="modalEmail" class="form-control">
+                        </div>
+                        <div class="col-6">
+                            <label class="form-label small fw-bold">Téléphone</label>
+                            <input type="text" name="phone" id="modalPhone" class="form-control">
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer border-top-0 pt-0">
+                    <button type="button" class="btn btn-light" data-bs-dismiss="modal">Annuler</button>
+                    <button type="submit" class="btn btn-primary fw-semibold px-4" id="modalSubmitBtn">Sauvegarder</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<script>
+function openAddToTeamModal(elementOrId) {
+    if (elementOrId instanceof HTMLElement) {
+        const ds = elementOrId.dataset;
+        document.getElementById('modalEmpId').value = ds.id || '';
+        document.getElementById('modalFirstName').value = ds.firstName || '';
+        document.getElementById('modalLastName').value = ds.lastName || '';
+        document.getElementById('modalPosition').value = ds.position && ds.position !== 'Utilisateur' ? ds.position : '';
+        document.getElementById('modalDepartment').value = ds.department && ds.department !== 'Général' ? ds.department : 'Salon';
+        document.getElementById('modalRole').value = ds.role && ds.role !== 'USER' ? ds.role : 'EMPLOYEE';
+        document.getElementById('modalAvatarColor').value = ds.avatarColor || '#c5a059';
+        document.getElementById('modalEmail').value = ds.email || '';
+        document.getElementById('modalPhone').value = ds.phone || '';
+        
+        const isEditMode = ds.isEdit === 'true';
+        if (isEditMode) {
+            document.getElementById('modalTitleText').textContent = "Modifier l'Employé";
+            document.getElementById('modalAction').value = "edit_user_team";
+            document.getElementById('modalSubmitBtn').textContent = "Sauvegarder";
+        } else {
+            document.getElementById('modalTitleText').textContent = "Ajouter à l'Équipe";
+            document.getElementById('modalAction').value = "add_to_team";
+            document.getElementById('modalSubmitBtn').textContent = "Valider & Intégrer l'Équipe";
+        }
+    }
+
+    var modal = new bootstrap.Modal(document.getElementById('addToTeamModal'));
+    modal.show();
+}
+</script>
+{% endblock %}
