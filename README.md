@@ -66,7 +66,7 @@ execute_from_command_line(sys.argv)
 **Key configuration:**
 | Setting | Value |
 |---|---|
-| `SECRET_KEY` | `django-insecure-#o=p6!qmt2@0%^^ri(cccr9!c$scp0i0dsr!6@ey9m+ryxm6(0` |
+| `SECRET_KEY` | `your-django-secret-key` |
 | `DEBUG` | `True` |
 | `ALLOWED_HOSTS` | `[]` (empty — development only) |
 | `INSTALLED_APPS` | Default Django apps + `apps.core`, `apps.vendor` |
@@ -390,8 +390,8 @@ SOCIALACCOUNT_LOGIN_ON_GET = True
 SOCIALACCOUNT_PROVIDERS = {
     'google': {
         'APP': {
-            'client_id': '1787044947-8oo9r1tfau5h2k46ird4a1n5jk65n0mn.apps.googleusercontent.com',
-            'secret': 'GOCSPX-...',
+            'client_id': 'your-google-client-id.apps.googleusercontent.com',
+            'secret': 'your-google-client-secret',
             'key': ''
         },
         'SCOPE': ['profile', 'email'],
@@ -458,7 +458,4 @@ Then visit:
 | Frontend | Bootstrap 5.3 |
 | Template Engine | Django Templates |
 
-Email : admin@britishstyle.com
-Nom d'utilisateur : admin
-Mot de passe : admin123
----
+> **Note de sécurité :** Pour créer un compte administrateur local, exécutez `python manage.py createsuperuser`.
