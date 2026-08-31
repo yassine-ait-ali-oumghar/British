@@ -1,7 +1,7 @@
 /* Services / Prestations Cards */
 .services-section {
   background-color: var(--bg-cream, #f7f1e8);
-  padding-top: clamp(90px, 12vh, 140px) !important;
+  padding-top: clamp(140px, 15vh, 175px) !important;
   min-height: 100vh;
 }
 

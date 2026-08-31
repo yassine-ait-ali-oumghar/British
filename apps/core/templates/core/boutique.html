@@ -7,7 +7,7 @@
 
 {% block content %}
 <!-- Page Header -->
-<section class="boutique-hero py-5" style="padding-top: 140px !important;">
+<section class="boutique-hero py-5" style="padding-top: 165px !important;">
     <div class="container-fluid px-4 px-lg-5 py-4">
         <div class="text-center boutique-header-content mx-auto">
             <span class="badge-tag"><i class="bi bi-bag-check me-2"></i>Boutique Exclusive</span>
@@ -46,24 +46,9 @@
                 <div class="boutique-card h-100 d-flex flex-column justify-content-between">
                     <div class="product-media-box position-relative overflow-hidden">
                         {% if prod.image_url %}
-                        <img src="{{ prod.image_url }}" alt="{{ prod.name }}" class="w-100 h-100 product-img-cover" loading="lazy" onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
-                        <div class="product-icon-glow" style="display: none;">
-                            {% if prod.category == 'Cheveux' %}<i class="bi bi-droplet-half"></i>
-                            {% elif prod.category == 'Visage & Skincare' %}<i class="bi bi-flower1"></i>
-                            {% elif prod.category == 'Maquillage' %}<i class="bi bi-palette"></i>
-                            {% elif prod.category == 'Ongles & Vernis' %}<i class="bi bi-hand-index-thumb"></i>
-                            {% elif prod.category == 'Coloration Cheveux' %}<i class="bi bi-brush"></i>
-                            {% else %}<i class="bi bi-sparkles"></i>{% endif %}
-                        </div>
+                        <img src="{{ prod.image_url }}" alt="{{ prod.name }}" class="w-100 h-100 product-img-cover" loading="lazy" onerror="this.onerror=null; this.src='{% if prod.category == 'Cheveux' or prod.category == 'Coiffage' or prod.category == 'Barbe' %}{% static 'images/prod_cheveux.png' %}{% elif prod.category == 'Visage & Skincare' or prod.category == 'Soins Visage' or prod.category == 'Coffrets' %}{% static 'images/prod_skincare.png' %}{% elif prod.category == 'Maquillage' %}{% static 'images/prod_maquillage.png' %}{% elif prod.category == 'Ongles & Vernis' %}{% static 'images/prod_ongles.png' %}{% elif prod.category == 'Coloration Cheveux' %}{% static 'images/prod_coloration.png' %}{% else %}{% static 'images/prod_cheveux.png' %}{% endif %}';">
                         {% else %}
-                        <div class="product-icon-glow">
-                            {% if prod.category == 'Cheveux' %}<i class="bi bi-droplet-half"></i>
-                            {% elif prod.category == 'Visage & Skincare' %}<i class="bi bi-flower1"></i>
-                            {% elif prod.category == 'Maquillage' %}<i class="bi bi-palette"></i>
-                            {% elif prod.category == 'Ongles & Vernis' %}<i class="bi bi-hand-index-thumb"></i>
-                            {% elif prod.category == 'Coloration Cheveux' %}<i class="bi bi-brush"></i>
-                            {% else %}<i class="bi bi-sparkles"></i>{% endif %}
-                        </div>
+                        <img src="{% if prod.category == 'Cheveux' or prod.category == 'Coiffage' or prod.category == 'Barbe' %}{% static 'images/prod_cheveux.png' %}{% elif prod.category == 'Visage & Skincare' or prod.category == 'Soins Visage' or prod.category == 'Coffrets' %}{% static 'images/prod_skincare.png' %}{% elif prod.category == 'Maquillage' %}{% static 'images/prod_maquillage.png' %}{% elif prod.category == 'Ongles & Vernis' %}{% static 'images/prod_ongles.png' %}{% elif prod.category == 'Coloration Cheveux' %}{% static 'images/prod_coloration.png' %}{% else %}{% static 'images/prod_cheveux.png' %}{% endif %}" alt="{{ prod.name }}" class="w-100 h-100 product-img-cover" loading="lazy">
                         {% endif %}
                     </div>
                     <div class="product-details p-4 d-flex flex-column justify-content-between h-100">

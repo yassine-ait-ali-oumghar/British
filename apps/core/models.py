@@ -1,3 +1,11 @@
+# ==============================================================================
+# MODÈLES DE DONNÉES DE L'APPLICATION BRITISH STYLE (ORM DJANGO / POSTGRESQL)
+# ==============================================================================
+# Ce fichier définit la structure de la base de données relationnelle.
+# Il contient les 10 entités clés du projet ainsi que la logique métier de bas niveau
+# (calculs d'heures de travail, calculs de présence, génération des scores de performance, etc.).
+# ==============================================================================
+
 from django.db import models
 from django.contrib.auth.models import User
 from django.utils import timezone
@@ -6,6 +14,7 @@ import datetime
 from django.db.models.signals import post_save
 from django.dispatch import receiver
 
+# Liste des rôles d'accès au système
 ROLE_CHOICES = [
     ('USER', 'Utilisateur'),
     ('EMPLOYEE', 'Employé'),
@@ -18,6 +27,11 @@ ROLE_CHOICES = [
 ]
 
 class Employee(models.Model):
+    """
+    Modèle du profil Employé / Coiffeur / Membre du personnel.
+    Rattaché à un compte utilisateur Django (User) par une relation OneToOne.
+    Contient la logique de calcul d'heures, de présence et de performance.
+    """
     objects = models.Manager()
     attendance_records: models.Manager
     notifications: models.Manager
@@ -46,65 +60,91 @@ class Employee(models.Model):
 
     @property
     def full_name(self):
+        """Retourne le nom complet (Prénom + Nom) de l'employé."""
         return f"{self.first_name} {self.last_name}"
 
     def get_today_record(self):
+        """Récupère l'enregistrement de pointage (AttendanceRecord) de la journée en cours."""
+        # 1. Obtient la date d'aujourd'hui dans le fuseau horaire local (Casablanca)
         today = timezone.localtime(timezone.now()).date()
+        # 2. Cherche en BDD le pointage correspondant à cet employé et cette date
         return self.attendance_records.filter(date=today).first()
 
     def get_current_status(self):
+        """Renvoie le statut brut actuel ('PRESENT', 'PAUSE', 'REPOS', 'ABSENT')."""
+        # 1. Récupère le pointage du jour
         record = self.get_today_record()
+        # 2. Si un pointage existe, renvoie son statut, sinon renvoie 'ABSENT'
         if record:
             return record.status
         return 'ABSENT'
 
     def get_current_status_display(self):
+        """Renvoie le statut du jour au format lisible ('Présent', 'En pause', etc.)."""
         record = self.get_today_record()
         if record:
             return record.get_status_display()
         return 'Absent'
 
     def get_hours_worked_today(self):
+        """Calcule le nombre d'heures décimales effectuées aujourd'hui."""
+        # 1. Récupère le pointage du jour
         record = self.get_today_record()
+        # 2. Si le pointage existe, appelle la méthode de calcul d'heures nettes
         if record:
             return record.calculate_hours_worked()
         return 0.0
 
     def get_hours_worked_today_formatted(self):
+        """Convertit le temps de travail du jour au format lisible 'Xh YYm'."""
+        # 1. Récupère le total d'heures décimal (ex: 7.5)
         hours = self.get_hours_worked_today()
+        # 2. Extrait la partie entière (heures) et calcule les minutes restantes
         h = int(hours)
         m = int(round((hours - h) * 60))
+        # 3. Formate le résultat en texte (ex: '7h 30m')
         return f"{h}h {m:02d}m"
 
     def get_hours_worked_this_week(self):
+        """Calcule le total cumulé d'heures travaillées depuis le début de la semaine (Lundi)."""
+        # 1. Obtient la date du jour
         today = timezone.now().date()
+        # 2. Calcule la date du Lundi (début de semaine) et du Dimanche (fin de semaine)
         start_of_week = today - datetime.timedelta(days=today.weekday())
         end_of_week = start_of_week + datetime.timedelta(days=6)
         
+        # 3. Filtre tous les pointages compris entre le Lundi et le Dimanche
         records = self.attendance_records.filter(date__gte=start_of_week, date__lte=end_of_week)
+        # 4. Additionne les heures travaillées de chaque jour
         total_hours = sum(r.calculate_hours_worked() for r in records)
         return total_hours
 
     def get_hours_worked_this_week_formatted(self):
+        """Formate le total des heures de la semaine au format 'Xh YYm'."""
         hours = self.get_hours_worked_this_week()
         h = int(hours)
         m = int(round((hours - h) * 60))
         return f"{h}h {m:02d}m"
 
     def get_hours_worked_this_month(self):
+        """Calcule le total d'heures effectuées depuis le 1er du mois en cours."""
+        # 1. Date du jour et 1er jour du mois
         today = timezone.now().date()
         start_of_month = today.replace(day=1)
+        # 2. Récupère les pointages du mois et fait la somme des heures nettes
         records = self.attendance_records.filter(date__gte=start_of_month, date__lte=today)
         total_hours = sum(r.calculate_hours_worked() for r in records)
         return total_hours
 
     def get_hours_worked_this_month_formatted(self):
+        """Formate le total des heures du mois au format 'Xh YYm'."""
         hours = float(self.get_hours_worked_this_month() or 0)
         h = int(hours)
         m = int(round((hours - h) * 60))
         return f"{h}h {m:02d}m"
 
     def get_pause_time_today_formatted(self):
+        """Formate le temps total de pause de la journée."""
         record = self.get_today_record()
         if record:
             p_min = record.pause_duration_minutes
@@ -114,16 +154,19 @@ class Employee(models.Model):
         return "0 min"
 
     def get_days_present_this_month(self):
+        """Compte le nombre de jours où l'employé a été présent ce mois-ci."""
         today = timezone.now().date()
         start_of_month = today.replace(day=1)
         return self.attendance_records.filter(date__gte=start_of_month, date__lte=today, status__in=['PRESENT', 'PAUSE']).count()
 
     def get_days_rest_this_month(self):
+        """Compte le nombre de jours de repos pris ce mois-ci."""
         today = timezone.now().date()
         start_of_month = today.replace(day=1)
         return self.attendance_records.filter(date__gte=start_of_month, date__lte=today, status='REPOS').count()
 
     def get_overtime_hours_this_month(self):
+        """Calcule le total d'heures supplémentaires accumulées ce mois-ci."""
         today = timezone.now().date()
         start_of_month = today.replace(day=1)
         records = self.attendance_records.filter(date__gte=start_of_month, date__lte=today)
@@ -131,17 +174,23 @@ class Employee(models.Model):
         return total_overtime
 
     def get_overtime_hours_this_month_formatted(self):
+        """Formate les heures supplémentaires du mois au format 'Xh YYm'."""
         ot = self.get_overtime_hours_this_month()
         h = int(ot)
         m = int(round((ot - h) * 60))
         return f"{h}h {m:02d}m"
 
     def get_attendance_rate(self):
+        """Calcule le taux de présence mensuel en pourcentage (ex: 95%)."""
+        # 1. Définit l'intervalle de jours écoulés dans le mois
         today = timezone.now().date()
         start_of_month = today.replace(day=1)
         total_days = (today - start_of_month).days + 1
+        # 2. Compte le nombre de jours ouvrables hors dimanche
         work_days = max(1, sum(1 for d in range(total_days) if (start_of_month + datetime.timedelta(days=d)).weekday() < 6))
+        # 3. Compte les jours de présence effective
         present_records = self.attendance_records.filter(date__gte=start_of_month, status__in=['PRESENT', 'PAUSE']).count()
+        # 4. Ratio entre jours présent et jours ouvrables
         rate = round((present_records / work_days) * 100)
         return min(100, max(0, rate))
 
@@ -193,30 +242,38 @@ class AttendanceRecord(models.Model):
         return f"{self.employee.full_name} - {self.date} ({self.get_status_display()})"
 
     def calculate_hours_worked(self):
+        """Calcul net des heures effectuées dans la journée après déduction des pauses."""
+        # Étape 1 : Si l'employé est absent, en repos ou n'a pas pointé d'arrivée -> 0 heure
         if self.status in ['ABSENT', 'REPOS'] or not self.check_in:
             return 0.0
         
+        # Étape 2 : Si l'heure de départ n'est pas encore saisie (journée en cours)
         end_time = self.check_out
         if not end_time:
             now_dt = timezone.localtime(timezone.now())
+            # Si c'est aujourd'hui, on prend l'heure actuelle comme fin provisoire
             if self.date == now_dt.date():
                 end_time = now_dt.time()
             else:
                 return 0.0
 
+        # Étape 3 : Conversion des TimeField en datetime pour permettre la soustraction
         dummy_date = datetime.date(2000, 1, 1)
         dt_in = datetime.datetime.combine(dummy_date, self.check_in)
         dt_out = datetime.datetime.combine(dummy_date, end_time)
 
+        # Étape 4 : Gestion du travail de nuit (si le départ a lieu après minuit)
         if dt_out < dt_in:
             dt_out += datetime.timedelta(days=1)
 
+        # Étape 5 : Calcul de la différence nette en secondes, conversion en heures et déduction des pauses
         diff = dt_out - dt_in
         hours = diff.total_seconds() / 3600.0 - (self.pause_duration_minutes / 60.0)
         return max(0.0, hours)
 
     @property
     def hours_worked_formatted(self):
+        """Formatage lisible du temps de travail (ex: '8h 15m')."""
         hours = self.calculate_hours_worked()
         h = int(hours)
         m = int(round((hours - h) * 60))

@@ -54,10 +54,12 @@ header#main-header {
     left: 0;
     width: 100%;
     z-index: 1000;
-    background: transparent !important;
+    background: rgba(247, 241, 232, 0.96) !important;
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    box-shadow: 0 2px 15px rgba(0, 0, 0, 0.04) !important;
     transition: background-color 0.3s ease, box-shadow 0.3s ease, padding 0.3s ease;
     padding: 12px 0;
-    box-shadow: none !important;
 }
 
 header#main-header .navbar > .container-fluid {
@@ -66,10 +68,10 @@ header#main-header .navbar > .container-fluid {
 }
 
 header#main-header.scrolled {
-    background: rgba(247, 241, 232, 0.9) !important;
+    background: rgba(247, 241, 232, 0.98) !important;
     backdrop-filter: blur(12px);
     -webkit-backdrop-filter: blur(12px);
-    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.05) !important;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08) !important;
     padding: 8px 0;
 }
 
@@ -338,7 +340,7 @@ header#main-header.scrolled {
 
 /* Contact Page Styles */
 .contact-container {
-    padding-top: 130px;
+    padding-top: 165px;
     padding-bottom: 80px;
 }
 

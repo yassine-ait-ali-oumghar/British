@@ -1,3 +1,11 @@
+# ==============================================================================
+# ADAPTATEURS D'AUTHENTIFICATION PERSONNALISÉS (ALLAUTH)
+# ==============================================================================
+# Ce fichier gère la création dynamique des utilisateurs, la vérification de l'unicité
+# des identifiants/emails et la redirection intelligente vers le bon espace (Admin,
+# Réception, Employé ou Client) après chaque connexion classique ou via Google OAuth.
+# ==============================================================================
+
 from django.db import IntegrityError
 from django.core.exceptions import ValidationError
 from django.contrib.auth import get_user_model
@@ -7,20 +15,30 @@ from apps.core.models import Employee
 
 User = get_user_model()
 
+
 class CustomAccountAdapter(DefaultAccountAdapter):
+    """
+    Adaptateur pour l'authentification classique (Nom d'utilisateur + Mot de passe).
+    """
+
     def clean_username(self, username, shallow=False):
+        """Vérifie que le nom d'utilisateur est unique (insensible à la casse)."""
         cleaned_username = super().clean_username(username, shallow=False)
         if cleaned_username and User.objects.filter(username__iexact=cleaned_username).exists():
             raise ValidationError("Ce nom d'utilisateur est déjà utilisé. Veuillez en choisir un autre.")
         return cleaned_username
 
     def clean_email(self, email):
+        """Vérifie que l'adresse email est unique dans la base de données."""
         cleaned_email = super().clean_email(email)
         if cleaned_email and User.objects.filter(email__iexact=cleaned_email).exists():
             raise ValidationError("Un compte avec cette adresse email existe déjà.")
         return cleaned_email
 
     def save_user(self, request, user, form, commit=True):
+        """
+        Enregistre l'utilisateur et crée automatiquement son profil Employee rattaché.
+        """
         username = user.username or (form.cleaned_data.get('username') if (hasattr(form, 'cleaned_data') and form.cleaned_data) else None)
         if username:
             base_username = username
@@ -47,6 +65,7 @@ class CustomAccountAdapter(DefaultAccountAdapter):
             saved_user.username = username
             saved_user.save()
 
+        # Enregistre le numéro de téléphone et s'assure que le profil Employee existe
         if phone:
             emp = getattr(saved_user, 'employee_profile', None)
             if emp:
@@ -67,8 +86,17 @@ class CustomAccountAdapter(DefaultAccountAdapter):
         return saved_user
 
     def get_login_redirect_url(self, request):
+        """
+        REDIRECTION INTELLIGENTE APRES CONNEXION :
+        Achemine l'utilisateur vers son espace dédié en fonction de son rôle métier :
+        - Réceptionniste  -> /reception/dashboard/
+        - Administrateur   -> /dashboard/
+        - Coiffeur / Staff -> /employee/dashboard/
+        - Client classique -> / (Page d'accueil)
+        """
         user = request.user
         if user.is_authenticated:
+            # S'assure que le profil Employee existe toujours
             if not hasattr(user, 'employee_profile') or not user.employee_profile:
                 first_name = user.first_name or user.username
                 last_name = user.last_name or ""
@@ -108,13 +136,18 @@ class CustomAccountAdapter(DefaultAccountAdapter):
             return '/'
         return '/'
 
-
     def get_signup_redirect_url(self, request):
+        """Redirige de la même façon après inscription."""
         return self.get_login_redirect_url(request)
 
 
 class CustomSocialAccountAdapter(DefaultSocialAccountAdapter):
+    """
+    Adaptateur pour la connexion sociale via Google OAuth 2.0.
+    """
+
     def populate_user(self, request, sociallogin, data):
+        """Génère un nom d'utilisateur unique à partir de l'adresse Gmail."""
         user = super().populate_user(request, sociallogin, data)
         if not user.username:
             email = (data.get('email') or user.email or '').strip()
@@ -128,6 +161,7 @@ class CustomSocialAccountAdapter(DefaultSocialAccountAdapter):
         return user
 
     def save_user(self, request, sociallogin, form=None):
+        """Crée automatiquement le profil Employee après une inscription Google."""
         user = super().save_user(request, sociallogin, form)
         if not hasattr(user, 'employee_profile') or not user.employee_profile:
             first_name = user.first_name or user.username

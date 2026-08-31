@@ -24,3 +24,6 @@ venv/
 Thumbs.db
 .vscode/
 
+# Documentation personnelle / Soutenance
+EXPLIQUE.md
+

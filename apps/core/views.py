@@ -15,89 +15,156 @@ from django.conf import settings
 from django.contrib import messages
 from .models import Employee, AttendanceRecord, Product, Service, ContactMessage, Notification, Reservation, EmployeeBreak, Order, OrderItem, Payment
 
-# Security Decorator for ERP Access
+# ==============================================================================
+# DÉCORATEURS DE SÉCURITÉ ET CONTRÔLE D'ACCÈS PAR RÔLE
+# ==============================================================================
+
 def admin_required(view_func):
+    """
+    Décorateur restreignant l'accès aux pages Administrateur / ERP.
+    Seuls les Superutilisateurs, Staff, Administrateurs ou Réceptionnistes sont autorisés.
+    """
     @wraps(view_func)
     def _wrapped_view(request, *args, **kwargs):
+        # Étape 1 : Vérifie si l'utilisateur est connecté à son compte
         if not request.user.is_authenticated:
+            # Si non connecté, redirige vers la page de connexion Allauth
             return redirect(f"/accounts/login/?next={request.path}")
+        
+        # Étape 2 : Vérifie si l'utilisateur possède un profil Employé rattaché
         if hasattr(request.user, 'employee_profile') and request.user.employee_profile:
             emp = request.user.employee_profile
             pos = (emp.position or '').lower()
+            # Détermine si le rôle est Réceptionniste
             is_reception = emp.role == 'RECEPTION' or 'réception' in pos or 'reception' in pos
+            
+            # Si c'est un membre d'équipe classique (ex: Coiffeur), on le redirige vers son Espace Employé
             if emp.is_team_member and emp.role != 'USER' and emp.role != 'ADMINISTRATEUR' and not is_reception:
                 return redirect('/employee/dashboard/')
-        if not (request.user.is_staff or request.user.is_superuser or (hasattr(request.user, 'employee_profile') and (request.user.employee_profile.role in ['ADMINISTRATEUR', 'RECEPTION'] or 'réception' in (request.user.employee_profile.position or '').lower() or 'reception' in (request.user.employee_profile.position or '').lower()))):
+
+        # Étape 3 : Contrôle strict du droit Administrateur ou Réception
+        is_admin_or_reception = (
+            request.user.is_staff or 
+            request.user.is_superuser or 
+            (hasattr(request.user, 'employee_profile') and (
+                request.user.employee_profile.role in ['ADMINISTRATEUR', 'RECEPTION'] or 
+                'réception' in (request.user.employee_profile.position or '').lower() or 
+                'reception' in (request.user.employee_profile.position or '').lower()
+            ))
+        )
+        
+        # Étape 4 : Si le contrôle échoue, renvoie une erreur 403 (Accès Interdit)
+        if not is_admin_or_reception:
             return HttpResponseForbidden("403 Accès interdit. Seuls les administrateurs et membres de la réception ont accès à cette section.".encode('utf-8'))
+        
+        # Étape 5 : Accès validé, exécute la vue demandée
         return view_func(request, *args, **kwargs)
     return _wrapped_view
 
-# Security Decorator for Dedicated Employee Portal
+
 def employee_required(view_func):
+    """
+    Décorateur restreignant l'accès à l'Espace Membre Employé / Coiffeur.
+    Exige que l'utilisateur soit un membre d'équipe actif avec un profil valide.
+    """
     @wraps(view_func)
     def _wrapped_view(request, *args, **kwargs):
+        # Étape 1 : Vérifie si l'utilisateur est authentifié
         if not request.user.is_authenticated:
             return redirect(f"/accounts/login/?next={request.path}")
+        
+        # Étape 2 : Vérifie si le compte possède un profil Employee
         if not hasattr(request.user, 'employee_profile') or not request.user.employee_profile:
             return redirect('/employee/access-denied/')
+        
+        # Étape 3 : Récupère le profil et vérifie qu'il est membre d'équipe actif (non client)
         emp = request.user.employee_profile
         if not emp.is_team_member or not emp.is_active or emp.role == 'USER':
             return redirect('/employee/access-denied/')
+        
+        # Étape 4 : Autorisation accordée -> Exécute la vue
         return view_func(request, *args, **kwargs)
     return _wrapped_view
 
 
-# Security Decorator for Dedicated Reception Portal
 def reception_required(view_func):
+    """
+    Décorateur restreignant l'accès à l'Espace Réception & Caisse / POS.
+    Réservé aux Réceptionnistes, Administrateurs et Superutilisateurs.
+    """
     @wraps(view_func)
     def _wrapped_view(request, *args, **kwargs):
+        # Étape 1 : Vérifie l'authentification de l'utilisateur
         if not request.user.is_authenticated:
             return redirect(f"/accounts/login/?next={request.path}")
+        
+        # Étape 2 : Les superutilisateurs et membres du staff ont un accès direct
         if request.user.is_superuser or request.user.is_staff:
             return view_func(request, *args, **kwargs)
+        
+        # Étape 3 : Vérifie si le profil utilisateur est un Réceptionniste ou Administrateur
         if hasattr(request.user, 'employee_profile') and request.user.employee_profile:
             emp = request.user.employee_profile
             pos = (emp.position or '').lower()
             if emp.role in ['RECEPTION', 'ADMINISTRATEUR'] or 'réception' in pos or 'reception' in pos:
                 return view_func(request, *args, **kwargs)
+        
+        # Étape 4 : Refuse l'accès avec un statut HTTP 403 Forbidden
         return HttpResponseForbidden("403 Accès interdit. Réservé à la Réception.")
     return _wrapped_view
 
 
 
 
-# Public Views
+# ==============================================================================
+# VUES PUBLIQUES (ACCÈS LIBRE SANS CONNEXION)
+# ==============================================================================
+
 def frontpage(request):
+    """Affiche la page d'accueil avec le Hero banner et la présentation du salon."""
     return render(request, 'core/frontpage.html')  
 
 def contact(request):
+    """Traitement du formulaire de contact et affichage de la page Contact."""
     success_msg = None
+    # Étape 1 : Si la demande est envoyée via le formulaire (méthode POST)
     if request.method == 'POST':
+        # Étape 2 : Récupération des données du formulaire HTML
         name = request.POST.get('name', '').strip()
         email = request.POST.get('email', '').strip()
         phone = request.POST.get('phone', '').strip()
         subject = request.POST.get('subject', '').strip() or "Demande de contact"
         message = request.POST.get('message', '').strip()
+        
+        # Étape 3 : Validation et enregistrement dans le modèle ContactMessage en BDD
         if name and email and message:
             ContactMessage.objects.create(
                 name=name, email=email, phone=phone, subject=subject, message=message
             )
             success_msg = "Votre message a bien été envoyé ! Notre équipe vous répondra dans les plus brefs délais."
+            
+    # Étape 4 : Rendu du template HTML avec le message de confirmation si présent
     return render(request, 'core/contact.html', {'success_msg': success_msg})
 
 def services(request):
+    """Affiche le catalogue des prestations (coupes, barbe, soins) et la liste des coiffeurs."""
+    # Étape 1 : Récupère les prestations actives en base de données
     services_list = Service.objects.filter(is_active=True)
+    # Étape 2 : Récupère les coiffeurs membres de l'équipe
     employees_list = Employee.objects.filter(is_team_member=True, is_active=True).exclude(role='ADMINISTRATEUR').order_by('first_name')
+    # Étape 3 : Injecte les données dans le template services.html
     return render(request, 'core/services.html', {
         'services_list': services_list,
         'employees_list': employees_list
     })  
 
 def equipe(request):
+    """Affiche la page de présentation de l'équipe de coiffeurs et barbiers."""
     team_members = Employee.objects.filter(is_team_member=True, is_active=True).exclude(role='ADMINISTRATEUR').order_by('id')
     return render(request, 'core/equipe.html', {'team_members': team_members})
 
 def boutique(request):
+    """Affiche la boutique e-commerce avec les produits cosmétiques disponibles."""
     products_list = Product.objects.filter(is_available=True)
     return render(request, 'core/boutique.html', {'products_list': products_list})
 
