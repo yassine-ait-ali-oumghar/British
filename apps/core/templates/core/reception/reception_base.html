@@ -414,7 +414,7 @@
             <a href="{% url 'frontpage' %}" class="btn btn-outline-light w-100 btn-sm mb-2 rounded-3 d-flex align-items-center justify-content-center gap-2">
                 <i class="bi bi-house-door"></i> Site Principal
             </a>
-            <form method="post" action="{% url 'account_logout' %}" class="m-0">
+            <form method="post" action="{% url 'account_logout' %}" class="m-0" onsubmit="if(typeof CartManager !== 'undefined') CartManager.clearCart();">
                 {% csrf_token %}
                 <button type="submit" class="btn btn-danger w-100 btn-sm rounded-3 d-flex align-items-center justify-content-center gap-2">
                     <i class="bi bi-box-arrow-right"></i> Déconnexion
@@ -437,6 +437,15 @@
             </div>
 
             <div class="topbar-actions">
+                {% if user.is_superuser or user.is_staff or user.employee_profile.role == 'ADMINISTRATEUR' %}
+                <a href="{% url 'dashboard_overview' %}" class="btn btn-sm btn-outline-primary fw-semibold rounded-pill px-3 d-inline-flex align-items-center gap-1 shadow-xs">
+                    <i class="bi bi-speedometer2 me-1"></i> Admin ERP
+                </a>
+                {% endif %}
+                <button type="button" class="btn btn-gold btn-sm d-flex align-items-center gap-2 shadow-sm" data-bs-toggle="modal" data-bs-target="#createRDVModal">
+                    <i class="bi bi-plus-lg"></i>
+                    <span class="d-none d-sm-inline">Nouveau RDV</span>
+                </button>
             </div>
         </header>
 

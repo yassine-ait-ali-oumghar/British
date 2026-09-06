@@ -16,14 +16,27 @@ from django.dispatch import receiver
 
 # Liste des rôles d'accès au système
 ROLE_CHOICES = [
-    ('USER', 'Utilisateur'),
     ('EMPLOYEE', 'Employé'),
     ('RECEPTION', 'Réceptionniste'),
-    ('MANAGER', 'Manager'),
-    ('RESPONSABLE', 'Responsable'),
-    ('VENDEUR', 'Vendeur'),
-    ('LOGISTIQUE', 'Logistique'),
     ('ADMINISTRATEUR', 'Administrateur'),
+]
+
+# Liste des postes prédéfinis
+POSITION_CHOICES = [
+    ('Coiffure', 'Coiffure'),
+    ('Esthétique', 'Esthétique'),
+    ('Onglerie', 'Onglerie'),
+    ('Réceptionniste', 'Réceptionniste'),
+    ('Master', 'Master'),
+]
+
+# Liste des départements prédéfinis
+DEPARTMENT_CHOICES = [
+    ('Coiffure', 'Coiffure'),
+    ('Esthétique', 'Esthétique'),
+    ('Onglerie', 'Onglerie'),
+    ('Accueil', 'Accueil'),
+    ('Salon Master', 'Salon Master'),
 ]
 
 class Employee(models.Model):

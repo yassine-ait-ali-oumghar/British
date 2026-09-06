@@ -139,20 +139,29 @@
                         </div>
                         <div class="col-6">
                             <label class="form-label small fw-bold">Poste / Intitulé</label>
-                            <input type="text" name="position" class="form-control" placeholder="ex: Coiffeur Senior" required>
+                            <select name="position" class="form-select" required>
+                                <option value="Coiffure">Coiffure</option>
+                                <option value="Esthétique">Esthétique</option>
+                                <option value="Onglerie">Onglerie</option>
+                                <option value="Réceptionniste">Réceptionniste</option>
+                                <option value="Master">Master</option>
+                            </select>
                         </div>
                         <div class="col-6">
                             <label class="form-label small fw-bold">Département</label>
-                            <input type="text" name="department" class="form-control" placeholder="ex: Salon, Administration" value="Salon" required>
+                            <select name="department" class="form-select" required>
+                                <option value="Coiffure">Coiffure</option>
+                                <option value="Esthétique">Esthétique</option>
+                                <option value="Onglerie">Onglerie</option>
+                                <option value="Accueil">Accueil</option>
+                                <option value="Salon Master">Salon Master</option>
+                            </select>
                         </div>
                         <div class="col-6">
                             <label class="form-label small fw-bold">Rôle Métier</label>
                             <select name="role" class="form-select">
                                 <option value="EMPLOYEE">Employé</option>
-                                <option value="MANAGER">Manager</option>
-                                <option value="RESPONSABLE">Responsable</option>
-                                <option value="VENDEUR">Vendeur</option>
-                                <option value="LOGISTIQUE">Logistique</option>
+                                <option value="RECEPTION">Réceptionniste</option>
                                 <option value="ADMINISTRATEUR">Administrateur</option>
                             </select>
                         </div>
@@ -166,9 +175,13 @@
                         </div>
                         <div class="col-6">
                             <label class="form-label small fw-bold">Email</label>
-                            <input type="email" name="email" class="form-control">
+                            <input type="email" name="email" class="form-control" placeholder="exemple@britishstyle.com">
                         </div>
                         <div class="col-6">
+                            <label class="form-label small fw-bold">Mot de Passe (Compte Connexion)</label>
+                            <input type="password" name="password" class="form-control" placeholder="Mot de passe du compte">
+                        </div>
+                        <div class="col-12">
                             <label class="form-label small fw-bold">Téléphone</label>
                             <input type="text" name="phone" class="form-control">
                         </div>

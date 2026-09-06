@@ -27,8 +27,40 @@ const CartManager = {
     STORAGE_KEY: 'british_style_cart_v1',
     SHIPPING_KEY: 'british_style_shipping_v1',
     PAYMENT_KEY: 'british_style_payment_v1',
+    USER_KEY: 'british_style_user_id_v1',
     
+    checkUserSession() {
+        const isAuthenticated = window.IS_USER_AUTHENTICATED === true;
+        const currentUserId = window.CURRENT_USER_ID || 'anonymous';
+        const wasAuthVal = localStorage.getItem('british_style_was_authenticated');
+        const wasAuthenticated = wasAuthVal === 'true';
+        const storedUserId = localStorage.getItem(this.USER_KEY);
+
+        let shouldClear = false;
+
+        // Case 1: First load with new tracking while logged out -> clear lingering cart items
+        if (wasAuthVal === null && !isAuthenticated) {
+            shouldClear = true;
+        }
+        // Case 2: User was authenticated in previous session but is now logged out
+        else if (wasAuthenticated && !isAuthenticated) {
+            shouldClear = true;
+        }
+        // Case 3: User account changed or logged out
+        else if (storedUserId && storedUserId !== 'anonymous' && storedUserId !== currentUserId) {
+            shouldClear = true;
+        }
+
+        if (shouldClear) {
+            this.clearCart();
+        }
+
+        localStorage.setItem('british_style_was_authenticated', isAuthenticated ? 'true' : 'false');
+        localStorage.setItem(this.USER_KEY, currentUserId);
+    },
+
     getCart() {
+        this.checkUserSession();
         try {
             return JSON.parse(localStorage.getItem(this.STORAGE_KEY)) || [];
         } catch (e) {
@@ -125,6 +157,8 @@ const CartManager = {
         localStorage.removeItem(this.STORAGE_KEY);
         localStorage.removeItem(this.SHIPPING_KEY);
         localStorage.removeItem(this.PAYMENT_KEY);
+        const currentUserId = window.CURRENT_USER_ID || 'anonymous';
+        localStorage.setItem(this.USER_KEY, currentUserId);
         this.updateCartUI();
     },
 
@@ -164,6 +198,29 @@ const CartManager = {
             formatted += digits[i];
         }
         el.value = formatted;
+    },
+
+    formatCardNumber(el) {
+        if (!el) return;
+        let digits = el.value.replace(/[^0-9]/g, '');
+        if (digits.length > 16) digits = digits.slice(0, 16);
+        let formatted = '';
+        for (let i = 0; i < digits.length; i++) {
+            if (i > 0 && i % 4 === 0) formatted += ' ';
+            formatted += digits[i];
+        }
+        el.value = formatted;
+    },
+
+    formatCardExpiry(el) {
+        if (!el) return;
+        let digits = el.value.replace(/[^0-9]/g, '');
+        if (digits.length > 4) digits = digits.slice(0, 4);
+        if (digits.length >= 3) {
+            el.value = digits.slice(0, 2) + '/' + digits.slice(2);
+        } else {
+            el.value = digits;
+        }
     },
 
     getPaymentDisplayText(method) {
@@ -238,6 +295,24 @@ const CartManager = {
             if (addrInput) addrInput.setAttribute('required', 'required');
         }
 
+        // Toggle credit card fields group requirement
+        const cardGroup = document.getElementById('cardPaymentFieldsGroup');
+        const cardNumInput = document.getElementById('checkoutCardNumber');
+        const cardExpInput = document.getElementById('checkoutCardExpiry');
+        const cardCvcInput = document.getElementById('checkoutCardCvc');
+
+        if (paymentMethod === 'card') {
+            if (cardGroup) cardGroup.classList.remove('d-none');
+            if (cardNumInput) cardNumInput.setAttribute('required', 'required');
+            if (cardExpInput) cardExpInput.setAttribute('required', 'required');
+            if (cardCvcInput) cardCvcInput.setAttribute('required', 'required');
+        } else {
+            if (cardGroup) cardGroup.classList.add('d-none');
+            if (cardNumInput) cardNumInput.removeAttribute('required');
+            if (cardExpInput) cardExpInput.removeAttribute('required');
+            if (cardCvcInput) cardCvcInput.removeAttribute('required');
+        }
+
         // Open Modal
         const modalElement = document.getElementById('checkoutModal');
         if (modalElement && typeof bootstrap !== 'undefined') {
@@ -270,6 +345,45 @@ const CartManager = {
             );
             if (phoneInput) phoneInput.focus();
             return;
+        }
+
+        // Mandatory Credit Card Validation when paymentMethod is 'card'
+        if (paymentMethod === 'card') {
+            const cardNumInput = document.getElementById('checkoutCardNumber');
+            const cardExpInput = document.getElementById('checkoutCardExpiry');
+            const cardCvcInput = document.getElementById('checkoutCardCvc');
+
+            const cardNumber = cardNumInput ? cardNumInput.value.replace(/[^0-9]/g, '') : '';
+            const cardExpiry = cardExpInput ? cardExpInput.value.trim() : '';
+            const cardCvc = cardCvcInput ? cardCvcInput.value.trim() : '';
+
+            if (cardNumber.length < 16) {
+                showCustomAlert(
+                    "Numéro de Carte Invalide",
+                    "Veuillez saisir un numéro de carte bancaire valide à 16 chiffres.",
+                    "bi-credit-card-fill"
+                );
+                if (cardNumInput) cardNumInput.focus();
+                return;
+            }
+            if (!/^\d{2}\/\d{2}$/.test(cardExpiry)) {
+                showCustomAlert(
+                    "Date d'Expiration Invalide",
+                    "Veuillez saisir la date d'expiration de la carte au format MM/AA (ex: 08/28).",
+                    "bi-calendar-event"
+                );
+                if (cardExpInput) cardExpInput.focus();
+                return;
+            }
+            if (cardCvc.length < 3) {
+                showCustomAlert(
+                    "Code CVC Invalide",
+                    "Veuillez saisir le code CVC/CVV (3 chiffres au dos de votre carte).",
+                    "bi-shield-lock-fill"
+                );
+                if (cardCvcInput) cardCvcInput.focus();
+                return;
+            }
         }
 
         if (cart.length === 0) {
@@ -775,5 +889,22 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // Initialize Team Ratings & Cart UI
     TeamRatingManager.updateTeamCardsUI();
+    CartManager.checkUserSession();
     CartManager.updateCartUI();
+
+    // Auto-clear cart on logout form submission or logout link click
+    document.addEventListener('submit', (e) => {
+        const form = e.target;
+        if (form && form.action && form.action.includes('logout')) {
+            CartManager.clearCart();
+        }
+    });
+
+    document.addEventListener('click', (e) => {
+        const link = e.target.closest('a');
+        if (link && link.href && link.href.includes('logout')) {
+            CartManager.clearCart();
+        }
+    });
 });
+

@@ -222,20 +222,29 @@
                         </div>
                         <div class="col-6">
                             <label class="form-label small fw-bold">Poste / Intitulé <span class="text-danger">*</span></label>
-                            <input type="text" name="position" id="modalPosition" class="form-control" placeholder="ex: Coiffeur Senior, Réceptionniste..." required>
+                            <select name="position" id="modalPosition" class="form-select" required>
+                                <option value="Coiffure">Coiffure</option>
+                                <option value="Esthétique">Esthétique</option>
+                                <option value="Onglerie">Onglerie</option>
+                                <option value="Réceptionniste">Réceptionniste</option>
+                                <option value="Master">Master</option>
+                            </select>
                         </div>
                         <div class="col-6">
                             <label class="form-label small fw-bold">Département <span class="text-danger">*</span></label>
-                            <input type="text" name="department" id="modalDepartment" class="form-control" placeholder="ex: Salon, Barbier..." value="Salon" required>
+                            <select name="department" id="modalDepartment" class="form-select" required>
+                                <option value="Coiffure">Coiffure</option>
+                                <option value="Esthétique">Esthétique</option>
+                                <option value="Onglerie">Onglerie</option>
+                                <option value="Accueil">Accueil</option>
+                                <option value="Salon Master">Salon Master</option>
+                            </select>
                         </div>
                         <div class="col-6">
                             <label class="form-label small fw-bold">Rôle Métier <span class="text-danger">*</span></label>
                             <select name="role" id="modalRole" class="form-select" required>
                                 <option value="EMPLOYEE">Employé</option>
-                                <option value="MANAGER">Manager</option>
-                                <option value="RESPONSABLE">Responsable</option>
-                                <option value="VENDEUR">Vendeur</option>
-                                <option value="LOGISTIQUE">Logistique</option>
+                                <option value="RECEPTION">Réceptionniste</option>
                                 <option value="ADMINISTRATEUR">Administrateur</option>
                             </select>
                         </div>
@@ -252,6 +261,10 @@
                             <input type="email" name="email" id="modalEmail" class="form-control">
                         </div>
                         <div class="col-6">
+                            <label class="form-label small fw-bold">Mot de Passe (Compte Connexion)</label>
+                            <input type="password" name="password" id="modalPassword" class="form-control" placeholder="Entrez le mot de passe">
+                        </div>
+                        <div class="col-12">
                             <label class="form-label small fw-bold">Téléphone</label>
                             <input type="text" name="phone" id="modalPhone" class="form-control">
                         </div>

@@ -14,7 +14,7 @@
                     <p class="text-muted small">Êtes-vous sûr(e) de vouloir vous déconnecter de votre espace personnel ?</p>
                 </div>
 
-                <form method="post" action="{% url 'account_logout' %}">
+                <form method="post" action="{% url 'account_logout' %}" onsubmit="if(typeof CartManager !== 'undefined') CartManager.clearCart();">
                     {% csrf_token %}
                     {% if redirect_field_value %}
                     <input type="hidden" name="{{ redirect_field_name }}" value="{{ redirect_field_value }}" />
@@ -32,4 +32,12 @@
         </div>
     </div>
 </div>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        if (typeof CartManager !== 'undefined') {
+            CartManager.clearCart();
+        }
+    });
+</script>
 {% endblock %}

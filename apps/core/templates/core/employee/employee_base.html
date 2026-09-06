@@ -359,7 +359,7 @@
             {% endif %}
 
             <li class="sidebar-menu-item mt-4">
-                <a href="{% url 'account_logout' %}" class="sidebar-menu-link text-danger">
+                <a href="{% url 'account_logout' %}" class="sidebar-menu-link text-danger" onclick="if(typeof CartManager !== 'undefined') CartManager.clearCart();">
                     <i class="bi bi-box-arrow-right"></i>
                     <span>Déconnexion</span>
                 </a>

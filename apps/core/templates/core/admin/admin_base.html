@@ -321,7 +321,7 @@
             <div class="d-flex justify-content-center gap-2 mt-2">
                 <a href="{% url 'dashboard_settings' %}" class="text-muted" title="Paramètres"><i class="bi bi-gear"></i></a>
                 <a href="{% url 'frontpage' %}" class="text-muted" title="Voir le site client"><i class="bi bi-box-arrow-up-right"></i></a>
-                <form method="post" action="{% url 'account_logout' %}" class="d-inline">
+                <form method="post" action="{% url 'account_logout' %}" class="d-inline" onsubmit="if(typeof CartManager !== 'undefined') CartManager.clearCart();">
                     {% csrf_token %}
                     <button type="submit" class="border-0 bg-transparent text-danger p-0 ms-1" title="Déconnexion"><i class="bi bi-box-arrow-right"></i></button>
                 </form>
@@ -342,6 +342,7 @@
                 </a>
             </li>
         </ul>
+
 
         <div class="sidebar-section-title">GESTION ERP</div>
         <ul class="sidebar-menu">
@@ -421,6 +422,7 @@
             </div>
 
             <div class="topbar-right">
+
                 <!-- Global Live Search -->
                 <div class="search-pill-container">
                     <div class="search-pill">
@@ -441,7 +443,7 @@
                         <li><a class="dropdown-item rounded-2" href="{% url 'dashboard_settings' %}"><i class="bi bi-gear me-2"></i> Paramètres</a></li>
                         <li><hr class="dropdown-divider"></li>
                         <li>
-                            <form method="post" action="{% url 'account_logout' %}" class="m-0">
+                            <form method="post" action="{% url 'account_logout' %}" class="m-0" onsubmit="if(typeof CartManager !== 'undefined') CartManager.clearCart();">
                                 {% csrf_token %}
                                 <button type="submit" class="dropdown-item text-danger rounded-2 fw-semibold"><i class="bi bi-box-arrow-right me-2"></i> Se Déconnecter</button>
                             </form>

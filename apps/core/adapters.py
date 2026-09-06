@@ -192,6 +192,11 @@ class CustomSocialAccountAdapter(DefaultSocialAccountAdapter):
     def get_signup_redirect_url(self, request):
         return self.get_login_redirect_url(request)
 
+    def on_authentication_error(self, request, provider_id, error=None, exception=None, extra_context=None):
+        from django.contrib import messages
+        messages.error(request, "Une erreur s'est produite lors de la connexion Google. Veuillez cliquer sur le bouton de connexion Google pour recommencer.")
+        return super().on_authentication_error(request, provider_id, error=error, exception=exception, extra_context=extra_context)
+
 
 
 

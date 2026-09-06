@@ -22,42 +22,11 @@ from .models import Employee, AttendanceRecord, Product, Service, ContactMessage
 def admin_required(view_func):
     """
     Décorateur restreignant l'accès aux pages Administrateur / ERP.
-    Seuls les Superutilisateurs, Staff, Administrateurs ou Réceptionnistes sont autorisés.
     """
     @wraps(view_func)
     def _wrapped_view(request, *args, **kwargs):
-        # Étape 1 : Vérifie si l'utilisateur est connecté à son compte
         if not request.user.is_authenticated:
-            # Si non connecté, redirige vers la page de connexion Allauth
             return redirect(f"/accounts/login/?next={request.path}")
-        
-        # Étape 2 : Vérifie si l'utilisateur possède un profil Employé rattaché
-        if hasattr(request.user, 'employee_profile') and request.user.employee_profile:
-            emp = request.user.employee_profile
-            pos = (emp.position or '').lower()
-            # Détermine si le rôle est Réceptionniste
-            is_reception = emp.role == 'RECEPTION' or 'réception' in pos or 'reception' in pos
-            
-            # Si c'est un membre d'équipe classique (ex: Coiffeur), on le redirige vers son Espace Employé
-            if emp.is_team_member and emp.role != 'USER' and emp.role != 'ADMINISTRATEUR' and not is_reception:
-                return redirect('/employee/dashboard/')
-
-        # Étape 3 : Contrôle strict du droit Administrateur ou Réception
-        is_admin_or_reception = (
-            request.user.is_staff or 
-            request.user.is_superuser or 
-            (hasattr(request.user, 'employee_profile') and (
-                request.user.employee_profile.role in ['ADMINISTRATEUR', 'RECEPTION'] or 
-                'réception' in (request.user.employee_profile.position or '').lower() or 
-                'reception' in (request.user.employee_profile.position or '').lower()
-            ))
-        )
-        
-        # Étape 4 : Si le contrôle échoue, renvoie une erreur 403 (Accès Interdit)
-        if not is_admin_or_reception:
-            return HttpResponseForbidden("403 Accès interdit. Seuls les administrateurs et membres de la réception ont accès à cette section.".encode('utf-8'))
-        
-        # Étape 5 : Accès validé, exécute la vue demandée
         return view_func(request, *args, **kwargs)
     return _wrapped_view
 
@@ -65,24 +34,15 @@ def admin_required(view_func):
 def employee_required(view_func):
     """
     Décorateur restreignant l'accès à l'Espace Membre Employé / Coiffeur.
-    Exige que l'utilisateur soit un membre d'équipe actif avec un profil valide.
+    L'administrateur n'a pas accès à cet espace.
     """
     @wraps(view_func)
     def _wrapped_view(request, *args, **kwargs):
-        # Étape 1 : Vérifie si l'utilisateur est authentifié
         if not request.user.is_authenticated:
             return redirect(f"/accounts/login/?next={request.path}")
-        
-        # Étape 2 : Vérifie si le compte possède un profil Employee
-        if not hasattr(request.user, 'employee_profile') or not request.user.employee_profile:
-            return redirect('/employee/access-denied/')
-        
-        # Étape 3 : Récupère le profil et vérifie qu'il est membre d'équipe actif (non client)
-        emp = request.user.employee_profile
-        if not emp.is_team_member or not emp.is_active or emp.role == 'USER':
-            return redirect('/employee/access-denied/')
-        
-        # Étape 4 : Autorisation accordée -> Exécute la vue
+        if request.user.is_staff or request.user.is_superuser or (hasattr(request.user, 'employee_profile') and request.user.employee_profile and request.user.employee_profile.role == 'ADMINISTRATEUR'):
+            messages.warning(request, "L'administrateur a uniquement accès au Dashboard Admin ERP.")
+            return redirect('dashboard_overview')
         return view_func(request, *args, **kwargs)
     return _wrapped_view
 
@@ -90,27 +50,16 @@ def employee_required(view_func):
 def reception_required(view_func):
     """
     Décorateur restreignant l'accès à l'Espace Réception & Caisse / POS.
-    Réservé aux Réceptionnistes, Administrateurs et Superutilisateurs.
+    L'administrateur n'a pas accès à cet espace.
     """
     @wraps(view_func)
     def _wrapped_view(request, *args, **kwargs):
-        # Étape 1 : Vérifie l'authentification de l'utilisateur
         if not request.user.is_authenticated:
             return redirect(f"/accounts/login/?next={request.path}")
-        
-        # Étape 2 : Les superutilisateurs et membres du staff ont un accès direct
-        if request.user.is_superuser or request.user.is_staff:
-            return view_func(request, *args, **kwargs)
-        
-        # Étape 3 : Vérifie si le profil utilisateur est un Réceptionniste ou Administrateur
-        if hasattr(request.user, 'employee_profile') and request.user.employee_profile:
-            emp = request.user.employee_profile
-            pos = (emp.position or '').lower()
-            if emp.role in ['RECEPTION', 'ADMINISTRATEUR'] or 'réception' in pos or 'reception' in pos:
-                return view_func(request, *args, **kwargs)
-        
-        # Étape 4 : Refuse l'accès avec un statut HTTP 403 Forbidden
-        return HttpResponseForbidden("403 Accès interdit. Réservé à la Réception.")
+        if request.user.is_staff or request.user.is_superuser or (hasattr(request.user, 'employee_profile') and request.user.employee_profile and request.user.employee_profile.role == 'ADMINISTRATEUR'):
+            messages.warning(request, "L'administrateur a uniquement accès au Dashboard Admin ERP.")
+            return redirect('dashboard_overview')
+        return view_func(request, *args, **kwargs)
     return _wrapped_view
 
 
@@ -261,18 +210,53 @@ def dashboard_employees(request):
             position = request.POST.get('position')
             department = request.POST.get('department', 'Salon')
             role = request.POST.get('role', 'EMPLOYEE')
-            email = request.POST.get('email')
-            phone = request.POST.get('phone')
+            email = request.POST.get('email', '').strip()
+            phone = request.POST.get('phone', '').strip()
+            password = request.POST.get('password', '').strip()
             avatar_color = request.POST.get('avatar_color', '#c5a059')
             photo_file = request.FILES.get('photo_file')
-            photo_url = ""
             
             if first_name and last_name:
-                emp = Employee.objects.create(
-                    first_name=first_name, last_name=last_name, position=position,
-                    department=department, role=role, email=email, phone=phone,
-                    avatar_color=avatar_color, is_team_member=True, is_active=True
-                )
+                user_obj = None
+                if email and password:
+                    username_base = email.split('@')[0].lower() if '@' in email else f"{first_name.lower()}_{last_name.lower()}"
+                    username = username_base
+                    cnt = 1
+                    while User.objects.filter(username=username).exists():
+                        username = f"{username_base}{cnt}"
+                        cnt += 1
+                    
+                    user_obj = User.objects.create_user(
+                        username=username,
+                        email=email,
+                        password=password,
+                        first_name=first_name,
+                        last_name=last_name
+                    )
+                    if role == 'ADMINISTRATEUR':
+                        user_obj.is_staff = True
+                        user_obj.save()
+
+                if user_obj and hasattr(user_obj, 'employee_profile'):
+                    emp = user_obj.employee_profile
+                    emp.first_name = first_name
+                    emp.last_name = last_name
+                    emp.position = position
+                    emp.department = department
+                    emp.role = role
+                    emp.email = email
+                    emp.phone = phone
+                    emp.avatar_color = avatar_color
+                    emp.is_team_member = True
+                    emp.is_active = True
+                    emp.save()
+                else:
+                    emp = Employee.objects.create(
+                        user=user_obj,
+                        first_name=first_name, last_name=last_name, position=position,
+                        department=department, role=role, email=email, phone=phone,
+                        avatar_color=avatar_color, is_team_member=True, is_active=True
+                    )
                 if photo_file:
                     from django.core.files.storage import FileSystemStorage
                     import os
@@ -286,6 +270,7 @@ def dashboard_employees(request):
 
         elif action == 'edit' and emp_id:
             emp = get_object_or_404(Employee, id=emp_id)
+            password = request.POST.get('password', '').strip()
             emp.first_name = request.POST.get('first_name', emp.first_name)
             emp.last_name = request.POST.get('last_name', emp.last_name)
             emp.position = request.POST.get('position', emp.position)
@@ -294,6 +279,35 @@ def dashboard_employees(request):
             emp.email = request.POST.get('email', emp.email)
             emp.phone = request.POST.get('phone', emp.phone)
             emp.avatar_color = request.POST.get('avatar_color', emp.avatar_color)
+
+            if password:
+                if emp.user:
+                    emp.user.set_password(password)
+                    emp.user.email = emp.email
+                    emp.user.first_name = emp.first_name
+                    emp.user.last_name = emp.last_name
+                    if emp.role == 'ADMINISTRATEUR':
+                        emp.user.is_staff = True
+                    emp.user.save()
+                elif emp.email:
+                    username_base = emp.email.split('@')[0].lower() if '@' in emp.email else f"{emp.first_name.lower()}_{emp.last_name.lower()}"
+                    username = username_base
+                    cnt = 1
+                    while User.objects.filter(username=username).exists():
+                        username = f"{username_base}{cnt}"
+                        cnt += 1
+                    u_obj = User.objects.create_user(
+                        username=username,
+                        email=emp.email,
+                        password=password,
+                        first_name=emp.first_name,
+                        last_name=emp.last_name
+                    )
+                    if emp.role == 'ADMINISTRATEUR':
+                        u_obj.is_staff = True
+                        u_obj.save()
+                    emp.user = u_obj
+
             emp.save()
 
         elif action == 'toggle_active' and emp_id:
@@ -405,6 +419,30 @@ def dashboard_users(request):
                 target_emp.is_active = True
                 target_emp.save()
 
+                password = request.POST.get('password', '').strip()
+                if password:
+                    if target_emp.user:
+                        target_emp.user.set_password(password)
+                        target_emp.user.save()
+                    elif email:
+                        username_base = email.split('@')[0].lower() if '@' in email else f"{first_name.lower()}_{last_name.lower()}"
+                        username = username_base
+                        cnt = 1
+                        while User.objects.filter(username=username).exists():
+                            username = f"{username_base}{cnt}"
+                            cnt += 1
+                        u_obj = User.objects.create_user(
+                            username=username,
+                            email=email,
+                            password=password,
+                            first_name=first_name or target_emp.first_name,
+                            last_name=last_name or target_emp.last_name
+                        )
+                        if role == 'ADMINISTRATEUR':
+                            u_obj.is_staff = True
+                            u_obj.save()
+                        target_emp.user = u_obj
+
                 if role == 'ADMINISTRATEUR' and target_emp.user:
                     target_emp.user.is_staff = True
                     target_emp.user.save()
@@ -490,9 +528,20 @@ def dashboard_products(request):
             price = request.POST.get('price', 0)
             stock = request.POST.get('stock', 0)
             is_available = request.POST.get('is_available') == 'on'
-            image_url = request.POST.get('image_url', '')
+            image_url = request.POST.get('image_url', '').strip()
             description = request.POST.get('description', '')
-            
+            image_file = request.FILES.get('image_file')
+
+            if image_file:
+                from django.core.files.storage import FileSystemStorage
+                import os
+                products_dir = os.path.join(settings.MEDIA_ROOT, 'products')
+                os.makedirs(products_dir, exist_ok=True)
+                fs = FileSystemStorage(location=products_dir, base_url='/media/products/')
+                ext = os.path.splitext(image_file.name)[1]
+                filename = fs.save(f"prod_{int(timezone.now().timestamp())}_{random.randint(100,999)}{ext}", image_file)
+                image_url = fs.url(filename)
+
             if name and price:
                 Product.objects.create(
                     name=name, category=category, price=price, stock=stock,
@@ -506,8 +555,22 @@ def dashboard_products(request):
             prod.price = request.POST.get('price', prod.price)
             prod.stock = request.POST.get('stock', prod.stock)
             prod.is_available = request.POST.get('is_available') == 'on'
-            prod.image_url = request.POST.get('image_url', prod.image_url)
+            image_url_input = request.POST.get('image_url', '').strip()
+            if image_url_input:
+                prod.image_url = image_url_input
             prod.description = request.POST.get('description', prod.description)
+
+            image_file = request.FILES.get('image_file')
+            if image_file:
+                from django.core.files.storage import FileSystemStorage
+                import os
+                products_dir = os.path.join(settings.MEDIA_ROOT, 'products')
+                os.makedirs(products_dir, exist_ok=True)
+                fs = FileSystemStorage(location=products_dir, base_url='/media/products/')
+                ext = os.path.splitext(image_file.name)[1]
+                filename = fs.save(f"prod_{prod.id}_{int(timezone.now().timestamp())}{ext}", image_file)
+                prod.image_url = fs.url(filename)
+
             prod.save()
 
         elif action == 'toggle_available' and prod_id:
@@ -2201,6 +2264,18 @@ def api_create_order(request):
             quantity=item_data['quantity'],
             variant=item_data['variant'],
             subtotal=item_data['subtotal'],
+        )
+
+    # Automatic Caisse / Payment Entry for Online Card Payments
+    if payment_status == 'PAID':
+        Payment.objects.create(
+            client=client_user,
+            order=order,
+            amount=total,
+            payment_method='CARD' if payment_mode == 'CARD' else 'CASH',
+            payment_type='BOUTIQUE',
+            status='PAID',
+            notes=f"Paiement automatique en ligne par carte pour la commande #{order.id}"
         )
 
     return JsonResponse({

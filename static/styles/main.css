@@ -732,6 +732,11 @@ img, video, iframe {
         display: flex;
         animation: none;
     }
+
+    .mobile-switch {
+        display: block !important;
+        margin-top: 1.25rem !important;
+    }
 }
 
 /* Luxury User Navbar Dropdown */

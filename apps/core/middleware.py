@@ -28,6 +28,7 @@ class RequireLoginMiddleware:
                 '/mes-reservations/',
                 '/dashboard/',
                 '/employee/',
+                '/reception/',
             ]
             
             # Si l'URL demandée commence par un des préfixes protégés -> Redirection vers Login

@@ -17,31 +17,31 @@
         <div class="card border-0 shadow-sm rounded-4 p-4">
             <div class="list-group list-group-flush gap-3">
                 {% for notif in notifications %}
-                <div class="list-group-item p-4 border rounded-4 shadow-sm position-relative {% if not notif.is_read %}bg-warning-subtle border-warning{% else %}bg-white{% endif %}" id="notif-card-{{ notif.id }}">
+                <div class="list-group-item p-4 border rounded-4 shadow-sm position-relative bg-white" id="notif-card-{{ notif.id }}" style="background-color: #ffffff !important; border: 1px solid #cbd5e1 !important; margin-bottom: 12px;">
                     <div class="d-flex flex-wrap align-items-center justify-content-between gap-2 mb-2">
                         <div class="d-flex align-items-center gap-2">
                             {% if notif.type == 'ANNOUNCEMENT' %}
-                                <span class="badge bg-primary px-3 py-1"><i class="bi bi-megaphone me-1"></i>Annonce</span>
+                                <span class="badge bg-primary px-3 py-1 text-white"><i class="bi bi-megaphone me-1"></i>Annonce</span>
                             {% elif notif.type == 'ADMIN' %}
-                                <span class="badge bg-danger px-3 py-1"><i class="bi bi-shield-lock me-1"></i>Administration</span>
+                                <span class="badge bg-danger px-3 py-1 text-white"><i class="bi bi-shield-lock me-1"></i>Administration</span>
                             {% else %}
-                                <span class="badge bg-success px-3 py-1"><i class="bi bi-calendar-event me-1"></i>Planning</span>
+                                <span class="badge bg-success px-3 py-1 text-white"><i class="bi bi-calendar-event me-1"></i>Planning</span>
                             {% endif %}
 
                             {% if not notif.is_read %}
-                                <span class="badge bg-warning text-dark px-2 py-1">Nouveau</span>
+                                <span class="badge bg-warning text-dark px-2 py-1 fw-bold">Nouveau</span>
                             {% endif %}
                         </div>
 
-                        <small class="text-muted"><i class="bi bi-clock me-1"></i>{{ notif.created_at|date:"d/m/Y H:i" }}</small>
+                        <small class="text-muted fw-medium"><i class="bi bi-clock me-1"></i>{{ notif.created_at|date:"d/m/Y H:i" }}</small>
                     </div>
 
-                    <h5 class="fw-bold text-dark mb-2">{{ notif.title }}</h5>
-                    <p class="text-secondary mb-3">{{ notif.message }}</p>
+                    <h5 class="fw-bold mb-2" style="color: #0f172a !important; font-size: 1.15rem; font-weight: 700;">{{ notif.title }}</h5>
+                    <p class="mb-3" style="color: #334155 !important; font-size: 0.95rem; line-height: 1.6; font-weight: 400;">{{ notif.message }}</p>
 
                     {% if not notif.is_read %}
                     <div class="text-end">
-                        <button class="btn btn-sm btn-outline-dark rounded-pill px-3" onclick="markAsRead({{ notif.id }})">
+                        <button class="btn btn-sm btn-outline-dark rounded-pill px-3 fw-semibold" onclick="markAsRead({{ notif.id }})">
                             <i class="bi bi-check2-circle me-1"></i> Marquer comme lu
                         </button>
                     </div>

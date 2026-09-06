@@ -73,9 +73,9 @@
 
                 <button type="submit" class="luxury-btn-danger w-100 mt-2 border-0">Se connecter</button>
 
-                <div class="mobile-switch text-center mt-3 d-md-none">
+                <div class="mobile-switch text-center mt-3 d-lg-none">
                     <p class="small text-muted mb-0">Vous n'avez pas encore de compte ? 
-                        <a href="#" class="text-gold fw-bold register-link">S'inscrire</a>
+                        <a href="{% url 'account_signup' %}" class="text-gold fw-bold register-link">S'inscrire</a>
                     </p>
                 </div>
             </form>
@@ -155,9 +155,9 @@
 
                 <button type="submit" class="luxury-btn-danger w-100 mt-2 border-0" onclick="if(document.getElementById('id_password1') && document.getElementById('id_password2')) document.getElementById('id_password2').value = document.getElementById('id_password1').value;">Créer mon compte</button>
 
-                <div class="mobile-switch text-center mt-3 d-md-none">
+                <div class="mobile-switch text-center mt-3 d-lg-none">
                     <p class="small text-muted mb-0">Déjà inscrit(e) ? 
-                        <a href="#" class="text-gold fw-bold login-link">Se connecter</a>
+                        <a href="{% url 'account_login' %}" class="text-gold fw-bold login-link">Se connecter</a>
                     </p>
                 </div>
             </form>

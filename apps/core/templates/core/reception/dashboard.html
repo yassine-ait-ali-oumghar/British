@@ -357,12 +357,12 @@
             <div class="notification-feed" style="max-height: 420px; overflow-y: auto;">
                 {% if recent_notifications %}
                 {% for n in recent_notifications %}
-                <div class="p-3 mb-2 rounded-3 bg-light border border-opacity-50">
+                <div class="p-3 mb-2 rounded-3 bg-white border border-opacity-50" style="background-color: #ffffff !important; border: 1px solid #e2e8f0 !important;">
                     <div class="d-flex align-items-center justify-content-between mb-1">
-                        <span class="fw-bold small text-dark">{{ n.title }}</span>
+                        <span class="fw-bold small" style="color: #0f172a !important; font-size: 0.9rem;">{{ n.title }}</span>
                         <span class="small text-muted" style="font-size: 0.75rem;">{{ n.created_at|date:"H:i" }}</span>
                     </div>
-                    <p class="small text-secondary mb-0" style="font-size: 0.82rem;">{{ n.message }}</p>
+                    <p class="small mb-0" style="color: #334155 !important; font-size: 0.85rem;">{{ n.message }}</p>
                 </div>
                 {% endfor %}
                 {% else %}

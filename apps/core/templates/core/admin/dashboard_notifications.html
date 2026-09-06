@@ -116,8 +116,8 @@
                         {% endif %}
                     </td>
                     <td>
-                        <div class="fw-bold text-dark mb-0.5">{{ notif.title }}</div>
-                        <div class="text-muted small text-truncate" style="max-width: 480px;">{{ notif.message }}</div>
+                        <div class="fw-bold mb-0.5" style="color: #0f172a !important; font-size: 0.95rem; font-weight: 700;">{{ notif.title }}</div>
+                        <div class="small text-truncate" style="color: #334155 !important; max-width: 480px;">{{ notif.message }}</div>
                     </td>
                     <td class="text-muted small text-nowrap">
                         <i class="bi bi-clock me-1 text-muted"></i>{{ notif.created_at|date:"d/m/Y H:i" }}
