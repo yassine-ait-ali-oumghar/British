@@ -170,164 +170,6 @@
                             </td>
                         </tr>
                         {% endfor %}
-
-                        <!-- Modal Détails RDV -->
-                        <div class="modal fade" id="detailRDVModal{{ r.id }}" tabindex="-1" aria-hidden="true">
-                            <div class="modal-dialog modal-dialog-centered">
-                                <div class="modal-content border-0 shadow-lg rounded-4">
-                                    <div class="modal-header border-0 bg-dark text-white p-4">
-                                        <h5 class="modal-title fw-bold">Détails du Rendez-vous #{{ r.id }}</h5>
-                                        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
-                                    </div>
-                                    <div class="modal-body p-4">
-                                        <div class="mb-3 p-3 rounded-3 bg-light border">
-                                            <div class="fw-bold fs-5 text-gold" style="color: #c5a059;">{{ r.client.first_name }} {{ r.client.last_name }}</div>
-                                            <div class="text-muted"><i class="bi bi-envelope me-1"></i>{{ r.client.email }}</div>
-                                            <div class="text-muted"><i class="bi bi-telephone me-1"></i>{{ r.client.employee_profile.phone|default:"Non renseigné" }}</div>
-                                        </div>
-
-                                        <div class="row g-2 mb-3">
-                                            <div class="col-6">
-                                                <small class="text-muted d-block">Service</small>
-                                                <span class="fw-semibold">{{ r.service.name }}</span>
-                                            </div>
-                                            <div class="col-6">
-                                                <small class="text-muted d-block">Catégorie</small>
-                                                <span class="fw-semibold">{{ r.service.category }}</span>
-                                            </div>
-                                            <div class="col-6">
-                                                <small class="text-muted d-block">Employé(e)</small>
-                                                <span class="fw-semibold">{{ r.employee.full_name }}</span>
-                                            </div>
-                                            <div class="col-6">
-                                                <small class="text-muted d-block">Prix</small>
-                                                <span class="fw-bold text-success">{{ r.service.price }} DH</span>
-                                            </div>
-                                            <div class="col-6">
-                                                <small class="text-muted d-block">Horaire</small>
-                                                <span>{{ r.date|date:"d/m/Y" }} à {{ r.start_time|time:"H:i" }}</span>
-                                            </div>
-                                            <div class="col-6">
-                                                <small class="text-muted d-block">Statut Actuel</small>
-                                                <span class="fw-bold">{{ r.get_status_display }}</span>
-                                            </div>
-                                        </div>
-
-                                        {% if r.user_custom_notes %}
-                                        <div class="p-2 bg-light rounded-3 small mb-3 text-muted border">
-                                            <i class="bi bi-chat-left-text me-1"></i> {{ r.user_custom_notes }}
-                                        </div>
-                                        {% endif %}
-
-                                        <div class="d-flex align-items-center justify-content-between pt-2 border-top flex-wrap gap-2">
-                                            {% if r.status != 'CANCELLED' %}
-                                            <button type="button" class="btn btn-outline-danger btn-sm rounded-3" data-bs-toggle="modal" data-bs-target="#cancelRDVModal{{ r.id }}" data-bs-dismiss="modal">
-                                                <i class="bi bi-x-circle me-1"></i> Annuler
-                                            </button>
-                                            {% endif %}
-
-                                            {% if r.is_paid %}
-                                            <span class="badge bg-success bg-opacity-10 text-success rounded-pill px-3 py-2 fw-bold border border-success">
-                                                🟢 Payé ({{ r.paid_payment.amount }} DH)
-                                            </span>
-                                            {% elif r.status != 'CANCELLED' and r.status != 'NO_SHOW' %}
-                                            <button type="button" class="btn btn-gold btn-sm rounded-3 px-3 shadow-sm text-white" data-bs-toggle="modal" data-bs-target="#payRDVModal{{ r.id }}">
-                                                <i class="bi bi-credit-card me-1"></i> Encaisser ({{ r.service.price }} DH)
-                                            </button>
-
-                                            <!-- Modal Encaissement RDV Direct -->
-                                            <div class="modal fade" id="payRDVModal{{ r.id }}" tabindex="-1" aria-hidden="true">
-                                                <div class="modal-dialog modal-dialog-centered">
-                                                    <div class="modal-content border-0 shadow-lg rounded-4 text-start">
-                                                        <div class="modal-header border-0 bg-dark text-white p-4">
-                                                            <h5 class="modal-title fw-bold d-flex align-items-center gap-2">
-                                                                <i class="bi bi-credit-card text-gold" style="color: #c5a059;"></i>
-                                                                Encaisser RDV #{{ r.id }} ({{ r.service.name }})
-                                                            </h5>
-                                                            <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
-                                                        </div>
-                                                        <form method="post" action="{% url 'reception_payments' %}">
-                                                            {% csrf_token %}
-                                                            <input type="hidden" name="action" value="pay_reservation">
-                                                            <input type="hidden" name="reservation_id" value="{{ r.id }}">
-                                                            <div class="modal-body p-4 text-dark">
-                                                                <div class="p-3 bg-light rounded-3 mb-3 border">
-                                                                    <div><strong>Cliente :</strong> {{ r.client.first_name }} {{ r.client.last_name }}</div>
-                                                                    <div><strong>Prestation :</strong> {{ r.service.name }} ({{ r.service.category }})</div>
-                                                                    <div><strong>Employé(e) :</strong> {{ r.employee.full_name }}</div>
-                                                                    <div><strong>Tarif de référence :</strong> {{ r.service.price }} DH</div>
-                                                                </div>
-
-                                                                <div class="mb-3">
-                                                                    <label class="form-label fw-semibold">Montant (DH) <span class="text-danger">*</span></label>
-                                                                    <input type="number" step="0.01" name="amount" class="form-control rounded-3 fs-5 fw-bold text-success" value="{{ r.service.price }}" required>
-                                                                </div>
-
-                                                                <div class="mb-3">
-                                                                    <label class="form-label fw-semibold">Mode de paiement <span class="text-danger">*</span></label>
-                                                                    <select name="payment_method" class="form-select rounded-3" required>
-                                                                        <option value="CASH">💵 Espèces</option>
-                                                                    </select>
-                                                                </div>
-
-                                                                <div class="mb-3">
-                                                                    <label class="form-label fw-semibold">Note / Reçu</label>
-                                                                    <textarea name="notes" class="form-control rounded-3" rows="2" placeholder="Numéro de règlement..."></textarea>
-                                                                </div>
-                                                            </div>
-                                                            <div class="modal-footer border-0 p-4 pt-0">
-                                                                <button type="button" class="btn btn-light rounded-3" data-bs-dismiss="modal">Annuler</button>
-                                                                <button type="submit" class="btn btn-gold text-white rounded-3 px-4">Valider l'Encaissement (Payé 🟢)</button>
-                                                            </div>
-                                                        </form>
-                                                    </div>
-                                                </div>
-                                            </div>
-                                            {% endif %}
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-
-                        <!-- Modal Annulation RDV -->
-                        <div class="modal fade" id="cancelRDVModal{{ r.id }}" tabindex="-1" aria-hidden="true">
-                            <div class="modal-dialog modal-dialog-centered">
-                                <div class="modal-content border-0 shadow-lg rounded-4">
-                                    <div class="modal-header border-0 bg-danger text-white p-4">
-                                        <h5 class="modal-title fw-bold">Annuler le Rendez-vous #{{ r.id }}</h5>
-                                        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
-                                    </div>
-                                    <form method="post" action="{% url 'reception_reservation_cancel' r.id %}">
-                                        {% csrf_token %}
-                                        <div class="modal-body p-4">
-                                            <p class="text-muted">Veuillez sélectionner la raison de l'annulation. Le créneau horaire de l'employé sera automatiquement rendu disponible.</p>
-                                            
-                                            <div class="mb-3">
-                                                <label class="form-label fw-semibold">Raison de l'annulation <span class="text-danger">*</span></label>
-                                                <select name="cancellation_reason" class="form-select rounded-3" required>
-                                                    <option value="Cliente demande l'annulation">Cliente demande l'annulation</option>
-                                                    <option value="Employé indisponible">Employé indisponible</option>
-                                                    <option value="Cliente absente">Cliente absente (No-show)</option>
-                                                    <option value="Erreur de réservation">Erreur de réservation</option>
-                                                    <option value="Autre">Autre motif</option>
-                                                </select>
-                                            </div>
-
-                                            <div class="mb-3">
-                                                <label class="form-label fw-semibold">Précisions (Optionnel)</label>
-                                                <textarea name="cancellation_note" class="form-control rounded-3" rows="2" placeholder="Précisez la raison si nécessaire..."></textarea>
-                                            </div>
-                                        </div>
-                                        <div class="modal-footer border-0 p-4 pt-0">
-                                            <button type="button" class="btn btn-light rounded-3" data-bs-dismiss="modal">Retour</button>
-                                            <button type="submit" class="btn btn-danger rounded-3 px-4">Confirmer l'annulation</button>
-                                        </div>
-                                    </form>
-                                </div>
-                            </div>
-                        </div>
-
                         {% endfor %}
                     </tbody>
                 </table>
@@ -339,6 +181,167 @@
                 <p class="small">Utilisez le bouton "Nouveau RDV" pour planifier un soin.</p>
             </div>
             {% endif %}
+
+            <!-- Modals for Reservations -->
+            {% for r in schedule_reservations %}
+            <!-- Modal Détails RDV -->
+            <div class="modal fade" id="detailRDVModal{{ r.id }}" tabindex="-1" aria-hidden="true">
+                <div class="modal-dialog modal-dialog-centered">
+                    <div class="modal-content border-0 shadow-lg rounded-4">
+                        <div class="modal-header border-0 bg-dark text-white p-4">
+                            <h5 class="modal-title fw-bold">Détails du Rendez-vous #{{ r.id }}</h5>
+                            <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+                        </div>
+                        <div class="modal-body p-4">
+                            <div class="mb-3 p-3 rounded-3 bg-light border">
+                                <div class="fw-bold fs-5 text-gold" style="color: #c5a059;">{{ r.client.first_name }} {{ r.client.last_name }}</div>
+                                <div class="text-muted"><i class="bi bi-envelope me-1"></i>{{ r.client.email }}</div>
+                                <div class="text-muted"><i class="bi bi-telephone me-1"></i>{{ r.client.employee_profile.phone|default:"Non renseigné" }}</div>
+                            </div>
+
+                            <div class="row g-2 mb-3">
+                                <div class="col-6">
+                                    <small class="text-muted d-block">Service</small>
+                                    <span class="fw-semibold">{{ r.service.name }}</span>
+                                </div>
+                                <div class="col-6">
+                                    <small class="text-muted d-block">Catégorie</small>
+                                    <span class="fw-semibold">{{ r.service.category }}</span>
+                                </div>
+                                <div class="col-6">
+                                    <small class="text-muted d-block">Employé(e)</small>
+                                    <span class="fw-semibold">{{ r.employee.full_name }}</span>
+                                </div>
+                                <div class="col-6">
+                                    <small class="text-muted d-block">Prix</small>
+                                    <span class="fw-bold text-success">{{ r.service.price }} DH</span>
+                                </div>
+                                <div class="col-6">
+                                    <small class="text-muted d-block">Horaire</small>
+                                    <span>{{ r.date|date:"d/m/Y" }} à {{ r.start_time|time:"H:i" }}</span>
+                                </div>
+                                <div class="col-6">
+                                    <small class="text-muted d-block">Statut Actuel</small>
+                                    <span class="fw-bold">{{ r.get_status_display }}</span>
+                                </div>
+                            </div>
+
+                            {% if r.user_custom_notes %}
+                            <div class="p-2 bg-light rounded-3 small mb-3 text-muted border">
+                                <i class="bi bi-chat-left-text me-1"></i> {{ r.user_custom_notes }}
+                            </div>
+                            {% endif %}
+
+                            <div class="d-flex align-items-center justify-content-between pt-2 border-top flex-wrap gap-2">
+                                {% if r.status != 'CANCELLED' %}
+                                <button type="button" class="btn btn-outline-danger btn-sm rounded-3" data-bs-toggle="modal" data-bs-target="#cancelRDVModal{{ r.id }}" data-bs-dismiss="modal">
+                                    <i class="bi bi-x-circle me-1"></i> Annuler
+                                </button>
+                                {% endif %}
+
+                                {% if r.is_paid %}
+                                <span class="badge bg-success bg-opacity-10 text-success rounded-pill px-3 py-2 fw-bold border border-success">
+                                    🟢 Payé ({{ r.paid_payment.amount }} DH)
+                                </span>
+                                {% elif r.status != 'CANCELLED' and r.status != 'NO_SHOW' %}
+                                <button type="button" class="btn btn-gold btn-sm rounded-3 px-3 shadow-sm text-white" data-bs-toggle="modal" data-bs-target="#payRDVModal{{ r.id }}" data-bs-dismiss="modal">
+                                    <i class="bi bi-credit-card me-1"></i> Encaisser ({{ r.service.price }} DH)
+                                </button>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Modal Encaissement RDV Direct -->
+            <div class="modal fade" id="payRDVModal{{ r.id }}" tabindex="-1" aria-hidden="true">
+                <div class="modal-dialog modal-dialog-centered">
+                    <div class="modal-content border-0 shadow-lg rounded-4 text-start">
+                        <div class="modal-header border-0 bg-dark text-white p-4">
+                            <h5 class="modal-title fw-bold d-flex align-items-center gap-2">
+                                <i class="bi bi-credit-card text-gold" style="color: #c5a059;"></i>
+                                Encaisser RDV #{{ r.id }} ({{ r.service.name }})
+                            </h5>
+                            <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+                        </div>
+                        <form method="post" action="{% url 'reception_payments' %}">
+                            {% csrf_token %}
+                            <input type="hidden" name="action" value="pay_reservation">
+                            <input type="hidden" name="reservation_id" value="{{ r.id }}">
+                            <div class="modal-body p-4 text-dark">
+                                <div class="p-3 bg-light rounded-3 mb-3 border">
+                                    <div><strong>Cliente :</strong> {{ r.client.first_name }} {{ r.client.last_name }}</div>
+                                    <div><strong>Prestation :</strong> {{ r.service.name }} ({{ r.service.category }})</div>
+                                    <div><strong>Employé(e) :</strong> {{ r.employee.full_name }}</div>
+                                    <div><strong>Tarif de référence :</strong> {{ r.service.price }} DH</div>
+                                </div>
+
+                                <div class="mb-3">
+                                    <label class="form-label fw-semibold">Montant (DH) <span class="text-danger">*</span></label>
+                                    <input type="number" step="0.01" name="amount" class="form-control rounded-3 fs-5 fw-bold text-success" value="{{ r.service.price }}" required>
+                                </div>
+
+                                <div class="mb-3">
+                                    <label class="form-label fw-semibold">Mode de paiement <span class="text-danger">*</span></label>
+                                    <select name="payment_method" class="form-select rounded-3" required>
+                                        <option value="CASH">💵 Espèces</option>
+                                        <option value="CARD">💳 Carte bancaire</option>
+                                    </select>
+                                </div>
+
+                                <div class="mb-3">
+                                    <label class="form-label fw-semibold">Note / Reçu</label>
+                                    <textarea name="notes" class="form-control rounded-3" rows="2" placeholder="Numéro de règlement..."></textarea>
+                                </div>
+                            </div>
+                            <div class="modal-footer border-0 p-4 pt-0">
+                                <button type="button" class="btn btn-light rounded-3" data-bs-dismiss="modal">Annuler</button>
+                                <button type="submit" class="btn btn-gold text-white rounded-3 px-4">Valider l'Encaissement (Payé 🟢)</button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Modal Annulation RDV -->
+            <div class="modal fade" id="cancelRDVModal{{ r.id }}" tabindex="-1" aria-hidden="true">
+                <div class="modal-dialog modal-dialog-centered">
+                    <div class="modal-content border-0 shadow-lg rounded-4">
+                        <div class="modal-header border-0 bg-danger text-white p-4">
+                            <h5 class="modal-title fw-bold">Annuler le Rendez-vous #{{ r.id }}</h5>
+                            <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+                        </div>
+                        <form method="post" action="{% url 'reception_reservation_cancel' r.id %}">
+                            {% csrf_token %}
+                            <div class="modal-body p-4">
+                                <p class="text-muted">Veuillez sélectionner la raison de l'annulation. Le créneau horaire de l'employé sera automatiquement rendu disponible.</p>
+                                
+                                <div class="mb-3">
+                                    <label class="form-label fw-semibold">Raison de l'annulation <span class="text-danger">*</span></label>
+                                    <select name="cancellation_reason" class="form-select rounded-3" required>
+                                        <option value="Cliente demande l'annulation">Cliente demande l'annulation</option>
+                                        <option value="Employé indisponible">Employé indisponible</option>
+                                        <option value="Cliente absente">Cliente absente (No-show)</option>
+                                        <option value="Erreur de réservation">Erreur de réservation</option>
+                                        <option value="Autre">Autre motif</option>
+                                    </select>
+                                </div>
+
+                                <div class="mb-3">
+                                    <label class="form-label fw-semibold">Précisions (Optionnel)</label>
+                                    <textarea name="cancellation_note" class="form-control rounded-3" rows="2" placeholder="Précisez la raison si nécessaire..."></textarea>
+                                </div>
+                            </div>
+                            <div class="modal-footer border-0 p-4 pt-0">
+                                <button type="button" class="btn btn-light rounded-3" data-bs-dismiss="modal">Retour</button>
+                                <button type="submit" class="btn btn-danger rounded-3 px-4">Confirmer l'annulation</button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </div>
+            {% endfor %}
         </div>
     </div>
 

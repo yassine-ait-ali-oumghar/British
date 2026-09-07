@@ -378,14 +378,24 @@ def run():
         },
     ]
 
+    category_images = {
+        'Onglerie': 'https://images.unsplash.com/photo-1604654894610-df63bc536371?auto=format&fit=crop&w=600&q=80',
+        'Coiffure': 'https://images.unsplash.com/photo-1562322140-8baeececf3df?auto=format&fit=crop&w=600&q=80',
+        'Esthétique': 'https://images.unsplash.com/photo-1571781926291-c477ebfd024b?auto=format&fit=crop&w=600&q=80',
+        'Maquillage': 'https://images.unsplash.com/photo-1522337360788-8b13dee7a37e?auto=format&fit=crop&w=600&q=80',
+    }
+
     count = 0
     for s in services_data:
+        cat = s.get('category', '')
+        img_url = s.get('image_url') or category_images.get(cat, 'https://images.unsplash.com/photo-1562322140-8baeececf3df?auto=format&fit=crop&w=600&q=80')
         Service.objects.create(
             name=s['name'],
             category=s['category'],
             price=s['price'],
             duration_minutes=s['duration_minutes'],
             description=s['description'],
+            image_url=img_url,
             is_active=True
         )
         count += 1

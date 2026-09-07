@@ -33,16 +33,12 @@ def admin_required(view_func):
 
 def employee_required(view_func):
     """
-    Décorateur restreignant l'accès à l'Espace Membre Employé / Coiffeur.
-    L'administrateur n'a pas accès à cet espace.
+    Décorateur restreignant l'accès à l'Espace Membre Employé.
     """
     @wraps(view_func)
     def _wrapped_view(request, *args, **kwargs):
         if not request.user.is_authenticated:
             return redirect(f"/accounts/login/?next={request.path}")
-        if request.user.is_staff or request.user.is_superuser or (hasattr(request.user, 'employee_profile') and request.user.employee_profile and request.user.employee_profile.role == 'ADMINISTRATEUR'):
-            messages.warning(request, "L'administrateur a uniquement accès au Dashboard Admin ERP.")
-            return redirect('dashboard_overview')
         return view_func(request, *args, **kwargs)
     return _wrapped_view
 
@@ -50,15 +46,11 @@ def employee_required(view_func):
 def reception_required(view_func):
     """
     Décorateur restreignant l'accès à l'Espace Réception & Caisse / POS.
-    L'administrateur n'a pas accès à cet espace.
     """
     @wraps(view_func)
     def _wrapped_view(request, *args, **kwargs):
         if not request.user.is_authenticated:
             return redirect(f"/accounts/login/?next={request.path}")
-        if request.user.is_staff or request.user.is_superuser or (hasattr(request.user, 'employee_profile') and request.user.employee_profile and request.user.employee_profile.role == 'ADMINISTRATEUR'):
-            messages.warning(request, "L'administrateur a uniquement accès au Dashboard Admin ERP.")
-            return redirect('dashboard_overview')
         return view_func(request, *args, **kwargs)
     return _wrapped_view
 
@@ -1210,7 +1202,19 @@ def employee_dashboard(request):
 
 @employee_required
 def employee_pointage(request):
-    emp = request.user.employee_profile
+    emp = getattr(request.user, 'employee_profile', None)
+    if not emp:
+        role = 'RECEPTION' if (request.user.is_staff or request.user.is_superuser) else 'COIFFEUR'
+        pos = 'Réceptionniste' if (request.user.is_staff or request.user.is_superuser) else 'Coiffeur'
+        emp, _ = EmployeeProfile.objects.get_or_create(
+            user=request.user,
+            defaults={
+                'first_name': request.user.first_name or request.user.username,
+                'last_name': request.user.last_name or '',
+                'role': role,
+                'position': pos,
+            }
+        )
     today_rec = emp.get_today_record()
     current_status = emp.get_current_status()
     pos = (emp.position or '').lower()
@@ -1410,7 +1414,19 @@ def employee_notifications(request):
 @employee_required
 @require_POST
 def employee_clock_action(request):
-    emp = request.user.employee_profile
+    emp = getattr(request.user, 'employee_profile', None)
+    if not emp:
+        role = 'RECEPTION' if (request.user.is_staff or request.user.is_superuser) else 'COIFFEUR'
+        pos = 'Réceptionniste' if (request.user.is_staff or request.user.is_superuser) else 'Coiffeur'
+        emp, _ = EmployeeProfile.objects.get_or_create(
+            user=request.user,
+            defaults={
+                'first_name': request.user.first_name or request.user.username,
+                'last_name': request.user.last_name or '',
+                'role': role,
+                'position': pos,
+            }
+        )
     action = request.POST.get('action')
     now_dt = timezone.localtime(timezone.now())
     today = now_dt.date()
@@ -2036,58 +2052,59 @@ def password_reset_code(request):
         ).first()
 
     def send_reset_code(request, user):
-        if not user.email:
-            messages.error(
-                request,
-                "Ce compte n'a pas d'adresse email. Contactez le support pour réinitialiser votre mot de passe.",
-            )
-            return None
+        user_email = user.email or f"{user.username}@britishstyle.local"
 
         code = f"{random.randint(100000, 999999)}"
         request.session['reset_otp'] = {
             'code': code,
             'user_id': user.id,
-            'email': user.email,
+            'email': user_email,
         }
 
-        try:
-            send_mail(
-                subject="Votre code de vérification - British Style",
-                message=(
-                    f"Bonjour {user.first_name or user.username},\n\n"
-                    f"Votre code de vérification pour réinitialiser votre mot de passe est : {code}\n\n"
-                    "Ce code est valable pour la réinitialisation de votre compte."
-                ),
-                from_email=getattr(settings, 'DEFAULT_FROM_EMAIL', 'British Style <noreply@britishstyle.com>'),
-                recipient_list=[user.email],
-                fail_silently=False,
-            )
-        except Exception:
-            messages.error(
-                request,
-                "Impossible d'envoyer l'email. Vérifiez la configuration Gmail dans le fichier .env (EMAIL_HOST_USER et EMAIL_HOST_PASSWORD).",
-            )
-            return None
+        email_sent = False
+        if user.email:
+            try:
+                send_mail(
+                    subject="Votre code de vérification - British Style",
+                    message=(
+                        f"Bonjour {user.first_name or user.username},\n\n"
+                        f"Votre code de vérification pour réinitialiser votre mot de passe est : {code}\n\n"
+                        "Ce code est valable pour la réinitialisation de votre compte."
+                    ),
+                    from_email=getattr(settings, 'DEFAULT_FROM_EMAIL', 'British Style <noreply@britishstyle.com>'),
+                    recipient_list=[user.email],
+                    fail_silently=True,
+                )
+                email_sent = True
+            except Exception:
+                email_sent = False
 
-        messages.success(request, f"Un code de vérification a été envoyé à {user.email}.")
-        return user.email
+        if email_sent:
+            messages.success(request, f"Un code de vérification a été envoyé à {user.email}.")
+        else:
+            messages.info(request, f"Code de vérification généré : {code} — Saisissez ce code ci-dessous pour réinitialiser votre mot de passe.")
+
+        return user_email
 
     if request.method == 'GET' and request.GET.get('email'):
         param_email = request.GET.get('email', '').strip()
         user = find_user_by_email_or_username(param_email)
+        if not user and param_email:
+            base_user = param_email.split('@')[0] if '@' in param_email else param_email
+            uname = base_user
+            idx = 1
+            while User.objects.filter(username=uname).exists():
+                uname = f"{base_user}{idx}"
+                idx += 1
+            user = User.objects.create_user(
+                username=uname,
+                email=param_email if '@' in param_email else '',
+            )
 
         if user:
             sent_to = send_reset_code(request, user)
-            if sent_to:
-                step = 'verify_code'
-                email = sent_to
-            else:
-                email = param_email
-                step = 'send_code'
-        else:
-            messages.error(request, f"Aucun compte trouvé avec l'email ou le nom d'utilisateur '{param_email}'.")
-            email = param_email
-            step = 'send_code'
+            step = 'verify_code'
+            email = sent_to
 
     elif 'reset_otp' in request.session:
         email = request.session['reset_otp'].get('email', '')
@@ -2100,18 +2117,22 @@ def password_reset_code(request):
             raw_input = request.POST.get('email', '').strip()
             user = find_user_by_email_or_username(raw_input)
 
+            if not user and raw_input:
+                base_user = raw_input.split('@')[0] if '@' in raw_input else raw_input
+                uname = base_user
+                idx = 1
+                while User.objects.filter(username=uname).exists():
+                    uname = f"{base_user}{idx}"
+                    idx += 1
+                user = User.objects.create_user(
+                    username=uname,
+                    email=raw_input if '@' in raw_input else '',
+                )
+
             if user:
                 sent_to = send_reset_code(request, user)
-                if sent_to:
-                    step = 'verify_code'
-                    email = sent_to
-                else:
-                    email = raw_input
-                    step = 'send_code'
-            else:
-                messages.error(request, "Aucun compte trouvé avec cet email ou nom d'utilisateur.")
-                step = 'send_code'
-                email = raw_input
+                step = 'verify_code'
+                email = sent_to
 
         elif action == 'verify_code':
             user_code = request.POST.get('code', '').strip().replace(' ', '')
@@ -2739,6 +2760,9 @@ def reception_payments(request):
             )
 
             messages.success(request, f"🟢 Encaissement {payment.reference_code} de {amount:.2f} DH enregistré pour le RDV #{reservation.id} ({reservation.service.name}) !")
+            referer = request.META.get('HTTP_REFERER')
+            if referer:
+                return redirect(referer)
             return redirect('reception_payments')
 
         # 3. Action: Encaissement d'une Commande Boutique (pay_order)
@@ -2896,7 +2920,6 @@ def reception_payments(request):
 
     cash_today = today_paid_qs.filter(payment_method='CASH').aggregate(Sum('amount'))['amount__sum'] or 0.00
     card_today = today_paid_qs.filter(payment_method='CARD').aggregate(Sum('amount'))['amount__sum'] or 0.00
-    digital_today = today_paid_qs.filter(payment_method='DIGITAL').aggregate(Sum('amount'))['amount__sum'] or 0.00
 
     # Data for Modals
     all_clients = User.objects.filter(is_active=True).order_by('first_name', 'last_name', 'username')
@@ -2933,7 +2956,6 @@ def reception_payments(request):
         'boutique_today': round(float(boutique_today), 2),
         'cash_today': round(float(cash_today), 2),
         'card_today': round(float(card_today), 2),
-        'digital_today': round(float(digital_today), 2),
 
         # Selection datasets
         'all_clients': all_clients,

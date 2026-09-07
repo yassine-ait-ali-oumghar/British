@@ -85,26 +85,38 @@ TEMPLATES = [
 WSGI_APPLICATION = 'British_Style.wsgi.application'
 
 
-# Database
-# https://docs.djangoproject.com/en/6.0/ref/settings/#databases
+import socket
 
-# DATABASES = {
-#     'default': {
-#         'ENGINE': 'django.db.backends.sqlite3',
-#         'NAME': BASE_DIR / 'db.sqlite3',
-#     }
-# }
+def _is_postgres_available(host, port):
+    if not host or not port:
+        return False
+    try:
+        with socket.create_connection((host, int(port)), timeout=1):
+            return True
+    except (OSError, ValueError):
+        return False
 
-DATABASES = {
-    'default': {
-        'ENGINE': 'django.db.backends.postgresql',
-        'NAME': os.getenv('POSTGRES_DB'),
-        'USER': os.getenv('POSTGRES_USER'),
-        'PASSWORD': os.getenv('POSTGRES_PASSWORD'),
-        'HOST': os.getenv('POSTGRES_HOST', 'db'),
-        'PORT': os.getenv('POSTGRES_PORT', '5432'),
+_pg_host = os.getenv('POSTGRES_HOST', 'db')
+_pg_port = os.getenv('POSTGRES_PORT', '5432')
+
+if _is_postgres_available(_pg_host, _pg_port):
+    DATABASES = {
+        'default': {
+            'ENGINE': 'django.db.backends.postgresql',
+            'NAME': os.getenv('POSTGRES_DB', 'british_style'),
+            'USER': os.getenv('POSTGRES_USER', 'british_user'),
+            'PASSWORD': os.getenv('POSTGRES_PASSWORD', '102005'),
+            'HOST': _pg_host,
+            'PORT': _pg_port,
+        }
     }
-}
+else:
+    DATABASES = {
+        'default': {
+            'ENGINE': 'django.db.backends.sqlite3',
+            'NAME': BASE_DIR / 'db.sqlite3',
+        }
+    }
 
 # Password validation
 # https://docs.djangoproject.com/en/6.0/ref/settings/#auth-password-validators
@@ -129,10 +141,10 @@ USE_TZ = True
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/6.0/howto/static-files/
 
-STATIC_URL = 'static/'
-STATICFILES_DIRS = [ BASE_DIR /'static']
+STATIC_URL = '/static/'
+STATICFILES_DIRS = [ BASE_DIR / 'static']
 
-MEDIA_URL = 'media/'
+MEDIA_URL = '/media/'
 MEDIA_ROOT = BASE_DIR / 'media'
 
 # Django Allauth Configuration

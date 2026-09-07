@@ -996,7 +996,6 @@ class Payment(models.Model):
     PAYMENT_METHOD_CHOICES = [
         ('CASH', 'Espèces 💵'),
         ('CARD', 'Carte bancaire 💳'),
-        ('DIGITAL', 'Paiement électronique 📱'),
     ]
     STATUS_CHOICES = [
         ('PENDING', 'En attente 🟡'),

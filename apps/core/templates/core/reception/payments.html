@@ -69,18 +69,8 @@
         </h5>
         
         <div class="d-flex align-items-center flex-wrap gap-2">
-            <!-- Button Encaisser RDV -->
-            <button class="btn btn-gold text-white rounded-3 shadow-sm" data-bs-toggle="modal" data-bs-target="#payReservationModal">
-                <i class="bi bi-credit-card me-1"></i> Encaisser RDV
-            </button>
-            
-            <!-- Button Encaisser Commande -->
-            <button class="btn btn-primary text-white rounded-3 shadow-sm" data-bs-toggle="modal" data-bs-target="#payOrderModal">
-                <i class="bi bi-bag-check me-1"></i> Encaisser Commande
-            </button>
-
             <!-- Button Nouvel Encaissement Direct -->
-            <button class="btn btn-outline-dark rounded-3 shadow-sm" data-bs-toggle="modal" data-bs-target="#directPaymentModal">
+            <button class="btn btn-gold text-white rounded-3 shadow-sm" data-bs-toggle="modal" data-bs-target="#directPaymentModal">
                 <i class="bi bi-plus-circle me-1"></i> Nouvel Encaissement
             </button>
         </div>
@@ -221,7 +211,6 @@
                         <span class="fw-semibold small">
                             {% if p.payment_method == 'CASH' %}💵 Espèces
                             {% elif p.payment_method == 'CARD' %}💳 Carte
-                            {% elif p.payment_method == 'DIGITAL' %}📱 Paiement élec
                             {% else %}{{ p.get_payment_method_display }}
                             {% endif %}
                         </span>

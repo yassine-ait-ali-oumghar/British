@@ -70,68 +70,68 @@
             {% endif %}
         </div>
     </form>
-</div>
-
 <!-- Users Table -->
 <div class="erp-card p-0 overflow-hidden">
     <div class="w-100 overflow-hidden">
-        <table class="table table-hover align-middle mb-0 w-100">
+        <table class="table table-hover align-middle mb-0 w-100" style="table-layout: fixed;">
             <thead class="table-light">
                 <tr>
-                    <th class="ps-3 py-3">Utilisateur</th>
-                    <th class="py-3">Nom d'utilisateur</th>
-                    <th class="py-3">Email</th>
-                    <th class="py-3 text-center">Statut d'équipe</th>
-                    <th class="py-3">Poste & Département</th>
-                    <th class="pe-3 py-3 text-end text-nowrap">Actions</th>
+                    <th class="ps-3.5 py-3" style="width: 20%;">Utilisateur</th>
+                    <th class="py-3" style="width: 10%;">Pseudo</th>
+                    <th class="py-3" style="width: 26%;">Email</th>
+                    <th class="py-3 text-center" style="width: 16%;">Statut d'équipe</th>
+                    <th class="py-3" style="width: 16%;">Poste & Dépt</th>
+                    <th class="pe-3 py-3 text-end" style="width: 12%;">Actions</th>
                 </tr>
             </thead>
-                           {% for emp in employees_list %}
+            <tbody>
+                {% for emp in employees_list %}
                 <tr>
                     <td class="ps-3">
-                        <div class="d-flex align-items-center gap-2">
+                        <div class="d-flex align-items-center gap-2 overflow-hidden">
                             {% if emp.photo %}
-                                <img src="{{ emp.photo }}" alt="{{ emp.full_name }}" class="rounded-circle border flex-shrink-0" style="width: 38px; height: 38px; object-fit: cover;">
+                                <img src="{{ emp.photo }}" alt="{{ emp.full_name }}" class="rounded-circle border flex-shrink-0" style="width: 34px; height: 34px; object-fit: cover;">
                             {% else %}
-                                <div class="avatar-circle rounded-circle text-white fw-bold d-flex align-items-center justify-content-center flex-shrink-0" style="width: 38px; height: 38px; background-color: {{ emp.avatar_color|default:'#c5a059' }}; font-size: 0.9rem;">
+                                <div class="avatar-circle rounded-circle text-white fw-bold d-flex align-items-center justify-content-center flex-shrink-0" style="width: 34px; height: 34px; background-color: {{ emp.avatar_color|default:'#c5a059' }}; font-size: 0.8rem;">
                                     {{ emp.first_name|slice:":1" }}{{ emp.last_name|slice:":1" }}
                                 </div>
                             {% endif %}
-                            <div>
-                                <div class="fw-bold text-dark">{{ emp.full_name }}</div>
-                                <small class="text-muted" style="font-size: 0.78rem;">Inscrit le {{ emp.created_at|date:"d/m/Y" }}</small>
+                            <div class="text-truncate">
+                                <div class="fw-bold text-dark text-truncate" title="{{ emp.full_name }}">{{ emp.full_name }}</div>
+                                <small class="text-muted text-truncate d-block" style="font-size: 0.72rem;">Inscrit le {{ emp.created_at|date:"d/m/Y" }}</small>
                             </div>
                         </div>
                     </td>
-                    <td class="text-nowrap">
-                        <span class="badge bg-light text-dark border px-2 py-1 font-monospace">@{{ emp.user.username|default:"N/A" }}</span>
+                    <td>
+                        <span class="badge bg-light text-dark border px-2 py-1 font-monospace text-truncate d-inline-block" style="max-width: 100%;" title="@{{ emp.user.username|default:'N/A' }}">@{{ emp.user.username|default:"N/A" }}</span>
                     </td>
                     <td>
-                        <span class="text-muted small text-break">{{ emp.email|default:"Pas d'email" }}</span>
+                        <span class="text-muted small text-truncate d-inline-block" style="max-width: 100%; vertical-align: middle;" title="{{ emp.email|default:'Pas d\'email' }}">{{ emp.email|default:"Pas d'email" }}</span>
                     </td>
-                    <td class="text-center text-nowrap">
+                    <td class="text-center">
                         {% if emp.is_team_member %}
-                            <span class="badge bg-success bg-opacity-10 text-success border border-success border-opacity-25 px-2.5 py-1.5 rounded-pill fw-medium" style="font-size: 0.8rem;">
-                                <i class="bi bi-check-circle-fill me-1"></i> Membre d'Équipe ({{ emp.get_role_display }})
+                            <span class="badge bg-success bg-opacity-10 text-success border border-success border-opacity-25 px-2 py-1 rounded-pill fw-medium text-truncate d-inline-block" style="max-width: 100%; font-size: 0.75rem;" title="Membre ({{ emp.get_role_display }})">
+                                <i class="bi bi-check-circle-fill me-1"></i> Membre
                             </span>
                         {% else %}
-                            <span class="badge bg-secondary bg-opacity-10 text-secondary border border-secondary border-opacity-25 px-2.5 py-1.5 rounded-pill fw-medium" style="font-size: 0.8rem;">
-                                <i class="bi bi-person me-1"></i> Utilisateur Simple
+                            <span class="badge bg-secondary bg-opacity-10 text-secondary border border-secondary border-opacity-25 px-2 py-1 rounded-pill fw-medium text-truncate d-inline-block" style="max-width: 100%; font-size: 0.75rem;">
+                                <i class="bi bi-person me-1"></i> Utilisateur
                             </span>
                         {% endif %}
                     </td>
                     <td>
                         {% if emp.is_team_member %}
-                            <div class="fw-semibold text-dark small">{{ emp.position }}</div>
-                            <div class="text-muted text-xs" style="font-size: 0.75rem;">Dépt: {{ emp.department }}</div>
+                            <div class="fw-semibold text-dark small text-truncate" style="max-width: 100%;" title="{{ emp.position }}">{{ emp.position }}</div>
+                            <div class="text-muted text-xs text-truncate" style="font-size: 0.72rem; max-width: 100%;" title="Dépt: {{ emp.department }}">Dépt: {{ emp.department }}</div>
                         {% else %}
                             <span class="text-muted italic small">- non assigné -</span>
                         {% endif %}
                     </td>
-                    <td class="pe-3 text-end text-nowrap">
+                    <td class="pe-3 text-end">
                         <div class="d-inline-flex align-items-center justify-content-end gap-1">
                             {% if not emp.is_team_member %}
-                                <button class="btn btn-sm btn-primary fw-semibold rounded-3 px-2.5 py-1 d-inline-flex align-items-center gap-1"
+                                <button class="btn btn-sm btn-primary fw-semibold rounded-3 px-2 py-1 d-inline-flex align-items-center gap-1"
+                                        style="font-size: 0.75rem;"
                                         onclick="openAddToTeamModal(this)"
                                         data-id="{{ emp.id }}"
                                         data-first-name="{{ emp.first_name|escapejs }}"
@@ -143,11 +143,13 @@
                                         data-photo="{{ emp.photo|default:''|escapejs }}"
                                         data-avatar-color="{{ emp.avatar_color|default:'#c5a059' }}"
                                         data-phone="{{ emp.phone|default:''|escapejs }}"
-                                        data-is-edit="false">
-                                    <i class="bi bi-person-plus-fill"></i> Ajouter à l'équipe
+                                        data-is-edit="false"
+                                        title="Ajouter à l'équipe">
+                                    <i class="bi bi-person-plus-fill"></i>
                                 </button>
                             {% else %}
-                                <button class="btn btn-sm btn-light border text-dark py-1 px-2.5"
+                                <button class="btn btn-sm btn-light border text-dark py-1 px-2"
+                                        style="font-size: 0.75rem;"
                                         title="Modifier l'employé"
                                         onclick="openAddToTeamModal(this)"
                                         data-id="{{ emp.id }}"
@@ -161,13 +163,13 @@
                                         data-avatar-color="{{ emp.avatar_color|default:'#c5a059' }}"
                                         data-phone="{{ emp.phone|default:''|escapejs }}"
                                         data-is-edit="true">
-                                    <i class="bi bi-pencil-fill me-1"></i> Modifier
+                                    <i class="bi bi-pencil-fill"></i>
                                 </button>
                                 <form method="post" class="d-inline" onsubmit="return confirm('Retirer cet utilisateur de l\'équipe ? Il perdra ses accès à l\'espace Employé.');">
                                     {% csrf_token %}
                                     <input type="hidden" name="action" value="remove_from_team">
                                     <input type="hidden" name="employee_id" value="{{ emp.id }}">
-                                    <button type="submit" class="btn btn-sm btn-outline-warning rounded-3 py-1 px-2" title="Retirer de l'équipe">
+                                    <button type="submit" class="btn btn-sm btn-outline-warning rounded-3 py-1 px-2" style="font-size: 0.75rem;" title="Retirer de l'équipe">
                                         <i class="bi bi-person-x-fill"></i>
                                     </button>
                                 </form>
@@ -177,7 +179,7 @@
                                 {% csrf_token %}
                                 <input type="hidden" name="action" value="delete_user">
                                 <input type="hidden" name="employee_id" value="{{ emp.id }}">
-                                <button type="submit" class="btn btn-sm btn-light border text-danger rounded-3 py-1 px-2" title="Supprimer définitivement le compte">
+                                <button type="submit" class="btn btn-sm btn-light border text-danger rounded-3 py-1 px-2" style="font-size: 0.75rem;" title="Supprimer définitivement le compte">
                                     <i class="bi bi-trash-fill"></i>
                                 </button>
                             </form>

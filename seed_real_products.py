@@ -40,7 +40,7 @@ def run():
             'name': 'L\'Oréal Paris Elseve Extraordinaire Huile de Soin',
             'category': 'Cheveux',
             'price': 140,
-            'image_url': 'https://images.unsplash.com/photo-1608248597359-f67b57b98d1a?auto=format&fit=crop&w=600&q=80',
+            'image_url': 'https://images.unsplash.com/photo-1526947425960-945c6e72858f?auto=format&fit=crop&w=600&q=80',
             'description': 'Soin sublimateur enrichi aux 6 huiles de fleurs rares pour une matière cheveux soyeuse.'
         },
         {
@@ -89,7 +89,7 @@ def run():
             'name': 'Pantene Pro-V Huile Réparatrice Soie & Kératine',
             'category': 'Cheveux',
             'price': 110,
-            'image_url': 'https://images.unsplash.com/photo-1608248597359-f67b57b98d1a?auto=format&fit=crop&w=600&q=80',
+            'image_url': 'https://images.unsplash.com/photo-1535585209827-a15fcdbc4c2d?auto=format&fit=crop&w=600&q=80',
             'description': 'Elixir capillaire nourrissant instantané pour sublimer les pointes et éviter les fourches.'
         },
         {
@@ -329,24 +329,25 @@ def run():
             'name': 'Garnier Olia Coloration aux Huiles de Fleurs',
             'category': 'Coloration Cheveux',
             'price': 110,
-            'image_url': 'https://images.unsplash.com/photo-1608248597359-f67b57b98d1a?auto=format&fit=crop&w=600&q=80',
+            'image_url': 'https://images.unsplash.com/photo-1527799820374-dcf8d9d4a388?auto=format&fit=crop&w=600&q=80',
             'description': 'Coloration permanente à domicile sans ammoniaque propulsée par 60% d\'huiles.'
         },
     ]
 
     count = 0
-    for p in products_data:
+    for idx, p in enumerate(products_data):
+        local_img = f"/static/images/product_{130 + idx}.jpg"
         Product.objects.create(
             name=p['name'],
             category=p['category'],
             price=p['price'],
             is_available=True,
-            image_url=p.get('image_url', ''),
+            image_url=local_img,
             description=p['description']
         )
         count += 1
 
-    print(f"Successfully updated {count} real products without stock in PostgreSQL.")
+    print(f"Successfully updated {count} real products with local static images.")
 
 if __name__ == '__main__':
     run()

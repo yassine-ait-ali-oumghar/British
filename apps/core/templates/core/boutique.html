@@ -27,7 +27,7 @@
                 <div class="category-tabs d-flex flex-wrap gap-2 justify-content-start justify-content-lg-end">
                     <button class="filter-btn active" data-category="all">🌟 Tous les produits</button>
                     <button class="filter-btn" data-category="Coiffure">💇‍♀️ Coiffure</button>
-                    <button class="filter-btn" data-category="Esthétique">💆‍♀️ Esthétique</button>
+                    <button class="filter-btn" data-category="Esthétique">🧴 Esthétique</button>
                     <button class="filter-btn" data-category="Onglerie">💅 Onglerie</button>
                 </div>
             </div>
@@ -209,6 +209,28 @@
 
         let selectedCategory = 'all';
 
+        function matchesCategory(itemCat, selectedCat) {
+            if (!selectedCat || selectedCat === 'all') return true;
+            itemCat = itemCat.toLowerCase();
+            selectedCat = selectedCat.toLowerCase();
+
+            if (selectedCat === itemCat) return true;
+
+            if (selectedCat === 'coiffure' || selectedCat === 'cheveux') {
+                return itemCat.includes('cheveux') || itemCat.includes('coiff') || itemCat.includes('barbe') || itemCat.includes('coloration');
+            }
+            if (selectedCat === 'esthétique' || selectedCat === 'skincare' || selectedCat === 'visage') {
+                return itemCat.includes('visage') || itemCat.includes('skincare') || itemCat.includes('soin') || itemCat.includes('coffret') || itemCat.includes('maquillage');
+            }
+            if (selectedCat === 'onglerie' || selectedCat === 'ongles') {
+                return itemCat.includes('ongle') || itemCat.includes('vernis');
+            }
+            if (selectedCat === 'maquillage') {
+                return itemCat.includes('maquillage');
+            }
+            return itemCat.includes(selectedCat);
+        }
+
         function filterProducts() {
             const query = searchInput ? searchInput.value.toLowerCase().trim() : '';
             const selCat = (selectedCategory || 'all').toLowerCase().trim();
@@ -218,7 +240,7 @@
                 const name = (item.getAttribute('data-name') || '').toLowerCase().trim();
                 const desc = (item.getAttribute('data-desc') || '').toLowerCase().trim();
 
-                const matchesCat = (selCat === 'all' || cat === selCat);
+                const matchesCat = matchesCategory(cat, selCat);
                 const matchesSearch = !query || name.includes(query) || desc.includes(query) || cat.includes(query);
 
                 if (matchesCat && matchesSearch) {
